@@ -2,6 +2,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Application;
 using Infrastructure;
+using Infrastructure.Options;
+using Infrastructure.Persistence.BookStore;
+using Infrastructure.Persistence.Fraud;
+using Infrastructure.Persistence.Seed;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using WebApi.ErrorHandling;
 using WebApi.Middleware;
 
@@ -24,6 +30,9 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+// Apply pending migrations and optionally seed catalogue data
+await ApplyDatabaseMigrationsAsync(app);
+
 app.UseExceptionHandler();
 app.UseMiddleware<CorrelationIdMiddleware>();
 
@@ -37,3 +46,27 @@ if (app.Environment.IsDevelopment())
 var api = app.MapGroup("/api/v1");
 
 app.Run();
+
+static async Task ApplyDatabaseMigrationsAsync(WebApplication app)
+{
+    var dbOptions = app.Services.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+    if (!dbOptions.ApplyMigrationsOnStartup)
+        return;
+
+    var seedingOptions = app.Services.GetRequiredService<IOptions<SeedingOptions>>().Value;
+
+    await using var scope = app.Services.CreateAsyncScope();
+
+    // Never wrap MigrateAsync in an explicit transaction — EF Core 9+ manages its own locks
+    var bookStoreDb = scope.ServiceProvider.GetRequiredService<BookStoreDbContext>();
+    await bookStoreDb.Database.MigrateAsync();
+
+    var fraudDb = scope.ServiceProvider.GetRequiredService<FraudDbContext>();
+    await fraudDb.Database.MigrateAsync();
+
+    if (seedingOptions.Enabled)
+    {
+        var seeder = scope.ServiceProvider.GetRequiredService<ICatalogSeeder>();
+        await seeder.SeedAsync();
+    }
+}

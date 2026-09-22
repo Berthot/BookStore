@@ -3,7 +3,7 @@ id: BERT-TSK-0072
 title: "TSK-0072 — Migrations pela CLI, aplicação no startup e seed de livros"
 type: task
 versão: "1.0.0"
-status: pendente
+status: concluido
 executor: claude-code
 tags:
 - '#contexto/bertho'
@@ -50,11 +50,11 @@ src/Infrastructure/Options/**
 
 ## Critério de Aceite
 
-- [ ] Pastas `Migrations/` geradas pela CLI (sem edição manual)
-- [ ] Nenhuma pendência de modelo nos dois contextos
-- [ ] Worker não chama `Migrate`
-- [ ] Seed não duplica livros ao rodar duas vezes
-- [ ] `SeedingOptions` e a opção de migrations validadas com `ValidateOnStart()`
+- [x] Pastas `Migrations/` geradas pela CLI (sem edição manual)
+- [x] Nenhuma pendência de modelo nos dois contextos
+- [x] Worker não chama `Migrate`
+- [x] Seed não duplica livros ao rodar duas vezes
+- [x] `SeedingOptions` e a opção de migrations validadas com `ValidateOnStart()`
 
 ## Prova de Funcionamento
 
@@ -69,4 +69,19 @@ Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a 
 
 ## Notas de execução
 
-> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
+- Migrations geradas via CLI (`dotnet ef migrations add Initial`) para `FraudDbContext` e `BookStoreDbContext` — sem edição manual.
+- `PaymentFingerprint` adicionado como propriedade first-class em `Transaction` para contornar limitação do EF Core 10: não é possível criar índice composto navegando por `ComplexProperty` via lambda nem via string path dotted.
+- `DatabaseOptions` e `SeedingOptions` registrados com `ValidateOnStart()` em `PostgresExtensions.AddPersistence`.
+- `UseAsyncSeeding` configurado no `AddPostgresDbContext<BookStoreDbContext>` — chama `CatalogDataSeeder` internamente; seed idempotente via `AnyAsync`.
+- `ICatalogSeeder` público; `CatalogDataSeeder` interno; `Program.cs` resolve via DI e chama `SeedAsync` após `MigrateAsync`.
+- Worker (`apps/Worker/Program.cs`) não chama `MigrateAsync`.
+
+**Prova FraudDbContext:**
+```
+No changes have been made to the model since the last migration.
+```
+
+**Prova BookStoreDbContext:**
+```
+No changes have been made to the model since the last migration.
+```
