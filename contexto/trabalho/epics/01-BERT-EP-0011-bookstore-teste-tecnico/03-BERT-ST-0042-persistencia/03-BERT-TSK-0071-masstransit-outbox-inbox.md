@@ -3,7 +3,7 @@ id: BERT-TSK-0071
 title: "TSK-0071 — MassTransit: outbox, inbox, retry e DLQ"
 type: task
 versão: "1.0.0"
-status: pendente
+status: concluido
 executor: claude-code
 tags:
 - '#contexto/bertho'
@@ -59,4 +59,22 @@ Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a 
 
 ## Notas de execução
 
-> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
+### Decisões
+
+- Mensagens (`PurchasePlaced`, `TransactionSubmitted`, `TransactionDecided`) como `sealed record` em `Application/Messages/`; nenhuma referência a MassTransit.
+- Outcome em `TransactionDecided` como `string` para manter messages free of domain enum coupling.
+- `AddEntityFrameworkOutbox<TContext>` em ambos os contextos; Bus Outbox habilitado com `UseBusOutbox()`.
+- Constantes `RetryIntervalsMs` com `<summary>` explicando o propósito (D-37).
+- MassTransit tables verificadas por dois novos testes em `ModelTests`.
+
+### Saída da prova
+
+```
+dotnet build BookStore.slnx -c Release → Compilação com êxito. 0 Avisos, 0 Erros.
+dotnet test Tests.Infrastructure --filter ModelTests → Aprovado! 8 testes.
+```
+
+Checklist:
+- [x] Os dois contextos têm as três tabelas do MassTransit no modelo
+- [x] Nenhum arquivo de Domain/Application referencia MassTransit
+- [x] Toda constante de retry tem `<summary>` com o porquê

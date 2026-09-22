@@ -11,7 +11,7 @@ public static class DependencyInjection
     {
         services
             .AddPersistence(configuration)
-            .AddMessaging()
+            .AddMessaging(configuration)
             .AddTelemetry(configuration);
 
         return services;

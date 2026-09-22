@@ -1,5 +1,6 @@
 using Application.Abstractions.Idempotency;
 using Domain.Entities.Catalog;
+using MassTransit;
 using Domain.Entities.Sales;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
@@ -18,5 +19,10 @@ public sealed class BookStoreDbContext(DbContextOptions<BookStoreDbContext> opti
         modelBuilder.ApplyConfigurationsFromAssembly(
             Assembly.GetExecutingAssembly(),
             t => t.Namespace?.StartsWith("Infrastructure.Persistence.BookStore.Configurations") == true);
+
+        // MassTransit outbox/inbox tables — created by EF Core migrations alongside entity tables
+        modelBuilder.AddInboxStateEntity();
+        modelBuilder.AddOutboxMessageEntity();
+        modelBuilder.AddOutboxStateEntity();
     }
 }

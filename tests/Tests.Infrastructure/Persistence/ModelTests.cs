@@ -81,4 +81,26 @@ public sealed class ModelTests
 
         index.Should().NotBeNull();
     }
+
+    [Test]
+    public void BookStoreDbContext_ContainsMassTransitOutboxAndInboxTables()
+    {
+        using var ctx = new BookStoreDbContext(BookStoreOptions());
+        var entityNames = ctx.Model.GetEntityTypes().Select(e => e.ClrType.Name).ToList();
+
+        entityNames.Should().Contain("InboxState");
+        entityNames.Should().Contain("OutboxMessage");
+        entityNames.Should().Contain("OutboxState");
+    }
+
+    [Test]
+    public void FraudDbContext_ContainsMassTransitOutboxAndInboxTables()
+    {
+        using var ctx = new FraudDbContext(FraudOptions());
+        var entityNames = ctx.Model.GetEntityTypes().Select(e => e.ClrType.Name).ToList();
+
+        entityNames.Should().Contain("InboxState");
+        entityNames.Should().Contain("OutboxMessage");
+        entityNames.Should().Contain("OutboxState");
+    }
 }
