@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <Folder Include="Bases\" />
+    <Folder Include="Entities\" />
+    <Folder Include="Enums\" />
+    <Folder Include="Repositories\" />
+    <Folder Include="Rules\" />
+    <Folder Include="ValueObjects\" />
+  </ItemGroup>
+
+</Project>

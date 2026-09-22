@@ -1,0 +1,59 @@
+---
+id: BERT-TSK-0079
+title: "TSK-0079 — PurchaseBook e GetPurchase (POST/GET /api/v1/purchases)"
+type: task
+versão: "1.0.0"
+status: pendente
+executor: claude-code
+tags:
+- '#contexto/bertho'
+- '#area/trabalho'
+created_at: 2026-09-22
+updated_at: 2026-09-22
+governed_by:
+- '[[00-BERT-ST-0044-marketplace]]'
+vault_path: 04-trabalho/01-entidades/05-bertho/03-trabalho/01-epics/bookstore/01-BERT-EP-0011-bookstore-teste-tecnico/05-BERT-ST-0044-marketplace/02-BERT-TSK-0079-compra-e-consulta.md
+description: "Compra assíncrona via outbox com Idempotency-Key e consulta com customerMessage e fraudDetails."
+karawara-maps: [Ianderu, 04-trabalho, 01-entidades, 05-bertho, 03-trabalho, 01-epics, bookstore, 01-BERT-EP-0011-bookstore-teste-tecnico, 05-BERT-ST-0044-marketplace, 02-BERT-TSK-0079-compra-e-consulta]
+---
+
+## Descrição
+
+- **PurchaseBook** (D-36, D-41): `Idempotency-Key` obrigatória (mesmo filtro da TSK-0073). Calcula o
+  total, grava `Purchase` (`PendingFraudCheck`) + chave + `PurchasePlaced` na outbox **do schema
+  `bookstore`, num único `CommitAsync`**. Responde `202` + `Location`. `404` se o livro não existe.
+- **GetPurchase** (D-40): `status`, `customerMessage` e `fraudDetails` em campos separados.
+  `customerMessage` é **igual** para `PENDING_FRAUD_CHECK` e `UNDER_REVIEW` ("Pagamento em análise.")
+  — não revela a revisão. `fraudDetails` é `null` sem decisão.
+
+Convenções: `contexto/trabalho/01-entrada/00-PROMPT-execucao-bookstore.md`. Decisões: `docs/adr/` e `docs/diagramas/`.
+
+Seguir a **§8 Padrões .NET** do prompt: `<CasoDeUso>Request` implementa `ICommand<OperationResult<...Response>>` (escrita) ou `IQuery<...>` (leitura); handler `sealed` devolve `OperationResult<T>` (nunca exceção para fluxo esperado); validator FluentValidation na mesma pasta; repositórios nunca chamam `SaveChanges` — **um `CommitAsync` do Unit of Work** no fim do caminho de sucesso; `CancellationToken` último parâmetro e propagado.
+
+## Caminhos exclusivos
+
+```
+src/Application/UseCases/Sales/PurchaseBook/**
+src/Application/UseCases/Sales/GetPurchase/**
+apps/WebApi/Endpoints/Sales/**
+tests/Tests.Application/UseCases/Sales/PurchaseBook/**
+tests/Tests.Application/UseCases/Sales/GetPurchase/**
+```
+
+## Critério de Aceite
+
+- [ ] Compra toca só o schema `bookstore` na requisição
+- [ ] `customerMessage` idêntica em pendente e em revisão (teste)
+- [ ] `fraudDetails` separado de `customerMessage`
+
+## Prova de Funcionamento
+
+Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a prova está errada — reporte em vez de seguir.
+
+**Comando:** `dotnet test tests/Tests.Application --filter "FullyQualifiedName~PurchaseBook|FullyQualifiedName~GetPurchase"`
+— **Diretório:** raiz do repositório — **Esperado:** todos aprovados, pelo menos 5 testes
+
+
+## Notas de execução
+
+> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
