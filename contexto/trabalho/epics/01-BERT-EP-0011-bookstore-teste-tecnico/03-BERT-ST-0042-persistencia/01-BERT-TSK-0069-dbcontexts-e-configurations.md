@@ -3,7 +3,7 @@ id: BERT-TSK-0069
 title: "TSK-0069 — BookStoreDbContext, FraudDbContext e configurations"
 type: task
 versão: "1.0.0"
-status: pendente
+status: concluido
 executor: claude-code
 tags:
 - '#contexto/bertho'
@@ -80,4 +80,23 @@ Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a 
 
 ## Notas de execução
 
-> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
+### Decisões
+
+- **`ComplexProperty` para `PaymentInstrument`**: EF Core 10 não suporta `HasIndex` com lambda atravessando uma complex property. Solução: adicionada a propriedade `PaymentFingerprint { get; init; }` de primeira classe em `Transaction` (mapeada para `payment_fingerprint`, indexada). `Payment.Fingerprint` é mapeado para `payment_instrument_fingerprint` para preservar a estrutura do value object.
+- **`OwnsMany` + shadow key para `RuleEvaluation`**: cada avaliação em tabela própria (`fraud.RuleEvaluations`), sem jsonb (D-51).
+- **Filtro de namespace em `ApplyConfigurationsFromAssembly`**: impede que cada contexto mapeie entidades do outro.
+- **`Microsoft.EntityFrameworkCore.Relational` fixado em 10.0.12** em `Directory.Packages.props` e `Infrastructure.csproj` para resolver conflito com `Npgsql.EntityFrameworkCore.PostgreSQL 10.0.3`.
+
+### Saída da prova
+
+```
+Aprovado!  – Com falha: 0, Aprovado: 6, Ignorado: 0, Total: 6, Duração: 770 ms
+```
+
+Checklist:
+- [x] Cada contexto só enxerga as entidades do seu schema
+- [x] `RuleEvaluation` mapeado como tabela
+- [x] Índice `(payment_fingerprint, occurred_at)` declarado
+- [x] `AddPostgresDbContext<T>` usado pelos dois contextos
+- [x] Nenhum repositório chama `SaveChanges`/`SaveChangesAsync`
+- [x] `IBookStoreUnitOfWork` e `IFraudUnitOfWork` registrados separadamente

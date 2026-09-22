@@ -64,6 +64,7 @@ public sealed class TransactionBuilder
         Channel = _channel,
         DeliveryType = _deliveryType,
         Payment = _payment,
+        PaymentFingerprint = _payment.Fingerprint,
         CorrelationId = _correlationId,
         CreatedAt = TestConstants.Dates.FixedUtcNow
     };

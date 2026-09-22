@@ -12,6 +12,8 @@ public sealed class Transaction : Entity
     public Channel Channel { get; init; }
     public DeliveryType DeliveryType { get; init; }
     public PaymentInstrument Payment { get; init; } = new("Unknown", string.Empty);
+    // Stored as a first-class column so it can be part of a composite index (EF Core cannot index complex-type sub-properties directly)
+    public string PaymentFingerprint { get; init; } = string.Empty;
     public string CorrelationId { get; init; } = string.Empty;
     public TransactionStatus Status { get; private set; }
     public IReadOnlyList<Assessment> Assessments => _assessments;
@@ -38,6 +40,7 @@ public sealed class Transaction : Entity
             Channel = channel,
             DeliveryType = deliveryType,
             Payment = payment,
+            PaymentFingerprint = payment.Fingerprint,
             CorrelationId = correlationId,
             Status = TransactionStatus.Received,
             CreatedAt = now
