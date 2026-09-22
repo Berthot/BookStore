@@ -3,7 +3,7 @@ id: BERT-TSK-0068
 title: "TSK-0068 — Regras de discrepância: AmountDeviation e Structuring"
 type: task
 versão: "1.0.0"
-status: pendente
+status: concluido
 executor: claude-code
 tags:
 - '#contexto/bertho'
@@ -53,4 +53,11 @@ Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a 
 
 ## Notas de execução
 
-> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
+- AMOUNT_DEVIATION: requer CustomerTransactionCount ≥ 3 (MinHistoryCount) e Amount > 3x CustomerAverageAmount. Weight=0.4 → Review sozinha.
+- STRUCTURING: requer RecentJustBelowThresholdCount ≥ 3. Weight=0.4 → Review sozinha.
+- Ambas puras: só leem FraudContext, zero acesso a infra.
+- Prova: `dotnet test tests/Tests.Domain --filter "FullyQualifiedName~Rules.Discrepancy"` → **7 aprovados**.
+
+- [x] `AmountDeviationRule` não dispara sem histórico mínimo (teste)
+- [x] Cada regra tem teste de disparo e de não disparo
+- [x] Sozinhas, cada uma leva a `Review`, nunca a `Rejected` (teste com a política)
