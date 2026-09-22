@@ -3,7 +3,7 @@ id: BERT-TSK-0066
 title: "TSK-0066 — IFraudRule, FraudContext, FraudRuleSet e DecisionPolicy"
 type: task
 versão: "1.0.0"
-status: pendente
+status: concluido
 executor: claude-code
 tags:
 - '#contexto/bertho'
@@ -63,4 +63,11 @@ Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a 
 
 ## Notas de execução
 
-> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
+- Criados: `IFraudRule`, `FraudContext` (record), `DecisionPolicy` (static, constantes RejectThreshold=0.7 / ReviewThreshold=0.4 com `<summary>`), `FraudRuleSet` (executa todas as regras, soma pesos, delega a DecisionPolicy).
+- `FraudContextMother` adicionada em Tests.Shared para cenários de contexto.
+- Testes de fronteira: abaixo/exatamente/acima de cada threshold. StubRule inline nos testes (sem infra).
+- Prova: `dotnet test tests/Tests.Domain --filter "FullyQualifiedName~DecisionPolicy|FullyQualifiedName~FraudRuleSet"` → **12 aprovados**.
+
+- [x] `FraudRuleSet` registra avaliação de todas as regras, inclusive as que não dispararam (teste)
+- [x] `DecisionPolicy` testada nas fronteiras dos dois limites
+- [x] Nenhuma regra ou contexto referencia Infrastructure/EF
