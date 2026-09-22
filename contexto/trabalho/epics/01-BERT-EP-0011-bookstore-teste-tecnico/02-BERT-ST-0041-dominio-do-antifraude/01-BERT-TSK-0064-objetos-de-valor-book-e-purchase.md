@@ -3,7 +3,7 @@ id: BERT-TSK-0064
 title: "TSK-0064 — Objetos de valor, Book e Purchase (ciclo de vida)"
 type: task
 versão: "1.0.0"
-status: pendente
+status: concluido
 executor: claude-code
 tags:
 - '#contexto/bertho'
@@ -71,4 +71,16 @@ Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a 
 
 ## Notas de execução
 
-> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
+- Criados: `Entity`, `DomainError`, todos os enums (6), VOs (`Money`, `PaymentInstrument`, `Decider`), entidades `Book` e `Purchase` com ciclo de vida completo.
+- `PurchaseBuilder.Build()` não define `Status` explicitamente — `PurchaseStatus.PendingFraudCheck` é o valor default do enum (0), evitando set em `private set`.
+- Mothers `PurchaseMother.Confirmed/Cancelled/UnderReview()` constroem via `Build()` + `ApplyDecision()`.
+- `Tests.Shared.csproj` recebeu `ProjectReference` ao `Domain` (necessário para as Mothers).
+- Prova: `dotnet test tests/Tests.Domain --filter "FullyQualifiedName~Purchase"` → **10 aprovados**.
+- Build completo: `dotnet build BookStore.slnx -c Release` → 0 erros, 0 warnings.
+
+- [x] `Purchase` só vai a `Confirmed` a partir de `Approved`; tentativas a partir de outro resultado falham (teste)
+- [x] `Confirmed` e `Cancelled` não mudam de estado (teste)
+- [x] `UnderReview` vai a `Confirmed` ou `Cancelled` (teste)
+- [x] Nenhum teste instancia entidade sem Mother/Builder
+- [x] `TransactionStatus` não tem `Failed`
+- [x] Entidades herdam de `Entity` com `Guid Id { get; init; }`
