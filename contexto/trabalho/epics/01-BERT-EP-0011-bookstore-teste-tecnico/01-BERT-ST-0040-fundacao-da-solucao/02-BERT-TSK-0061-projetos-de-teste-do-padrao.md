@@ -3,7 +3,7 @@ id: BERT-TSK-0061
 title: "TSK-0061 — Tests.Shared, Tests.Domain e o padrão de testes"
 type: task
 versão: "1.0.0"
-status: pendente
+status: concluido
 executor: claude-code
 tags:
 - '#contexto/bertho'
@@ -62,4 +62,26 @@ Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a 
 
 ## Notas de execução
 
-> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
+**Prova antes:** 0 testes encontrados (filtro `TestCategory=Unit` sem testes). Esperado — projeto Tests.Shared não existia.
+
+**Decisões:**
+- `Tests.Shared.csproj` criado com AwesomeAssertions + NSubstitute; sem referência a Infrastructure ou banco.
+- `Attributes/TestCategories.cs`: atributos `[Unit]`, `[Integration]`, `[Slow]`, `[Critical]` herdam `CategoryAttribute` via primary constructor.
+- `Base/UnitTestsBase.cs`: classe abstrata decorada com `[Unit]` — classes que herdam recebem a categoria automaticamente.
+- `Constants/TestConstants.cs`: IDs e datas fixas reutilizáveis por Mothers/Builders.
+- Pastas `Mothers/Catalog`, `Mothers/Sales`, `Mothers/FraudAnalysis` criadas vazias via `<Folder>` no `.csproj` — serão preenchidas junto das entidades.
+- `Tests.Domain` atualizado para referenciar `Tests.Shared`.
+- Teste de sanidade `SanityTests.cs` em `Tests.Domain` com `[Unit]`.
+- `Tests.Shared` adicionado ao `BookStore.slnx` na pasta `/tests/`.
+
+**Saída da prova (após implementação):**
+```
+Aprovado!  – Com falha: 0, Aprovado: 1, Ignorado: 0, Total: 1, Duração: 33 ms
+```
+
+**Critérios verificados:**
+- [x] `Tests.Shared` e `Tests.Domain` existem e estão no `BookStore.slnx`
+- [x] Os quatro atributos de categoria existem e herdam de `CategoryAttribute`
+- [x] Nenhum projeto de teste referencia FluentAssertions
+- [x] `Tests.Shared` não referencia Infrastructure nem pacotes de banco
+- [x] `.slnx` relido imediatamente antes de ser editado
