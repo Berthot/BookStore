@@ -3,7 +3,7 @@ id: BERT-TSK-0065
 title: "TSK-0065 — Transaction, Assessment e as invariantes I-01..I-07"
 type: task
 versão: "1.0.0"
-status: pendente
+status: concluido
 executor: claude-code
 tags:
 - '#contexto/bertho'
@@ -72,4 +72,12 @@ Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a 
 
 ## Notas de execução
 
-> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
+- Criados: `RuleEvaluation` (record), `Assessment` (entity com factory methods ForEngine/ForReviewer/ForSystem), `Transaction` (aggregate root com StartProcessing/Decide/Review/FailSafe).
+- `TransactionBuilder.BuildCreate()` invoca `Transaction.Create()` para testar I-01; `Build()` contorna o factory (status default Received).
+- `Tests.Shared.csproj` já tem referência ao Domain (adicionada em TSK-0064).
+- Prova: `dotnet test tests/Tests.Domain --filter "FullyQualifiedName~Transaction"` → **16 aprovados**.
+
+- [x] Cada invariante I-01..I-07 tem ao menos um teste com o id no `[Description]`
+- [x] Não há setter público para `Status` nem para a lista de assessments
+- [x] Revisão gera novo `Assessment`; o anterior continua no histórico (teste)
+- [x] Violação de invariante retorna erro de domínio explícito, não exceção genérica
