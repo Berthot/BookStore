@@ -1,3 +1,4 @@
+using Application.Abstractions.Idempotency;
 using Domain.Entities.Catalog;
 using Domain.Entities.Sales;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,7 @@ public sealed class BookStoreDbContext(DbContextOptions<BookStoreDbContext> opti
 {
     public DbSet<Book> Books => Set<Book>();
     public DbSet<Purchase> Purchases => Set<Purchase>();
+    public DbSet<IdempotencyEntry> IdempotencyKeys => Set<IdempotencyEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

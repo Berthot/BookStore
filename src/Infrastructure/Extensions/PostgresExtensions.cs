@@ -1,3 +1,4 @@
+using Application.Abstractions.Idempotency;
 using Domain.Repositories;
 using Infrastructure.Persistence.BookStore;
 using Infrastructure.Persistence.BookStore.Repositories;
@@ -5,6 +6,7 @@ using Infrastructure.Persistence.BookStore.UnitOfWork;
 using Infrastructure.Persistence.Fraud;
 using Infrastructure.Persistence.Fraud.Repositories;
 using Infrastructure.Persistence.Fraud.UnitOfWork;
+using Infrastructure.Persistence.Idempotency;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,6 +27,9 @@ public static class PostgresExtensions
 
         services.AddScoped<IBookStoreUnitOfWork, BookStoreUnitOfWork>();
         services.AddScoped<IFraudUnitOfWork, FraudUnitOfWork>();
+
+        services.AddScoped<IBookStoreIdempotencyStore, BookStoreIdempotencyStore>();
+        services.AddScoped<IFraudIdempotencyStore, FraudIdempotencyStore>();
 
         return services;
     }

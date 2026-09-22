@@ -3,7 +3,7 @@ id: BERT-TSK-0070
 title: "TSK-0070 — Tabela idempotency_keys por schema e IIdempotencyStore"
 type: task
 versão: "1.0.0"
-status: pendente
+status: concluido
 executor: claude-code
 tags:
 - '#contexto/bertho'
@@ -61,4 +61,21 @@ Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a 
 
 ## Notas de execução
 
-> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
+### Decisões
+
+- `IIdempotencyStore` (Find/Add) em `Application.Abstractions.Idempotency`; `IdempotencyHasher` (ComputeHash) como classe estática separada — hash não é responsabilidade do store.
+- `IBookStoreIdempotencyStore` e `IFraudIdempotencyStore` como sub-interfaces para injeção tipada por contexto.
+- Implementações (`IdempotencyStore<TContext>`) internas à Infrastructure; nunca chamam `SaveChangesAsync`.
+- `IdempotencyEntry` mapeado nos dois DbContexts com índice único na coluna `Key`.
+- Normalização JSON: re-serializa com `System.Text.Json` (compact, sem whitespace) antes de calcular SHA-256.
+
+### Saída da prova
+
+```
+Aprovado!  – Com falha: 0, Aprovado: 7, Ignorado: 0, Total: 7, Duração: 138 ms
+```
+
+Checklist:
+- [x] Índice único na chave nos dois schemas
+- [x] A gravação não chama `SaveChanges` por conta própria
+- [x] Hash calculado sobre corpo normalizado (7 testes)

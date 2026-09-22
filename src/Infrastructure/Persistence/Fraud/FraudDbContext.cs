@@ -1,3 +1,4 @@
+using Application.Abstractions.Idempotency;
 using Domain.Entities.FraudAnalysis;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
@@ -8,6 +9,7 @@ public sealed class FraudDbContext(DbContextOptions<FraudDbContext> options) : D
 {
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<Assessment> Assessments => Set<Assessment>();
+    public DbSet<IdempotencyEntry> IdempotencyKeys => Set<IdempotencyEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
