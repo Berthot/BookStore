@@ -12,7 +12,7 @@ public static class DependencyInjection
         services
             .AddPersistence()
             .AddMessaging()
-            .AddTelemetry();
+            .AddTelemetry(configuration);
 
         return services;
     }

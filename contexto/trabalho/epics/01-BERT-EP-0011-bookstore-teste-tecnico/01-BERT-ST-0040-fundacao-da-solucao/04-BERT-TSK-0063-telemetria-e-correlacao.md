@@ -3,7 +3,7 @@ id: BERT-TSK-0063
 title: "TSK-0063 — Telemetria (OpenTelemetry) e X-Correlation-Id"
 type: task
 versão: "1.0.0"
-status: pendente
+status: concluido
 executor: claude-code
 tags:
 - '#contexto/bertho'
@@ -62,4 +62,22 @@ Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a 
 
 ## Notas de execução
 
-> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
+**Prova antes:** 0 testes corresponderam ao filtro. Esperado.
+
+**Decisões:**
+- `TelemetryExtensions.AddTelemetry(IConfiguration configuration)` preenche OTLP via `OTEL_EXPORTER_OTLP_ENDPOINT` (variável de ambiente nativa do OTEL SDK — zero hardcode).
+- `AddNpgsql()` (Npgsql.OpenTelemetry) omitido por ora — conflitava com o `AddNpgsql<TContext>()` do EF Core que ainda não existe. Será adicionado em TSK-0069 após os DbContexts serem configurados.
+- `CorrelationIdMiddleware.InvokeAsync` seta o header diretamente em vez de via `OnStarting` — `OnStarting` não dispara sem escrita real na resposta, o que impedia os testes unitários. Em produção a diferença é irrelevante (middleware roda antes de qualquer escrita); em testes a abordagem direta funciona corretamente.
+- `Infrastructure/DependencyInjection.cs` atualizado para passar `configuration` para `AddTelemetry` — fora dos caminhos exclusivos mas necessário; registrado aqui.
+
+**Saída da prova (após implementação):**
+```
+Aprovado! – Com falha: 0, Aprovado: 3, Ignorado: 0, Total: 3 [Tests.WebApi — Correlation]
+```
+
+**Critérios verificados:**
+- [x] Requisição sem `X-Correlation-Id` recebe um gerado no header da resposta
+- [x] Requisição com `X-Correlation-Id` recebe o mesmo valor de volta
+- [x] O valor entra no escopo de log (`logger.BeginScope`)
+- [x] Nenhum corpo de resposta contém `correlationId` (header apenas)
+- [x] Endpoint OTLP vem de `OTEL_EXPORTER_OTLP_ENDPOINT` (env var), não de código
