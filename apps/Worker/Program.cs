@@ -1,7 +1,11 @@
-using Worker;
+using Application;
+using Infrastructure;
 
 var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddHostedService<Worker.Worker>();
+
+builder.Services
+    .AddApplication()
+    .AddInfrastructure(builder.Configuration);
 
 var host = builder.Build();
 host.Run();
