@@ -1,0 +1,69 @@
+using System.Text;
+using System.Text.Json;
+using Application.Abstractions.Idempotency;
+
+namespace WebApi.Filters.Idempotency;
+
+/// <summary>Endpoint filter that enforces idempotency per draft-ietf-httpapi-idempotency-key-header-07.
+/// Shared by every POST that requires idempotency semantics; parameterised by store type so each
+/// bounded context injects its own schema-scoped store.</summary>
+public sealed class IdempotencyFilter<TStore>(TStore store) : IEndpointFilter
+    where TStore : IIdempotencyStore
+{
+    public const string HttpContextEntryKey = "IdempotencyEntry";
+
+    public async ValueTask<object?> InvokeAsync(
+        EndpointFilterInvocationContext context,
+        EndpointFilterDelegate next)
+    {
+        var key = context.HttpContext.Request.Headers["Idempotency-Key"].ToString();
+        if (string.IsNullOrWhiteSpace(key))
+            return Results.Problem(statusCode: 400, title: "Bad Request",
+                detail: "Idempotency-Key header is required.");
+
+        // Buffer the body so model binding can re-read it after we consume it here.
+        context.HttpContext.Request.EnableBuffering();
+        string body;
+        using (var reader = new StreamReader(
+            context.HttpContext.Request.Body,
+            Encoding.UTF8,
+            detectEncodingFromByteOrderMarks: false,
+            leaveOpen: true))
+        {
+            body = await reader.ReadToEndAsync(context.HttpContext.RequestAborted);
+        }
+        context.HttpContext.Request.Body.Position = 0;
+
+        string hash;
+        try
+        {
+            hash = IdempotencyHasher.ComputeHash(body);
+        }
+        catch (JsonException)
+        {
+            return Results.Problem(statusCode: 400, title: "Bad Request",
+                detail: "Request body must be valid JSON.");
+        }
+
+        var existing = await store.FindAsync(key, context.HttpContext.RequestAborted);
+
+        if (existing is { Status: IdempotencyStatus.Processing })
+            return Results.Problem(statusCode: 409, title: "Conflict",
+                detail: "A request with the same Idempotency-Key is currently being processed.");
+
+        if (existing is { Status: IdempotencyStatus.Completed })
+        {
+            if (existing.BodyHash != hash)
+                return Results.Problem(statusCode: 422, title: "Unprocessable Entity",
+                    detail: "A request with the same Idempotency-Key was submitted with a different body.");
+
+            return Results.Content(existing.ResponseBody!, "application/json");
+        }
+
+        var entry = IdempotencyEntry.Create(key, hash, DateTime.UtcNow);
+        store.Add(entry);
+        context.HttpContext.Items[HttpContextEntryKey] = entry;
+
+        return await next(context);
+    }
+}

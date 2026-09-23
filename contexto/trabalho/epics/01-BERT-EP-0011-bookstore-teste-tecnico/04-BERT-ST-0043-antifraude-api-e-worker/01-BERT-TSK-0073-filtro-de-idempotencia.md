@@ -3,7 +3,7 @@ id: BERT-TSK-0073
 title: "TSK-0073 — Filtro HTTP de idempotência (400, replay, 422, 409)"
 type: task
 versão: "1.0.0"
-status: pendente
+status: concluido
 executor: claude-code
 tags:
 - '#contexto/bertho'
@@ -51,9 +51,9 @@ tests/Tests.WebApi/Filters/**
 
 ## Critério de Aceite
 
-- [ ] Os seis casos da tabela têm teste (store substituído por NSubstitute)
-- [ ] O filtro não chama `SaveChanges`
-- [ ] Documento OpenAPI declara `Idempotency-Key` como header obrigatório nos POSTs
+- [x] Os seis casos da tabela têm teste (store substituído por NSubstitute)
+- [x] O filtro não chama `SaveChanges`
+- [x] Documento OpenAPI declara `Idempotency-Key` como header obrigatório nos POSTs
 
 ## Prova de Funcionamento
 
@@ -65,4 +65,14 @@ Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a 
 
 ## Notas de execução
 
-> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
+- `IdempotencyFilter<TStore>` genérico em `apps/WebApi/Filters/Idempotency/` — recebe `TStore : IIdempotencyStore`; os dois POSTs (Fraud e BookStore) usam o mesmo filtro com o store tipado certo.
+- O filtro habilita `EnableBuffering()` para que o body possa ser lido pelo model binding depois.
+- Não chama `SaveChanges` diretamente — apenas chama `store.Add(entry)` e coloca a entrada em `HttpContext.Items["IdempotencyEntry"]`; o `CommitAsync` do use case confirma tudo.
+- `IdempotencyKeyExtensions.RequireIdempotencyKey()` em `apps/WebApi/OpenApi/` adiciona o header obrigatório ao OpenAPI. `WithOpenApi(Func<...>)` é deprecated no .NET 10 (ASPDEPR002) — suprimido via pragma até que a extensão seja remodelada como `IOpenApiDocumentTransformer`.
+- `Microsoft.OpenApi` no .NET 10 moveu os tipos de `Microsoft.OpenApi.Models` para `Microsoft.OpenApi` diretamente; `Schema.Type` é agora `JsonSchemaType?` (enum), não `string`.
+
+**Prova:**
+```
+dotnet test tests/Tests.WebApi --filter "FullyQualifiedName~Idempotency"
+Aprovado!  – Com falha: 0, Aprovado: 6, Ignorado: 0, Total: 6
+```
