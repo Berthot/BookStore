@@ -13,4 +13,7 @@ internal sealed class PurchaseRepository(BookStoreDbContext context) : IPurchase
 
     public async Task<Purchase?> GetByCorrelationIdAsync(string correlationId, CancellationToken cancellationToken = default) =>
         await context.Purchases.FirstOrDefaultAsync(p => p.CorrelationId == correlationId, cancellationToken);
+
+    public async Task<Purchase?> GetByTransactionIdAsync(Guid transactionId, CancellationToken cancellationToken = default) =>
+        await context.Purchases.FirstOrDefaultAsync(p => p.TransactionId == transactionId, cancellationToken);
 }
