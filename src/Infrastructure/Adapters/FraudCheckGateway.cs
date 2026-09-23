@@ -1,6 +1,7 @@
 using Application.UseCases.FraudAnalysis.SubmitTransaction;
 using Application.UseCases.Sales.Ports;
 using Cortex.Mediator;
+using Domain.Enums;
 
 namespace Infrastructure.Adapters;
 
@@ -20,8 +21,12 @@ public sealed class FraudCheckGateway(IMediator mediator) : IFraudCheckGateway
         DateTime placedAt,
         CancellationToken cancellationToken = default)
     {
-        var delivery = bookFormat.Equals("EBOOK", StringComparison.OrdinalIgnoreCase) ? "Digital" : "Physical";
+        // EBOOK maps to Digital; all physical formats map to Physical (D-17).
+        var delivery = bookFormat.Equals("EBOOK", StringComparison.OrdinalIgnoreCase)
+            ? DeliveryType.Digital.ToString()
+            : DeliveryType.Physical.ToString();
 
+        // purchaseId is the external reference — serves as idempotency key on the fraud side (D-36/D-41).
         var result = await mediator.SendCommandAsync(
             new SubmitTransactionRequest(
                 purchaseId.ToString(),
@@ -31,13 +36,17 @@ public sealed class FraudCheckGateway(IMediator mediator) : IFraudCheckGateway
                 paymentType,
                 paymentFingerprint,
                 paymentLast4,
-                "Api",
+                Channel.Api.ToString(),
                 delivery,
                 quantity,
                 placedAt,
                 correlationId),
             cancellationToken);
 
-        return result.Data!.TransactionId;
+        if (!result.IsSuccess || result.Data is null)
+            throw new InvalidOperationException(
+                $"SubmitTransaction failed [{result.ErrorCode}]: {string.Join("; ", result.Errors)}");
+
+        return result.Data.TransactionId;
     }
 }
