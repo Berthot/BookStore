@@ -63,12 +63,12 @@ src/Infrastructure/Persistence/UnitOfWork/**
 
 ## Critério de Aceite
 
-- [ ] Cada contexto só enxerga as entidades do seu schema (teste sobre o `Model`, sem banco)
-- [ ] `RuleEvaluation` mapeado como tabela, não coluna JSON
-- [ ] Índice `(payment_fingerprint, occurred_at)` declarado
-- [ ] `AddPostgresDbContext<T>` usado pelos dois contextos
-- [ ] Nenhum repositório chama `SaveChanges`/`SaveChangesAsync` (verificado por busca e anotado)
-- [ ] `IBookStoreUnitOfWork` e `IFraudUnitOfWork` registrados separadamente
+- [x] Cada contexto só enxerga as entidades do seu schema (teste sobre o `Model`, sem banco)
+- [x] `RuleEvaluation` mapeado como tabela, não coluna JSON
+- [x] Índice `(payment_fingerprint, occurred_at)` declarado
+- [x] `AddPostgresDbContext<T>` usado pelos dois contextos
+- [x] Nenhum repositório chama `SaveChanges`/`SaveChangesAsync` (verificado por busca e anotado)
+- [x] `IBookStoreUnitOfWork` e `IFraudUnitOfWork` registrados separadamente
 
 ## Prova de Funcionamento
 

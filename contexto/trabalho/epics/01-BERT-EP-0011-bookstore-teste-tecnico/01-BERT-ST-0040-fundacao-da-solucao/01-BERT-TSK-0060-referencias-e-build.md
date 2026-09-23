@@ -50,12 +50,12 @@ BookStore.slnx
 
 ## Critério de Aceite
 
-- [ ] `src/Domain/Domain.csproj` não tem nenhum `ProjectReference`
-- [ ] Application → Domain; Infrastructure → Application; WebApi e Worker → Application + Infrastructure
-- [ ] Nenhum `Version=` em `PackageReference` dos `.csproj` — tudo no `Directory.Packages.props`
-- [ ] MassTransit declarado como `8.*`
-- [ ] Arquivos de template removidos
-- [ ] Repositório com git inicializado e primeiro commit
+- [x] `src/Domain/Domain.csproj` não tem nenhum `ProjectReference`
+- [x] Application → Domain; Infrastructure → Application; WebApi e Worker → Application + Infrastructure
+- [x] Nenhum `Version=` em `PackageReference` dos `.csproj` — tudo no `Directory.Packages.props`
+- [x] MassTransit declarado como `8.*`
+- [x] Arquivos de template removidos
+- [x] Repositório com git inicializado e primeiro commit
 
 ## Prova de Funcionamento
 

@@ -65,15 +65,15 @@ tests/Tests.Application/Behaviors/**
 
 ## Critério de Aceite
 
-- [ ] Todo método público de extension/DI tem `<summary>` em inglês
-- [ ] Um enum serializado pela API sai em maiúsculas com underscore (teste)
-- [ ] Rotas da API ficam sob `/api/v1` via `MapGroup`
-- [ ] Swagger UI abre em ambiente de desenvolvimento
-- [ ] Erro não tratado responde `application/problem+json`
-- [ ] `ValidationBehavior` devolve `Fail(Validation)` sem lançar (teste)
-- [ ] `ToHttpResult()` mapeia cada `ErrorCode` para o status da §8.2 (teste)
-- [ ] Program não chama `AddCortexMediator` diretamente
-- [ ] Nenhuma referência a MediatR
+- [x] Todo método público de extension/DI tem `<summary>` em inglês
+- [x] Um enum serializado pela API sai em maiúsculas com underscore (teste)
+- [x] Rotas da API ficam sob `/api/v1` via `MapGroup`
+- [x] Swagger UI abre em ambiente de desenvolvimento
+- [x] Erro não tratado responde `application/problem+json`
+- [x] `ValidationBehavior` devolve `Fail(Validation)` sem lançar (teste)
+- [x] `ToHttpResult()` mapeia cada `ErrorCode` para o status da §8.2 (teste)
+- [x] Program não chama `AddCortexMediator` diretamente
+- [x] Nenhuma referência a MediatR
 
 ## Prova de Funcionamento
 

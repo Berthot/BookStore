@@ -47,9 +47,9 @@ src/Infrastructure/Persistence/Fraud/Configurations/Idempotency/**
 
 ## Critério de Aceite
 
-- [ ] Índice único na chave nos dois schemas
-- [ ] A gravação não chama `SaveChanges` por conta própria
-- [ ] Hash calculado sobre corpo normalizado (mesmo JSON com espaços diferentes gera o mesmo hash — teste)
+- [x] Índice único na chave nos dois schemas
+- [x] A gravação não chama `SaveChanges` por conta própria
+- [x] Hash calculado sobre corpo normalizado (mesmo JSON com espaços diferentes gera o mesmo hash — teste)
 
 ## Prova de Funcionamento
 

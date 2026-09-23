@@ -57,10 +57,10 @@ tests/Tests.Domain/Entities/FraudAnalysis/**
 
 ## Critério de Aceite
 
-- [ ] Cada invariante I-01..I-07 tem ao menos um teste com o id no nome ou no `[Description]`
-- [ ] Não há setter público para `Status` nem para a lista de assessments
-- [ ] Revisão gera novo `Assessment`; o anterior continua no histórico (teste)
-- [ ] Violação de invariante retorna erro de domínio explícito, não exceção genérica
+- [x] Cada invariante I-01..I-07 tem ao menos um teste com o id no nome ou no `[Description]`
+- [x] Não há setter público para `Status` nem para a lista de assessments
+- [x] Revisão gera novo `Assessment`; o anterior continua no histórico (teste)
+- [x] Violação de invariante retorna erro de domínio explícito, não exceção genérica
 
 ## Prova de Funcionamento
 

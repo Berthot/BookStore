@@ -49,9 +49,9 @@ tests/Tests.Domain/Rules/DecisionPolicyTests.cs
 
 ## Critério de Aceite
 
-- [ ] `FraudRuleSet` registra avaliação de todas as regras, inclusive as que não dispararam (teste)
-- [ ] `DecisionPolicy` testada nas fronteiras dos dois limites
-- [ ] Nenhuma regra ou contexto referencia Infrastructure/EF
+- [x] `FraudRuleSet` registra avaliação de todas as regras, inclusive as que não dispararam (teste)
+- [x] `DecisionPolicy` testada nas fronteiras dos dois limites
+- [x] Nenhuma regra ou contexto referencia Infrastructure/EF
 
 ## Prova de Funcionamento
 

@@ -38,10 +38,10 @@ tests/Tests.Domain/Rules/Transactional/**
 
 ## Critério de Aceite
 
-- [ ] Cada regra tem teste que dispara e teste que não dispara
-- [ ] Asserções sobre o código do motivo, nunca sobre o texto
-- [ ] S2 somando as duas regras ultrapassa o limite de rejeição (teste com `FraudRuleSet` + `DecisionPolicy`)
-- [ ] S3 cai em `Review` (teste)
+- [x] Cada regra tem teste que dispara e teste que não dispara
+- [x] Asserções sobre o código do motivo, nunca sobre o texto
+- [x] S2 somando as duas regras ultrapassa o limite de rejeição (teste com `FraudRuleSet` + `DecisionPolicy`)
+- [x] S3 cai em `Review` (teste)
 
 ## Prova de Funcionamento
 

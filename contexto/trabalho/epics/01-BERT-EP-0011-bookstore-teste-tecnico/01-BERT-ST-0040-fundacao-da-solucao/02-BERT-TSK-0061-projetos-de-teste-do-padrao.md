@@ -46,11 +46,11 @@ Directory.Packages.props
 
 ## Critério de Aceite
 
-- [ ] `Tests.Shared` e `Tests.Domain` existem e estão no `BookStore.slnx`
-- [ ] Os quatro atributos de categoria existem e herdam de `CategoryAttribute`
-- [ ] Nenhum projeto de teste referencia FluentAssertions
-- [ ] `Tests.Shared` não referencia Infrastructure nem pacotes de banco
-- [ ] `.slnx` relido imediatamente antes de ser editado
+- [x] `Tests.Shared` e `Tests.Domain` existem e estão no `BookStore.slnx`
+- [x] Os quatro atributos de categoria existem e herdam de `CategoryAttribute`
+- [x] Nenhum projeto de teste referencia FluentAssertions
+- [x] `Tests.Shared` não referencia Infrastructure nem pacotes de banco
+- [x] `.slnx` relido imediatamente antes de ser editado
 
 ## Prova de Funcionamento
 

@@ -54,12 +54,12 @@ src/Domain/Bases/**
 
 ## Critério de Aceite
 
-- [ ] `Purchase` só vai a `Confirmed` a partir de `Approved`; tentativas a partir de outro resultado falham (teste)
-- [ ] `Confirmed` e `Cancelled` não mudam de estado (teste)
-- [ ] `UnderReview` vai a `Confirmed` ou `Cancelled` (teste)
-- [ ] Nenhum teste instancia entidade sem Mother/Builder
-- [ ] `TransactionStatus` não tem `Failed`
-- [ ] Entidades herdam de `Entity` com `Guid Id { get; init; }`
+- [x] `Purchase` só vai a `Confirmed` a partir de `Approved`; tentativas a partir de outro resultado falham (teste)
+- [x] `Confirmed` e `Cancelled` não mudam de estado (teste)
+- [x] `UnderReview` vai a `Confirmed` ou `Cancelled` (teste)
+- [x] Nenhum teste instancia entidade sem Mother/Builder
+- [x] `TransactionStatus` não tem `Failed`
+- [x] Entidades herdam de `Entity` com `Guid Id { get; init; }`
 
 ## Prova de Funcionamento
 

@@ -46,11 +46,11 @@ tests/Tests.WebApi/Middleware/**
 
 ## Critério de Aceite
 
-- [ ] Requisição sem `X-Correlation-Id` recebe um gerado no header da resposta
-- [ ] Requisição com `X-Correlation-Id` recebe o mesmo valor de volta
-- [ ] O valor entra no escopo de log
-- [ ] Nenhum corpo de resposta contém `correlationId`
-- [ ] Endpoint OTLP vem de configuração, não de código
+- [x] Requisição sem `X-Correlation-Id` recebe um gerado no header da resposta
+- [x] Requisição com `X-Correlation-Id` recebe o mesmo valor de volta
+- [x] O valor entra no escopo de log
+- [x] Nenhum corpo de resposta contém `correlationId`
+- [x] Endpoint OTLP vem de configuração, não de código
 
 ## Prova de Funcionamento
 

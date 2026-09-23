@@ -39,9 +39,9 @@ tests/Tests.Domain/Rules/Discrepancy/**
 
 ## Critério de Aceite
 
-- [ ] `AmountDeviationRule` não dispara sem histórico mínimo (teste)
-- [ ] Cada regra tem teste de disparo e de não disparo
-- [ ] Sozinhas, cada uma leva a `Review`, nunca a `Rejected` (teste com a política)
+- [x] `AmountDeviationRule` não dispara sem histórico mínimo (teste)
+- [x] Cada regra tem teste de disparo e de não disparo
+- [x] Sozinhas, cada uma leva a `Review`, nunca a `Rejected` (teste com a política)
 
 ## Prova de Funcionamento
 

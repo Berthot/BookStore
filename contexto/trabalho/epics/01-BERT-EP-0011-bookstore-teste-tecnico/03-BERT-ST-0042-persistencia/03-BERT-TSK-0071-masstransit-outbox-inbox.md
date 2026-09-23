@@ -45,9 +45,9 @@ src/Infrastructure/Persistence/Fraud/FraudDbContext.cs
 
 ## Critério de Aceite
 
-- [ ] Os dois contextos têm as três tabelas do MassTransit no modelo
-- [ ] Nenhum arquivo de Domain/Application referencia `MassTransit`
-- [ ] Toda constante de retry tem `<summary>` com o porquê
+- [x] Os dois contextos têm as três tabelas do MassTransit no modelo
+- [x] Nenhum arquivo de Domain/Application referencia `MassTransit`
+- [x] Toda constante de retry tem `<summary>` com o porquê
 
 ## Prova de Funcionamento
 
