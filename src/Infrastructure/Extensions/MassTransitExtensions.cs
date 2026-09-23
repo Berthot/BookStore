@@ -1,4 +1,5 @@
 using System.Reflection;
+using Infrastructure.Messaging;
 using Infrastructure.Persistence.BookStore;
 using Infrastructure.Persistence.Fraud;
 using MassTransit;
@@ -46,6 +47,9 @@ public static class MassTransitExtensions
 
                 // Retry with growing intervals; exhausted messages land in the <queue>_error DLQ
                 cfg.UseMessageRetry(r => r.Intervals(RetryIntervalsMs));
+
+                // Adds CorrelationId, MessageType and MessageId to the ILogger scope for every consumer
+                cfg.UseConsumeFilter(typeof(LoggingScopeConsumeFilter<>), context);
 
                 cfg.ConfigureEndpoints(context);
             });

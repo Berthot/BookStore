@@ -3,13 +3,19 @@ using Application.Messages;
 using Application.UseCases.Sales.SubmitPurchaseToFraud;
 using Cortex.Mediator;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Worker.Consumers.Sales;
 
-public sealed class PurchasePlacedConsumer(IMediator mediator) : IConsumer<PurchasePlaced>
+public sealed class PurchasePlacedConsumer(
+    IMediator mediator,
+    ILogger<PurchasePlacedConsumer> logger) : IConsumer<PurchasePlaced>
 {
     public async Task Consume(ConsumeContext<PurchasePlaced> context)
     {
+        logger.LogInformation("Consuming {MessageType} for purchase {PurchaseId}",
+            nameof(PurchasePlaced), context.Message.PurchaseId);
+
         var result = await mediator.SendCommandAsync(
             new SubmitPurchaseToFraudRequest(
                 context.Message.PurchaseId,
@@ -31,5 +37,9 @@ public sealed class PurchasePlacedConsumer(IMediator mediator) : IConsumer<Purch
         if (!result.IsSuccess && result.ErrorCode != ErrorCode.NotFound)
             throw new InvalidOperationException(
                 $"SubmitPurchaseToFraud failed [{result.ErrorCode}]: {string.Join("; ", result.Errors)}");
+
+        logger.LogInformation("Processed {MessageType} for purchase {PurchaseId}: {Outcome}",
+            nameof(PurchasePlaced), context.Message.PurchaseId,
+            result.IsSuccess ? "submitted" : "skipped (not found)");
     }
 }

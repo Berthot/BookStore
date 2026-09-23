@@ -3,13 +3,19 @@ using Application.Messages;
 using Application.UseCases.FraudAnalysis.FailSafe;
 using Cortex.Mediator;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Worker.Consumers.FraudAnalysis;
 
-public sealed class TransactionSubmittedFaultConsumer(IMediator mediator) : IConsumer<Fault<TransactionSubmitted>>
+public sealed class TransactionSubmittedFaultConsumer(
+    IMediator mediator,
+    ILogger<TransactionSubmittedFaultConsumer> logger) : IConsumer<Fault<TransactionSubmitted>>
 {
     public async Task Consume(ConsumeContext<Fault<TransactionSubmitted>> context)
     {
+        logger.LogWarning("Consuming {MessageType} fault for transaction {TransactionId} — applying fail-safe",
+            nameof(TransactionSubmitted), context.Message.Message.TransactionId);
+
         var result = await mediator.SendCommandAsync(
             new FailSafeTransactionRequest(
                 context.Message.Message.TransactionId,
@@ -21,5 +27,9 @@ public sealed class TransactionSubmittedFaultConsumer(IMediator mediator) : ICon
         if (!result.IsSuccess && result.ErrorCode != ErrorCode.NotFound)
             throw new InvalidOperationException(
                 $"FailSafeTransaction failed [{result.ErrorCode}]: {string.Join("; ", result.Errors)}");
+
+        logger.LogInformation("Fail-safe applied for transaction {TransactionId}: {Outcome}",
+            context.Message.Message.TransactionId,
+            result.IsSuccess ? result.Data?.Outcome.ToString() : "skipped (not found)");
     }
 }
