@@ -22,8 +22,13 @@ public sealed class IdempotencyFilter<TStore>(TStore store) : IEndpointFilter
             return Results.Problem(statusCode: 400, title: "Bad Request",
                 detail: "Idempotency-Key header is required.");
 
-        // Buffer the body so model binding can re-read it after we consume it here.
+        // Buffer the body so both the filter and model binding can read it.
+        // EnableBuffering() is called by the Program middleware before routing, so the stream
+        // is already a seekable FileBufferingReadStream. Model binding may have advanced the
+        // position to the end before this filter runs, so we rewind to 0 before reading here
+        // and again after so that subsequent reads (model binding re-entry) also start at 0.
         context.HttpContext.Request.EnableBuffering();
+        context.HttpContext.Request.Body.Position = 0;
         string body;
         using (var reader = new StreamReader(
             context.HttpContext.Request.Body,
