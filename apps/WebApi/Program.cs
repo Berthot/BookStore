@@ -78,3 +78,6 @@ static async Task ApplyDatabaseMigrationsAsync(WebApplication app)
         await seeder.SeedAsync();
     }
 }
+
+// Required so WebApplicationFactory<Program> resolves this type from the test assembly
+public partial class Program { }
