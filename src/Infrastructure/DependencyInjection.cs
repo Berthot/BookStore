@@ -1,4 +1,6 @@
 using Application.Abstractions.Messaging;
+using Application.UseCases.Sales.Ports;
+using Infrastructure.Adapters;
 using Infrastructure.Extensions;
 using Infrastructure.Messaging;
 using Microsoft.Extensions.Configuration;
@@ -17,6 +19,7 @@ public static class DependencyInjection
             .AddTelemetry(configuration);
 
         services.AddScoped<IEventPublisher, EventPublisher>();
+        services.AddScoped<IFraudCheckGateway, FraudCheckGateway>();
 
         return services;
     }
