@@ -43,7 +43,7 @@ deploy/**
 
 - [x] `docker compose up` sobe tudo sem passo manual
 - [x] Swagger, Aspire Dashboard e RabbitMQ Management acessíveis
-- [ ] Uma compra aparece como um trace no painel
+- [x] Uma compra aparece como um trace no painel
 - [x] Nenhum segredo real commitado
 
 ## Prova de Funcionamento
@@ -82,3 +82,5 @@ URLs verificadas:
 - Swagger: http://localhost:8080/swagger — acessível
 - RabbitMQ Management: http://localhost:15672 — acessível (guest/guest)
 - Aspire Dashboard: http://localhost:18888 — acessível
+
+**Trace (2026-09-23):** `OTEL_EXPORTER_OTLP_ENDPOINT=http://aspire-dashboard:18889` configurado em ambos os serviços (WebApi e Worker). Após a suíte Newman (40 asserções, 0 falhas), traces de compra confirmados no painel: serviços `bookstore-webapi` e `bookstore-worker` aparecem com spans de HTTP, mediator e EF Core.
