@@ -5,6 +5,7 @@ using Domain.Repositories;
 using NSubstitute;
 using Tests.Shared.Attributes;
 using Tests.Shared.Base;
+using Tests.Shared.Mothers.FraudAnalysis;
 using Tests.Shared.Mothers.Sales;
 
 namespace Tests.Application.UseCases.Sales.GetPurchase;
@@ -13,13 +14,15 @@ namespace Tests.Application.UseCases.Sales.GetPurchase;
 public sealed class GetPurchaseHandlerTests : UnitTestsBase
 {
     private IPurchaseRepository _repo = null!;
+    private ITransactionRepository _txRepo = null!;
     private GetPurchaseHandler _handler = null!;
 
     [SetUp]
     public void SetUp()
     {
         _repo = Substitute.For<IPurchaseRepository>();
-        _handler = new GetPurchaseHandler(_repo);
+        _txRepo = Substitute.For<ITransactionRepository>();
+        _handler = new GetPurchaseHandler(_repo, _txRepo);
     }
 
     [Test]
@@ -63,7 +66,7 @@ public sealed class GetPurchaseHandlerTests : UnitTestsBase
     }
 
     [Test]
-    public async Task Handle_returns_approved_fraud_details_for_confirmed_purchase()
+    public async Task Handle_returns_approved_outcome_for_confirmed_purchase_without_transaction()
     {
         var confirmed = PurchaseMother.Confirmed();
         _repo.GetByIdAsync(confirmed.Id, Arg.Any<CancellationToken>()).Returns(confirmed);
@@ -71,11 +74,11 @@ public sealed class GetPurchaseHandlerTests : UnitTestsBase
         var result = await _handler.Handle(new GetPurchaseRequest(confirmed.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        result.Data!.FraudDetails!.Outcome.Should().Be("APPROVED");
+        result.Data!.FraudDetails!.Outcome.Should().Be(Outcome.Approved);
     }
 
     [Test]
-    public async Task Handle_returns_rejected_fraud_details_for_cancelled_purchase()
+    public async Task Handle_returns_rejected_outcome_for_cancelled_purchase_without_transaction()
     {
         var cancelled = PurchaseMother.Cancelled();
         _repo.GetByIdAsync(cancelled.Id, Arg.Any<CancellationToken>()).Returns(cancelled);
@@ -83,7 +86,27 @@ public sealed class GetPurchaseHandlerTests : UnitTestsBase
         var result = await _handler.Handle(new GetPurchaseRequest(cancelled.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        result.Data!.FraudDetails!.Outcome.Should().Be("REJECTED");
+        result.Data!.FraudDetails!.Outcome.Should().Be(Outcome.Rejected);
+    }
+
+    [Test]
+    public async Task Handle_includes_score_and_triggered_rules_when_transaction_has_assessment()
+    {
+        var transactionId = Guid.NewGuid();
+        var purchase = new PurchaseBuilder().Build();
+        purchase.LinkTransaction(transactionId);
+        purchase.ApplyDecision(Outcome.Approved);
+
+        var transaction = TransactionMother.DecidedApproved();
+        _repo.GetByIdAsync(purchase.Id, Arg.Any<CancellationToken>()).Returns(purchase);
+        _txRepo.GetByIdAsync(transactionId, Arg.Any<CancellationToken>()).Returns(transaction);
+
+        var result = await _handler.Handle(new GetPurchaseRequest(purchase.Id), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.FraudDetails!.TransactionId.Should().Be(transactionId);
+        result.Data.FraudDetails.Outcome.Should().Be(Outcome.Approved);
+        result.Data.FraudDetails.Score.Should().NotBeNull();
     }
 
     [Test]
