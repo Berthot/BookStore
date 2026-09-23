@@ -8,12 +8,16 @@ public sealed class Transaction : Entity
 {
     private readonly List<Assessment> _assessments = [];
 
+    public string ExternalReference { get; init; } = string.Empty;
+    public string CustomerId { get; init; } = string.Empty;
     public Money Amount { get; init; } = new(0, "BRL");
     public Channel Channel { get; init; }
     public DeliveryType DeliveryType { get; init; }
     public PaymentInstrument Payment { get; init; } = new("Unknown", string.Empty);
     // Stored as a first-class column so it can be part of a composite index (EF Core cannot index complex-type sub-properties directly)
     public string PaymentFingerprint { get; init; } = string.Empty;
+    public int ItemCount { get; init; }
+    public DateTime OccurredAt { get; init; }
     public string CorrelationId { get; init; } = string.Empty;
     public TransactionStatus Status { get; private set; }
     public IReadOnlyList<Assessment> Assessments => _assessments;
@@ -23,10 +27,14 @@ public sealed class Transaction : Entity
 
     /// <summary>Creates a new transaction; returns a domain error if Amount.Value is not positive (I-01).</summary>
     public static (Transaction?, DomainError?) Create(
+        string externalReference,
+        string customerId,
         Money amount,
         Channel channel,
         DeliveryType deliveryType,
         PaymentInstrument payment,
+        int itemCount,
+        DateTime occurredAt,
         string correlationId,
         DateTime now)
     {
@@ -36,11 +44,15 @@ public sealed class Transaction : Entity
         return (new Transaction
         {
             Id = Guid.NewGuid(),
+            ExternalReference = externalReference,
+            CustomerId = customerId,
             Amount = amount,
             Channel = channel,
             DeliveryType = deliveryType,
             Payment = payment,
             PaymentFingerprint = payment.Fingerprint,
+            ItemCount = itemCount,
+            OccurredAt = occurredAt,
             CorrelationId = correlationId,
             Status = TransactionStatus.Received,
             CreatedAt = now

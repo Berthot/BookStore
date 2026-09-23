@@ -1,4 +1,6 @@
+using Application.Abstractions.Messaging;
 using Infrastructure.Extensions;
+using Infrastructure.Messaging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,6 +15,8 @@ public static class DependencyInjection
             .AddPersistence(configuration)
             .AddMessaging(configuration)
             .AddTelemetry(configuration);
+
+        services.AddScoped<IEventPublisher, EventPublisher>();
 
         return services;
     }

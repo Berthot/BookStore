@@ -11,8 +11,12 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
         builder.ToTable("Transactions", "fraud");
         builder.HasKey(t => t.Id);
 
+        builder.Property(t => t.ExternalReference).HasMaxLength(200);
+        builder.Property(t => t.CustomerId).HasMaxLength(200).IsRequired();
         builder.Property(t => t.Channel).IsRequired();
         builder.Property(t => t.DeliveryType).IsRequired();
+        builder.Property(t => t.ItemCount).IsRequired();
+        builder.Property(t => t.OccurredAt).IsRequired();
         builder.Property(t => t.CorrelationId).HasMaxLength(100).IsRequired();
         builder.Property(t => t.Status).IsRequired();
 

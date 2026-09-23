@@ -3,7 +3,7 @@ id: BERT-TSK-0074
 title: "TSK-0074 — SubmitTransaction e GetTransaction (POST e GET /api/v1/transactions)"
 type: task
 versão: "1.0.0"
-status: pendente
+status: em-andamento
 executor: claude-code
 tags:
 - '#contexto/bertho'
