@@ -87,9 +87,12 @@ public sealed class IdempotencyIntegrationTests
         await using var ctx = PostgresContainerFixture.BuildFraudContext(_cs);
         ctx.Set<IdempotencyEntry>().Add(IdempotencyEntry.Create(key, "hash", DateTime.UtcNow));
 
-        await using var tx = await ctx.Database.BeginTransactionAsync();
-        await ctx.SaveChangesAsync();
-        await tx.RollbackAsync();
+        await ctx.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var tx = await ctx.Database.BeginTransactionAsync();
+            await ctx.SaveChangesAsync();
+            await tx.RollbackAsync();
+        });
 
         await using var ctx2 = PostgresContainerFixture.BuildFraudContext(_cs);
         var found = await ctx2.Set<IdempotencyEntry>().FirstOrDefaultAsync(e => e.Key == key);
@@ -122,29 +125,32 @@ public sealed class IdempotencyIntegrationTests
     }
 
     // Simulates the UnitOfWork commit: explicit transaction + lock_timeout + idempotency conflict detection.
-    private async Task<bool> TryCommitWithLockTimeoutAsync(string key, string hash)
+    private static async Task<bool> TryCommitWithLockTimeoutAsync(string key, string hash)
     {
-        await using var ctx = PostgresContainerFixture.BuildFraudContext(_cs);
+        await using var ctx = PostgresContainerFixture.BuildFraudContext(PostgresContainerFixture.ConnectionString);
         ctx.Set<IdempotencyEntry>().Add(IdempotencyEntry.Create(key, hash, DateTime.UtcNow));
 
-        await using var tx = await ctx.Database.BeginTransactionAsync();
-        try
+        return await ctx.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
-            await ctx.Database.ExecuteSqlRawAsync("SET LOCAL lock_timeout = '1500ms'");
-            await ctx.SaveChangesAsync();
-            await tx.CommitAsync();
-            return true;
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx
-            && pgEx.SqlState is "23505" or "55P03")
-        {
-            await tx.RollbackAsync(CancellationToken.None);
-            return false;
-        }
-        catch
-        {
-            await tx.RollbackAsync(CancellationToken.None);
-            throw;
-        }
+            await using var tx = await ctx.Database.BeginTransactionAsync();
+            try
+            {
+                await ctx.Database.ExecuteSqlRawAsync("SET LOCAL lock_timeout = '1500ms'");
+                await ctx.SaveChangesAsync();
+                await tx.CommitAsync();
+                return true;
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx
+                && pgEx.SqlState is "23505" or "55P03")
+            {
+                await tx.RollbackAsync(CancellationToken.None);
+                return false;
+            }
+            catch
+            {
+                await tx.RollbackAsync(CancellationToken.None);
+                throw;
+            }
+        });
     }
 }

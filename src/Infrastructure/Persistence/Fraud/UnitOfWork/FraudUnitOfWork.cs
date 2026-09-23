@@ -14,29 +14,34 @@ internal sealed class FraudUnitOfWork(FraudDbContext context) : IFraudUnitOfWork
     /// </summary>
     public async Task<bool> CommitAsync(CancellationToken cancellationToken = default)
     {
-        await using var tx = await context.Database.BeginTransactionAsync(cancellationToken);
-        try
+        // EnableRetryOnFailure forbids user-initiated transactions unless they are wrapped in
+        // CreateExecutionStrategy().ExecuteAsync() — otherwise EF Core throws InvalidOperationException.
+        return await context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
-            // ADR-0004: limits wait time for a row lock held by a concurrent request.
-            await context.Database.ExecuteSqlRawAsync("SET LOCAL lock_timeout = '1500ms'", cancellationToken);
-            var rows = await context.SaveChangesAsync(cancellationToken);
-            await tx.CommitAsync(cancellationToken);
-            return rows > 0;
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23505" })
-        {
-            await tx.RollbackAsync(CancellationToken.None);
-            throw new IdempotencyConflictException(ex);
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "55P03" })
-        {
-            await tx.RollbackAsync(CancellationToken.None);
-            throw new IdempotencyLockTimeoutException(ex);
-        }
-        catch
-        {
-            await tx.RollbackAsync(CancellationToken.None);
-            throw;
-        }
+            await using var tx = await context.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                // ADR-0004: limits wait time for a row lock held by a concurrent request.
+                await context.Database.ExecuteSqlRawAsync("SET LOCAL lock_timeout = '1500ms'", cancellationToken);
+                var rows = await context.SaveChangesAsync(cancellationToken);
+                await tx.CommitAsync(cancellationToken);
+                return rows > 0;
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23505" })
+            {
+                await tx.RollbackAsync(CancellationToken.None);
+                throw new IdempotencyConflictException(ex);
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "55P03" })
+            {
+                await tx.RollbackAsync(CancellationToken.None);
+                throw new IdempotencyLockTimeoutException(ex);
+            }
+            catch
+            {
+                await tx.RollbackAsync(CancellationToken.None);
+                throw;
+            }
+        });
     }
 }

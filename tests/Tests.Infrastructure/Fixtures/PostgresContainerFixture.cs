@@ -52,7 +52,8 @@ public sealed class PostgresContainerFixture
     {
         var opts = new DbContextOptionsBuilder<BookStoreDbContext>()
             .UseNpgsql(connectionString, npgsql =>
-                npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "bookstore"))
+                npgsql.EnableRetryOnFailure()
+                      .MigrationsHistoryTable("__EFMigrationsHistory", "bookstore"))
             .Options;
         return new BookStoreDbContext(opts);
     }
@@ -61,7 +62,8 @@ public sealed class PostgresContainerFixture
     {
         var opts = new DbContextOptionsBuilder<FraudDbContext>()
             .UseNpgsql(connectionString, npgsql =>
-                npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "fraud"))
+                npgsql.EnableRetryOnFailure()
+                      .MigrationsHistoryTable("__EFMigrationsHistory", "fraud"))
             .Options;
         return new FraudDbContext(opts);
     }
