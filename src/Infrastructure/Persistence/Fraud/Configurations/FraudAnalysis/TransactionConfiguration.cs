@@ -8,7 +8,7 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
 {
     public void Configure(EntityTypeBuilder<Transaction> builder)
     {
-        builder.ToTable("Transactions", "fraud");
+        builder.ToTable("transactions", "fraud");
         builder.HasKey(t => t.Id);
 
         builder.Property(t => t.ExternalReference).HasMaxLength(200);

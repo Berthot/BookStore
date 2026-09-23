@@ -8,7 +8,7 @@ internal sealed class BookConfiguration : IEntityTypeConfiguration<Book>
 {
     public void Configure(EntityTypeBuilder<Book> builder)
     {
-        builder.ToTable("Books", "bookstore");
+        builder.ToTable("books", "bookstore");
         builder.HasKey(b => b.Id);
 
         builder.Property(b => b.Title).HasMaxLength(300).IsRequired();

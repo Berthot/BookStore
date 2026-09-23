@@ -8,7 +8,7 @@ internal sealed class PurchaseConfiguration : IEntityTypeConfiguration<Purchase>
 {
     public void Configure(EntityTypeBuilder<Purchase> builder)
     {
-        builder.ToTable("Purchases", "bookstore");
+        builder.ToTable("purchases", "bookstore");
         builder.HasKey(p => p.Id);
 
         builder.Property(p => p.BookId).IsRequired();

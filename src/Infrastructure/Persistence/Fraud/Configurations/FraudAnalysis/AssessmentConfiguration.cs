@@ -8,7 +8,7 @@ internal sealed class AssessmentConfiguration : IEntityTypeConfiguration<Assessm
 {
     public void Configure(EntityTypeBuilder<Assessment> builder)
     {
-        builder.ToTable("Assessments", "fraud");
+        builder.ToTable("assessments", "fraud");
         builder.HasKey(a => a.Id);
 
         builder.Property(a => a.TransactionId).IsRequired();
@@ -23,7 +23,7 @@ internal sealed class AssessmentConfiguration : IEntityTypeConfiguration<Assessm
 
         builder.OwnsMany(a => a.Evaluations, eval =>
         {
-            eval.ToTable("RuleEvaluations", "fraud");
+            eval.ToTable("rule_evaluations", "fraud");
             eval.WithOwner().HasForeignKey("AssessmentId");
             eval.Property<Guid>("Id").ValueGeneratedOnAdd();
             eval.HasKey("Id");

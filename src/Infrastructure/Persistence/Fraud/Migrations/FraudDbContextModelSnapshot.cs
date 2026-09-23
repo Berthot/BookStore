@@ -92,7 +92,7 @@ namespace Infrastructure.Persistence.Fraud.Migrations
 
                     b.HasIndex("TransactionId");
 
-                    b.ToTable("Assessments", "fraud");
+                    b.ToTable("assessments", "fraud");
                 });
 
             modelBuilder.Entity("Domain.Entities.FraudAnalysis.Transaction", b =>
@@ -170,7 +170,7 @@ namespace Infrastructure.Persistence.Fraud.Migrations
                     b.HasIndex("PaymentFingerprint", "CreatedAt")
                         .HasDatabaseName("ix_transactions_payment_fingerprint_occurred_at");
 
-                    b.ToTable("Transactions", "fraud");
+                    b.ToTable("transactions", "fraud");
                 });
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.InboxState", b =>
@@ -383,7 +383,7 @@ namespace Infrastructure.Persistence.Fraud.Migrations
 
                             b1.HasIndex("AssessmentId");
 
-                            b1.ToTable("RuleEvaluations", "fraud");
+                            b1.ToTable("rule_evaluations", "fraud");
 
                             b1.WithOwner()
                                 .HasForeignKey("AssessmentId");
@@ -405,7 +405,7 @@ namespace Infrastructure.Persistence.Fraud.Migrations
 
                             b1.HasKey("AssessmentId");
 
-                            b1.ToTable("Assessments", "fraud");
+                            b1.ToTable("assessments", "fraud");
 
                             b1.WithOwner()
                                 .HasForeignKey("AssessmentId");
@@ -436,7 +436,7 @@ namespace Infrastructure.Persistence.Fraud.Migrations
 
                             b1.HasKey("TransactionId");
 
-                            b1.ToTable("Transactions", "fraud");
+                            b1.ToTable("transactions", "fraud");
 
                             b1.WithOwner()
                                 .HasForeignKey("TransactionId");
