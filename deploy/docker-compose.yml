@@ -1,0 +1,78 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bookstore}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bookstore}
+      POSTGRES_DB: ${POSTGRES_DB:-bookstore}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bookstore} -d ${POSTGRES_DB:-bookstore}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:latest
+    ports:
+      - "18888:18888"
+      - "18889:18889"
+    environment:
+      ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
+
+  webapi:
+    build:
+      context: ..
+      dockerfile: apps/WebApi/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-bookstore};Username=${POSTGRES_USER:-bookstore};Password=${POSTGRES_PASSWORD:-bookstore}"
+      ConnectionStrings__RabbitMQ: "amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672/"
+      Database__ApplyMigrationsOnStartup: "true"
+      Seeding__Enabled: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
+      OTEL_SERVICE_NAME: bookstore-webapi
+      OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ..
+      dockerfile: apps/Worker/Dockerfile
+    environment:
+      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-bookstore};Username=${POSTGRES_USER:-bookstore};Password=${POSTGRES_PASSWORD:-bookstore}"
+      ConnectionStrings__RabbitMQ: "amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672/"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
+      OTEL_SERVICE_NAME: bookstore-worker
+      OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  pg_data:
