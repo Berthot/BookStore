@@ -6,9 +6,18 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "BOOK_CLEAN_CODE", "value": "11111111-0000-0000-0000-000000000001" },
-    { "key": "BOOK_PRAGMATIC", "value": "11111111-0000-0000-0000-000000000002" },
-    { "key": "BOOK_DDD", "value": "11111111-0000-0000-0000-000000000003" }
+    {
+      "key": "BOOK_CLEAN_CODE",
+      "value": "11111111-0000-0000-0000-000000000001"
+    },
+    {
+      "key": "BOOK_PRAGMATIC",
+      "value": "11111111-0000-0000-0000-000000000002"
+    },
+    {
+      "key": "BOOK_DDD",
+      "value": "11111111-0000-0000-0000-000000000003"
+    }
   ],
   "item": [
     {
@@ -19,7 +28,17 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/api/v1/books", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/books",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "books"
+              ]
+            }
           },
           "response": []
         }
@@ -56,14 +75,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{s1IdempotencyKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{s1IdempotencyKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s1_established\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s1_physical_low\",\n    \"last4\": \"1234\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            }
           },
           "response": []
         },
@@ -87,7 +122,18 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases/{{s1PurchaseId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases", "{{s1PurchaseId}}"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases/{{s1PurchaseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases",
+                "{{s1PurchaseId}}"
+              ]
+            }
           },
           "response": []
         }
@@ -114,14 +160,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{BOOK_PRAGMATIC}}\",\n  \"quantity\": 2,\n  \"customerId\": \"cus_s2_new\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s2_ebook_expensive\",\n    \"last4\": \"9999\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            }
           },
           "response": []
         },
@@ -145,7 +207,18 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases/{{s2PurchaseId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases", "{{s2PurchaseId}}"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases/{{s2PurchaseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases",
+                "{{s2PurchaseId}}"
+              ]
+            }
           },
           "response": []
         }
@@ -172,14 +245,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 10,\n  \"customerId\": \"cus_s3_bulk\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s3_bulk\",\n    \"last4\": \"5678\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            }
           },
           "response": []
         },
@@ -197,6 +286,13 @@
                   "});",
                   "if (body.fraudDetails && body.fraudDetails.transactionId) {",
                   "  pm.environment.set('s3TransactionId', body.fraudDetails.transactionId);",
+                  "  pm.environment.unset('_s3Retries');",
+                  "} else if (body.status === 'PENDING_FRAUD_CHECK') {",
+                  "  const retries = parseInt(pm.environment.get('_s3Retries') || '0');",
+                  "  if (retries < 8) {",
+                  "    pm.environment.set('_s3Retries', retries + 1);",
+                  "    pm.execution.setNextRequest('S3.2 — GET /purchases/:id (aguardar UNDER_REVIEW)');",
+                  "  }",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -206,7 +302,18 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases/{{s3PurchaseId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases", "{{s3PurchaseId}}"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases/{{s3PurchaseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases",
+                "{{s3PurchaseId}}"
+              ]
+            }
           },
           "response": []
         }
@@ -233,7 +340,18 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/api/v1/transactions/{{s3TransactionId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transactions", "{{s3TransactionId}}"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions/{{s3TransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                "{{s3TransactionId}}"
+              ]
+            }
           },
           "response": []
         },
@@ -254,12 +372,29 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"outcome\": \"APPROVED\",\n  \"reviewerId\": \"revisor_01\",\n  \"justification\": \"Cliente confirmou a compra via telefone. Pedido bulk legítimo para distribuição interna.\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/transactions/{{s3TransactionId}}/review", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transactions", "{{s3TransactionId}}", "review"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions/{{s3TransactionId}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                "{{s3TransactionId}}",
+                "review"
+              ]
+            }
           },
           "response": []
         },
@@ -279,7 +414,18 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases/{{s3PurchaseId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases", "{{s3PurchaseId}}"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases/{{s3PurchaseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases",
+                "{{s3PurchaseId}}"
+              ]
+            }
           },
           "response": []
         }
@@ -294,20 +440,41 @@
           "event": [
             {
               "listen": "test",
-              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+              "script": {
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));"
+                ],
+                "type": "text/javascript"
+              }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            }
           },
           "response": []
         },
@@ -316,20 +483,41 @@
           "event": [
             {
               "listen": "test",
-              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+              "script": {
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));"
+                ],
+                "type": "text/javascript"
+              }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            }
           },
           "response": []
         },
@@ -338,20 +526,41 @@
           "event": [
             {
               "listen": "test",
-              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+              "script": {
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));"
+                ],
+                "type": "text/javascript"
+              }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            }
           },
           "response": []
         },
@@ -360,20 +569,41 @@
           "event": [
             {
               "listen": "test",
-              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+              "script": {
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));"
+                ],
+                "type": "text/javascript"
+              }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            }
           },
           "response": []
         },
@@ -382,20 +612,41 @@
           "event": [
             {
               "listen": "test",
-              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+              "script": {
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));"
+                ],
+                "type": "text/javascript"
+              }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            }
           },
           "response": []
         },
@@ -417,14 +668,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            }
           },
           "response": []
         },
@@ -448,7 +715,18 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases/{{s5LastPurchaseId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases", "{{s5LastPurchaseId}}"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases/{{s5LastPurchaseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases",
+                "{{s5LastPurchaseId}}"
+              ]
+            }
           },
           "response": []
         }
@@ -477,14 +755,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{s1IdempotencyKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{s1IdempotencyKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s1_established\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s1_physical_low\",\n    \"last4\": \"1234\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            }
           },
           "response": []
         }
@@ -509,14 +803,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{s1IdempotencyKey}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{s1IdempotencyKey}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{BOOK_DDD}}\",\n  \"quantity\": 2,\n  \"customerId\": \"cus_diferente\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_diferente\",\n    \"last4\": \"0001\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            }
           },
           "response": []
         }
@@ -540,12 +850,27 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s8\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s8\",\n    \"last4\": \"1111\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            }
           },
           "response": []
         }
@@ -560,20 +885,41 @@
           "event": [
             {
               "listen": "test",
-              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+              "script": {
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));"
+                ],
+                "type": "text/javascript"
+              }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s10_deviation\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s10_history\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            }
           },
           "response": []
         },
@@ -582,20 +928,41 @@
           "event": [
             {
               "listen": "test",
-              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+              "script": {
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));"
+                ],
+                "type": "text/javascript"
+              }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s10_deviation\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s10_history\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            }
           },
           "response": []
         },
@@ -604,20 +971,41 @@
           "event": [
             {
               "listen": "test",
-              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+              "script": {
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));"
+                ],
+                "type": "text/javascript"
+              }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s10_deviation\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s10_history\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            }
           },
           "response": []
         },
@@ -639,14 +1027,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"bookId\": \"{{BOOK_DDD}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s10_deviation\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s10_history\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases"
+              ]
+            }
           },
           "response": []
         },
@@ -670,7 +1074,18 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/api/v1/purchases/{{s10PurchaseId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases", "{{s10PurchaseId}}"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/purchases/{{s10PurchaseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases",
+                "{{s10PurchaseId}}"
+              ]
+            }
           },
           "response": []
         }
@@ -685,20 +1100,41 @@
           "event": [
             {
               "listen": "test",
-              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+              "script": {
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));"
+                ],
+                "type": "text/javascript"
+              }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"externalReference\": \"s11-structuring-1\",\n  \"customerId\": \"cus_s11_structuring\",\n  \"amount\": { \"value\": 475.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"fp_s11_struct\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/transactions", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transactions"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions"
+              ]
+            }
           },
           "response": []
         },
@@ -707,20 +1143,41 @@
           "event": [
             {
               "listen": "test",
-              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+              "script": {
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));"
+                ],
+                "type": "text/javascript"
+              }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"externalReference\": \"s11-structuring-2\",\n  \"customerId\": \"cus_s11_structuring\",\n  \"amount\": { \"value\": 480.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"fp_s11_struct\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/transactions", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transactions"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions"
+              ]
+            }
           },
           "response": []
         },
@@ -742,14 +1199,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"externalReference\": \"s11-structuring-3\",\n  \"customerId\": \"cus_s11_structuring\",\n  \"amount\": { \"value\": 490.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"fp_s11_struct\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/transactions", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transactions"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions"
+              ]
+            }
           },
           "response": []
         },
@@ -773,7 +1246,18 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/api/v1/transactions/{{s11TransactionId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transactions", "{{s11TransactionId}}"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions/{{s11TransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                "{{s11TransactionId}}"
+              ]
+            }
           },
           "response": []
         }
