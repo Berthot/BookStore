@@ -29,7 +29,7 @@ public sealed class GetPurchaseHandler(IPurchaseRepository repository)
             p.Id,
             p.Status,
             GetCustomerMessage(p.Status),
-            GetFraudDetails(p.Status),
+            GetFraudDetails(p),
             p.CreatedAt);
 
     private static string GetCustomerMessage(PurchaseStatus status) => status switch
@@ -41,10 +41,14 @@ public sealed class GetPurchaseHandler(IPurchaseRepository repository)
         _ => InAnalysisMessage
     };
 
-    private static string? GetFraudDetails(PurchaseStatus status) => status switch
+    private static FraudDetailsResponse? GetFraudDetails(Purchase p)
     {
-        PurchaseStatus.Confirmed => "APPROVED",
-        PurchaseStatus.Cancelled => "REJECTED",
-        _ => null
-    };
+        if (p.Status is PurchaseStatus.Confirmed)
+            return new FraudDetailsResponse(p.TransactionId, "APPROVED");
+        if (p.Status is PurchaseStatus.Cancelled)
+            return new FraudDetailsResponse(p.TransactionId, "REJECTED");
+        return p.TransactionId.HasValue
+            ? new FraudDetailsResponse(p.TransactionId, null)
+            : null;
+    }
 }

@@ -71,7 +71,7 @@ public sealed class GetPurchaseHandlerTests : UnitTestsBase
         var result = await _handler.Handle(new GetPurchaseRequest(confirmed.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        result.Data!.FraudDetails.Should().Be("APPROVED");
+        result.Data!.FraudDetails!.Outcome.Should().Be("APPROVED");
     }
 
     [Test]
@@ -83,7 +83,7 @@ public sealed class GetPurchaseHandlerTests : UnitTestsBase
         var result = await _handler.Handle(new GetPurchaseRequest(cancelled.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        result.Data!.FraudDetails.Should().Be("REJECTED");
+        result.Data!.FraudDetails!.Outcome.Should().Be("REJECTED");
     }
 
     [Test]
