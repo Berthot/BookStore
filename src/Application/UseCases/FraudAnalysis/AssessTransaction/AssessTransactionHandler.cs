@@ -98,6 +98,8 @@ public sealed class AssessTransactionHandler(
 
         repository.AddAssessment(assessment);
 
+        await unitOfWork.CommitAsync(cancellationToken);
+
         await publisher.PublishAsync(
             new TransactionDecided(
                 transaction.Id,
@@ -105,8 +107,6 @@ public sealed class AssessTransactionHandler(
                 transaction.CorrelationId,
                 now),
             cancellationToken);
-
-        await unitOfWork.CommitAsync(cancellationToken);
 
         var outcomeStr = assessment.Outcome.ToString().ToUpperInvariant();
         FraudTelemetry.Decisions.Add(1, new System.Collections.Generic.KeyValuePair<string, object?>("outcome", outcomeStr));

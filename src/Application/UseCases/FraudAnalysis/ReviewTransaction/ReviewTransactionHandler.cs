@@ -58,6 +58,8 @@ public sealed class ReviewTransactionHandler(
 
         repository.AddAssessment(assessment);
 
+        await unitOfWork.CommitAsync(cancellationToken);
+
         await publisher.PublishAsync(
             new TransactionDecided(
                 transaction.Id,
@@ -65,8 +67,6 @@ public sealed class ReviewTransactionHandler(
                 transaction.CorrelationId,
                 now),
             cancellationToken);
-
-        await unitOfWork.CommitAsync(cancellationToken);
 
         return OperationResult<GetTransactionResponse>.SuccessResult(
             GetTransactionHandler.MapToResponse(transaction));

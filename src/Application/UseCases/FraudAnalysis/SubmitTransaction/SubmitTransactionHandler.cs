@@ -42,6 +42,8 @@ public sealed class SubmitTransactionHandler(
 
         repository.Add(transaction!);
 
+        await unitOfWork.CommitAsync(cancellationToken);
+
         await publisher.PublishAsync(new TransactionSubmitted(
             transaction!.Id,
             transaction.ExternalReference,
@@ -57,8 +59,6 @@ public sealed class SubmitTransactionHandler(
             transaction.OccurredAt,
             transaction.CorrelationId,
             transaction.CreatedAt), cancellationToken);
-
-        await unitOfWork.CommitAsync(cancellationToken);
 
         FraudTelemetry.TransactionsReceived.Add(1);
 

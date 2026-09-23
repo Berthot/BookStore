@@ -40,6 +40,8 @@ public sealed class FailSafeTransactionHandler(
 
         repository.AddAssessment(transaction.CurrentAssessment()!);
 
+        await unitOfWork.CommitAsync(cancellationToken);
+
         await publisher.PublishAsync(
             new TransactionDecided(
                 transaction.Id,
@@ -47,8 +49,6 @@ public sealed class FailSafeTransactionHandler(
                 transaction.CorrelationId,
                 now),
             cancellationToken);
-
-        await unitOfWork.CommitAsync(cancellationToken);
 
         return OperationResult<FailSafeTransactionResponse>.SuccessResult(
             new FailSafeTransactionResponse(
