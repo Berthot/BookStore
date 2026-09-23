@@ -3,6 +3,7 @@ using Application.Commons;
 using Application.Messages;
 using Application.UseCases.FraudAnalysis.SubmitTransaction;
 using Domain.Entities.FraudAnalysis;
+using Domain.Enums;
 using Domain.Repositories;
 using NSubstitute;
 using Tests.Shared.Attributes;
@@ -49,7 +50,7 @@ public sealed class SubmitTransactionHandlerTests : UnitTestsBase
 
         result.IsSuccess.Should().BeTrue();
         result.Data.Should().NotBeNull();
-        result.Data!.Status.Should().Be("RECEIVED");
+        result.Data!.Status.Should().Be(TransactionStatus.Received);
         result.Data.TransactionId.Should().NotBeEmpty();
     }
 
@@ -84,7 +85,7 @@ public sealed class SubmitTransactionHandlerTests : UnitTestsBase
     }
 
     [Test]
-    public async Task Handle_publish_is_called_before_commit()
+    public async Task Handle_commit_occurs_before_publish()
     {
         var callOrder = new List<string>();
         _publisher.When(x => x.PublishAsync(Arg.Any<TransactionSubmitted>(), Arg.Any<CancellationToken>()))
@@ -94,6 +95,6 @@ public sealed class SubmitTransactionHandlerTests : UnitTestsBase
 
         await _handler.Handle(ValidRequest(), CancellationToken.None);
 
-        callOrder.Should().ContainInOrder("publish", "commit");
+        callOrder.Should().ContainInOrder("commit", "publish");
     }
 }

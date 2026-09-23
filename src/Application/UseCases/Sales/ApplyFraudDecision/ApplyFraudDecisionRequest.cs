@@ -1,8 +1,9 @@
 using Application.Commons;
 using Cortex.Mediator.Commands;
+using Domain.Enums;
 
 namespace Application.UseCases.Sales.ApplyFraudDecision;
 
 public sealed record ApplyFraudDecisionRequest(
     Guid TransactionId,
-    string Outcome) : ICommand<OperationResult<ApplyFraudDecisionResponse>>;
+    Outcome Outcome) : ICommand<OperationResult<ApplyFraudDecisionResponse>>;

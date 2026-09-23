@@ -19,8 +19,13 @@ public sealed class SubmitTransactionHandler(
         SubmitTransactionRequest command,
         CancellationToken cancellationToken)
     {
-        Enum.TryParse<Channel>(command.Channel, ignoreCase: true, out var channel);
-        Enum.TryParse<DeliveryType>(command.Delivery, ignoreCase: true, out var delivery);
+        if (!Enum.TryParse<Channel>(command.Channel, ignoreCase: true, out var channel))
+            return OperationResult<SubmitTransactionResponse>.Fail(ErrorCode.Validation,
+                $"Invalid channel '{command.Channel}'.");
+
+        if (!Enum.TryParse<DeliveryType>(command.Delivery, ignoreCase: true, out var delivery))
+            return OperationResult<SubmitTransactionResponse>.Fail(ErrorCode.Validation,
+                $"Invalid delivery type '{command.Delivery}'.");
 
         var amount = new Money(command.AmountValue, command.AmountCurrency);
         var payment = new PaymentInstrument(command.PaymentType, command.PaymentFingerprint, command.PaymentLast4);
@@ -63,6 +68,6 @@ public sealed class SubmitTransactionHandler(
         FraudTelemetry.TransactionsReceived.Add(1);
 
         return OperationResult<SubmitTransactionResponse>.SuccessResult(
-            new SubmitTransactionResponse(transaction.Id, transaction.Status.ToString().ToUpperInvariant()));
+            new SubmitTransactionResponse(transaction.Id, transaction.Status));
     }
 }

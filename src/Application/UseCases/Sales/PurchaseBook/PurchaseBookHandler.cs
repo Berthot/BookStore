@@ -24,7 +24,7 @@ public sealed class PurchaseBookHandler(
             return OperationResult<PurchaseBookResponse>.Fail(ErrorCode.NotFound, "Book not found.");
 
         var total = new Money(book.Price.Value * command.Quantity, book.Price.Currency);
-        var bookFormat = book.Format.ToString().ToUpperInvariant();
+        var bookFormat = book.Format.ToString();
         var purchase = Purchase.Create(
             command.BookId,
             bookFormat,
@@ -47,7 +47,7 @@ public sealed class PurchaseBookHandler(
             purchase.Quantity,
             total.Value,
             total.Currency,
-            book.Format.ToString().ToUpperInvariant(),
+            book.Format.ToString(),
             command.PaymentType,
             command.PaymentFingerprint,
             command.PaymentLast4,

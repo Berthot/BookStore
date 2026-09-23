@@ -3,6 +3,7 @@ using Application.Commons;
 using Application.Messages;
 using Application.UseCases.FraudAnalysis.AssessTransaction;
 using Domain.Entities.FraudAnalysis;
+using Domain.Enums;
 using Domain.Repositories;
 using Domain.Rules;
 using NSubstitute;
@@ -52,7 +53,7 @@ public sealed class AssessTransactionHandlerTests : UnitTestsBase
         var result = await _handler.Handle(new AssessTransactionRequest(transaction.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        result.Data!.Outcome.Should().Be("APPROVED");
+        result.Data!.Outcome.Should().Be(Outcome.Approved);
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
         await _publisher.DidNotReceive().PublishAsync(Arg.Any<TransactionDecided>(), Arg.Any<CancellationToken>());
     }
@@ -70,7 +71,7 @@ public sealed class AssessTransactionHandlerTests : UnitTestsBase
     }
 
     [Test]
-    public async Task Handle_publish_occurs_before_second_commit()
+    public async Task Handle_commit_occurs_before_publish()
     {
         var transaction = TransactionMother.Received();
         _repo.GetByIdAsync(transaction.Id, Arg.Any<CancellationToken>()).Returns(transaction);
@@ -83,8 +84,8 @@ public sealed class AssessTransactionHandlerTests : UnitTestsBase
 
         await _handler.Handle(new AssessTransactionRequest(transaction.Id), CancellationToken.None);
 
-        // commit(processing), publish(decided), commit(decided)
-        order.Should().ContainInOrder("commit", "publish", "commit");
+        // commit(processing), commit(decided), publish(decided)
+        order.Should().ContainInOrder("commit", "commit", "publish");
         order.Should().HaveCount(3);
     }
 

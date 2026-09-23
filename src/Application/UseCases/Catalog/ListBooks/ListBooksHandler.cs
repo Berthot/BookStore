@@ -18,7 +18,7 @@ public sealed class ListBooksHandler(IBookRepository repository)
             b.Title,
             b.Author,
             new BookPriceDto(b.Price.Value, b.Price.Currency),
-            b.Format.ToString().ToUpperInvariant())).ToList();
+            b.Format)).ToList();
 
         return OperationResult<ListBooksResponse>.SuccessResult(new ListBooksResponse(dtos));
     }

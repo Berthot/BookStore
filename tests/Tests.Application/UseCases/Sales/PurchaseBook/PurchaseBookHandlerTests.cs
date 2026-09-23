@@ -73,7 +73,7 @@ public sealed class PurchaseBookHandlerTests : UnitTestsBase
                 m.Quantity == 1 &&
                 m.CustomerId == "cust-99" &&
                 m.PaymentFingerprint == "fp-xyz" &&
-                m.BookFormat == "EBOOK"),
+                m.BookFormat == BookFormat.Ebook.ToString()),
             Arg.Any<CancellationToken>());
     }
 

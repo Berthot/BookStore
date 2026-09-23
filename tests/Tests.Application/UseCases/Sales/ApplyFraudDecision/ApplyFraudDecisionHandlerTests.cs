@@ -30,7 +30,7 @@ public sealed class ApplyFraudDecisionHandlerTests : UnitTestsBase
         _repo.GetByTransactionIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns((Domain.Entities.Sales.Purchase?)null);
 
-        var result = await _handler.Handle(new ApplyFraudDecisionRequest(Guid.NewGuid(), "Approved"), CancellationToken.None);
+        var result = await _handler.Handle(new ApplyFraudDecisionRequest(Guid.NewGuid(), Outcome.Approved), CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
         result.ErrorCode.Should().Be(ErrorCode.NotFound);
@@ -44,7 +44,7 @@ public sealed class ApplyFraudDecisionHandlerTests : UnitTestsBase
         purchase.LinkTransaction(transactionId);
         _repo.GetByTransactionIdAsync(transactionId, Arg.Any<CancellationToken>()).Returns(purchase);
 
-        var result = await _handler.Handle(new ApplyFraudDecisionRequest(transactionId, "Approved"), CancellationToken.None);
+        var result = await _handler.Handle(new ApplyFraudDecisionRequest(transactionId, Outcome.Approved), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Data!.Status.Should().Be(PurchaseStatus.Confirmed);
@@ -58,7 +58,7 @@ public sealed class ApplyFraudDecisionHandlerTests : UnitTestsBase
         purchase.LinkTransaction(transactionId);
         _repo.GetByTransactionIdAsync(transactionId, Arg.Any<CancellationToken>()).Returns(purchase);
 
-        var result = await _handler.Handle(new ApplyFraudDecisionRequest(transactionId, "Rejected"), CancellationToken.None);
+        var result = await _handler.Handle(new ApplyFraudDecisionRequest(transactionId, Outcome.Rejected), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Data!.Status.Should().Be(PurchaseStatus.Cancelled);
@@ -72,7 +72,7 @@ public sealed class ApplyFraudDecisionHandlerTests : UnitTestsBase
         purchase.LinkTransaction(transactionId);
         _repo.GetByTransactionIdAsync(transactionId, Arg.Any<CancellationToken>()).Returns(purchase);
 
-        var result = await _handler.Handle(new ApplyFraudDecisionRequest(transactionId, "Review"), CancellationToken.None);
+        var result = await _handler.Handle(new ApplyFraudDecisionRequest(transactionId, Outcome.Review), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Data!.Status.Should().Be(PurchaseStatus.UnderReview);
@@ -86,7 +86,7 @@ public sealed class ApplyFraudDecisionHandlerTests : UnitTestsBase
         purchase.LinkTransaction(transactionId);
         _repo.GetByTransactionIdAsync(transactionId, Arg.Any<CancellationToken>()).Returns(purchase);
 
-        var result = await _handler.Handle(new ApplyFraudDecisionRequest(transactionId, "Approved"), CancellationToken.None);
+        var result = await _handler.Handle(new ApplyFraudDecisionRequest(transactionId, Outcome.Approved), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
@@ -100,7 +100,7 @@ public sealed class ApplyFraudDecisionHandlerTests : UnitTestsBase
         purchase.LinkTransaction(transactionId);
         _repo.GetByTransactionIdAsync(transactionId, Arg.Any<CancellationToken>()).Returns(purchase);
 
-        var result = await _handler.Handle(new ApplyFraudDecisionRequest(transactionId, "Approved"), CancellationToken.None);
+        var result = await _handler.Handle(new ApplyFraudDecisionRequest(transactionId, Outcome.Approved), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Data!.Status.Should().Be(PurchaseStatus.Confirmed);
@@ -114,7 +114,7 @@ public sealed class ApplyFraudDecisionHandlerTests : UnitTestsBase
         purchase.LinkTransaction(transactionId);
         _repo.GetByTransactionIdAsync(transactionId, Arg.Any<CancellationToken>()).Returns(purchase);
 
-        await _handler.Handle(new ApplyFraudDecisionRequest(transactionId, "Approved"), CancellationToken.None);
+        await _handler.Handle(new ApplyFraudDecisionRequest(transactionId, Outcome.Approved), CancellationToken.None);
 
         await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
     }

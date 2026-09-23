@@ -1,3 +1,5 @@
+using Domain.Enums;
+
 namespace Application.UseCases.FraudAnalysis.FailSafe;
 
-public sealed record FailSafeTransactionResponse(Guid TransactionId, string Outcome);
+public sealed record FailSafeTransactionResponse(Guid TransactionId, Outcome Outcome);

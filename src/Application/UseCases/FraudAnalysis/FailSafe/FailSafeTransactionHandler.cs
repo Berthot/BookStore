@@ -26,7 +26,7 @@ public sealed class FailSafeTransactionHandler(
             return OperationResult<FailSafeTransactionResponse>.SuccessResult(
                 new FailSafeTransactionResponse(
                     transaction.Id,
-                    transaction.CurrentAssessment()!.Outcome.ToString().ToUpperInvariant()));
+                    transaction.CurrentAssessment()!.Outcome));
 
         // Ensure Processing status before calling FailSafe (transaction may still be Received if the
         // assess consumer crashed before its first commit)
@@ -45,7 +45,7 @@ public sealed class FailSafeTransactionHandler(
         await publisher.PublishAsync(
             new TransactionDecided(
                 transaction.Id,
-                transaction.CurrentAssessment()!.Outcome.ToString().ToUpperInvariant(),
+                transaction.CurrentAssessment()!.Outcome,
                 transaction.CorrelationId,
                 now),
             cancellationToken);
@@ -53,6 +53,6 @@ public sealed class FailSafeTransactionHandler(
         return OperationResult<FailSafeTransactionResponse>.SuccessResult(
             new FailSafeTransactionResponse(
                 transaction.Id,
-                transaction.CurrentAssessment()!.Outcome.ToString().ToUpperInvariant()));
+                transaction.CurrentAssessment()!.Outcome));
     }
 }

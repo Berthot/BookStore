@@ -1,5 +1,6 @@
 using Application.Commons;
 using Application.UseCases.FraudAnalysis.GetTransaction;
+using Domain.Enums;
 using Domain.Repositories;
 using NSubstitute;
 using Tests.Shared.Attributes;
@@ -44,7 +45,7 @@ public sealed class GetTransactionHandlerTests : UnitTestsBase
         result.IsSuccess.Should().BeTrue();
         result.Data.Should().NotBeNull();
         result.Data!.TransactionId.Should().Be(transaction.Id);
-        result.Data.Status.Should().Be("RECEIVED");
+        result.Data.Status.Should().Be(TransactionStatus.Received);
 
         var props = typeof(GetTransactionResponse).GetProperties().Select(p => p.Name);
         props.Should().NotContain("CorrelationId");
@@ -60,7 +61,7 @@ public sealed class GetTransactionHandlerTests : UnitTestsBase
 
         result.IsSuccess.Should().BeTrue();
         result.Data!.Decision.Should().NotBeNull();
-        result.Data.Decision!.Outcome.Should().Be("APPROVED");
+        result.Data.Decision!.Outcome.Should().Be(Outcome.Approved);
         result.Data.History.Should().HaveCount(1);
     }
 

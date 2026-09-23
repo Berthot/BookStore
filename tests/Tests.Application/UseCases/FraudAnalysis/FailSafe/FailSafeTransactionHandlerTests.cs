@@ -3,6 +3,7 @@ using Application.Commons;
 using Application.Messages;
 using Application.UseCases.FraudAnalysis.FailSafe;
 using Domain.Entities.FraudAnalysis;
+using Domain.Enums;
 using Domain.Repositories;
 using NSubstitute;
 using Tests.Shared.Attributes;
@@ -40,7 +41,7 @@ public sealed class FailSafeTransactionHandlerTests : UnitTestsBase
         var result = await _handler.Handle(Request(transaction.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        result.Data!.Outcome.Should().Be("REVIEW");
+        result.Data!.Outcome.Should().Be(Outcome.Review);
     }
 
     [Test]
@@ -65,7 +66,7 @@ public sealed class FailSafeTransactionHandlerTests : UnitTestsBase
         var result = await _handler.Handle(Request(transaction.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        result.Data!.Outcome.Should().Be("REVIEW");
+        result.Data!.Outcome.Should().Be(Outcome.Review);
         await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
         await _publisher.Received(1).PublishAsync(Arg.Any<TransactionDecided>(), Arg.Any<CancellationToken>());
     }

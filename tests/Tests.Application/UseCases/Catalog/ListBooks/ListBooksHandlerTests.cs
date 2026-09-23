@@ -47,7 +47,7 @@ public sealed class ListBooksHandlerTests : UnitTestsBase
         dto.Author.Should().Be(book.Author);
         dto.Price.Value.Should().Be(book.Price.Value);
         dto.Price.Currency.Should().Be(book.Price.Currency);
-        dto.Format.Should().Be(book.Format.ToString().ToUpperInvariant());
+        dto.Format.Should().Be(book.Format);
     }
 
     [Test]

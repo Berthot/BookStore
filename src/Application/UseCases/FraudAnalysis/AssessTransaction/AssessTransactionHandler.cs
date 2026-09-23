@@ -39,7 +39,7 @@ public sealed class AssessTransactionHandler(
             return OperationResult<AssessTransactionResponse>.SuccessResult(
                 new AssessTransactionResponse(
                     transaction.Id,
-                    transaction.CurrentAssessment()!.Outcome.ToString().ToUpperInvariant()));
+                    transaction.CurrentAssessment()!.Outcome));
 
         // First commit: advance to Processing so GET shows PROCESSING
         if (transaction.Status == TransactionStatus.Received)
@@ -103,18 +103,17 @@ public sealed class AssessTransactionHandler(
         await publisher.PublishAsync(
             new TransactionDecided(
                 transaction.Id,
-                assessment.Outcome.ToString().ToUpperInvariant(),
+                assessment.Outcome,
                 transaction.CorrelationId,
                 now),
             cancellationToken);
 
-        var outcomeStr = assessment.Outcome.ToString().ToUpperInvariant();
-        FraudTelemetry.Decisions.Add(1, new System.Collections.Generic.KeyValuePair<string, object?>("outcome", outcomeStr));
+        FraudTelemetry.Decisions.Add(1, new System.Collections.Generic.KeyValuePair<string, object?>("outcome", assessment.Outcome));
         FraudTelemetry.DecisionDuration.Record(
             (now - transaction.CreatedAt).TotalMilliseconds,
-            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", outcomeStr));
+            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", assessment.Outcome));
 
         return OperationResult<AssessTransactionResponse>.SuccessResult(
-            new AssessTransactionResponse(transaction.Id, outcomeStr));
+            new AssessTransactionResponse(transaction.Id, assessment.Outcome));
     }
 }

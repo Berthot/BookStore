@@ -23,10 +23,7 @@ public sealed class ApplyFraudDecisionHandler(
             return OperationResult<ApplyFraudDecisionResponse>.SuccessResult(
                 new ApplyFraudDecisionResponse(purchase.Id, purchase.Status));
 
-        if (!Enum.TryParse<Outcome>(command.Outcome, ignoreCase: true, out var outcome))
-            return OperationResult<ApplyFraudDecisionResponse>.Fail(ErrorCode.Unprocessable, $"Unknown outcome: {command.Outcome}");
-
-        var error = purchase.ApplyDecision(outcome);
+        var error = purchase.ApplyDecision(command.Outcome);
         if (error is not null)
             return OperationResult<ApplyFraudDecisionResponse>.Fail(ErrorCode.Unprocessable, error.Message);
 

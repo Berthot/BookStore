@@ -27,7 +27,7 @@ public sealed class GetTransactionHandler(ITransactionRepository repository)
 
         return new GetTransactionResponse(
             t.Id,
-            t.Status.ToString().ToUpperInvariant(),
+            t.Status,
             new MoneyDto(t.Amount.Value, t.Amount.Currency),
             t.CreatedAt,
             current is null ? null : MapDecision(current),
@@ -36,9 +36,9 @@ public sealed class GetTransactionHandler(ITransactionRepository repository)
 
     private static DecisionDto MapDecision(Assessment a) =>
         new(
-            a.Outcome.ToString().ToUpperInvariant(),
+            a.Outcome,
             (int)Math.Round(a.Evaluations.Sum(e => e.Weight) * 100),
-            new DeciderDto(a.Decider.Kind.ToString().ToUpperInvariant(), a.Decider.ReviewerId),
+            new DeciderDto(a.Decider.Kind, a.Decider.ReviewerId),
             a.CreatedAt,
             a.Justification,
             a.Evaluations.Select(MapRule).ToList());
@@ -53,7 +53,7 @@ public sealed class GetTransactionHandler(ITransactionRepository repository)
 
     private static HistoryEntryDto MapHistory(Assessment a) =>
         new(
-            a.Outcome.ToString().ToUpperInvariant(),
-            new DeciderDto(a.Decider.Kind.ToString().ToUpperInvariant(), a.Decider.ReviewerId),
+            a.Outcome,
+            new DeciderDto(a.Decider.Kind, a.Decider.ReviewerId),
             a.CreatedAt);
 }

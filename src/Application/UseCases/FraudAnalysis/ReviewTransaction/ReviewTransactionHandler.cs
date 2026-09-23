@@ -63,7 +63,7 @@ public sealed class ReviewTransactionHandler(
         await publisher.PublishAsync(
             new TransactionDecided(
                 transaction.Id,
-                outcome.ToString().ToUpperInvariant(),
+                outcome,
                 transaction.CorrelationId,
                 now),
             cancellationToken);
