@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using Application.Abstractions.Idempotency;
+using Application.Diagnostics;
 
 namespace WebApi.Filters.Idempotency;
 
@@ -57,6 +58,7 @@ public sealed class IdempotencyFilter<TStore>(TStore store) : IEndpointFilter
                 return Results.Problem(statusCode: 422, title: "Unprocessable Entity",
                     detail: "A request with the same Idempotency-Key was submitted with a different body.");
 
+            BookStoreTelemetry.IdempotencyReplays.Add(1);
             return Results.Content(existing.ResponseBody!, "application/json");
         }
 

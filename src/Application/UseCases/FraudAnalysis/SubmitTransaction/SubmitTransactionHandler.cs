@@ -1,5 +1,6 @@
 using Application.Abstractions.Messaging;
 using Application.Commons;
+using Application.Diagnostics;
 using Application.Messages;
 using Cortex.Mediator.Commands;
 using Domain.Enums;
@@ -58,6 +59,8 @@ public sealed class SubmitTransactionHandler(
             transaction.CreatedAt), cancellationToken);
 
         await unitOfWork.CommitAsync(cancellationToken);
+
+        FraudTelemetry.TransactionsReceived.Add(1);
 
         return OperationResult<SubmitTransactionResponse>.SuccessResult(
             new SubmitTransactionResponse(transaction.Id, transaction.Status.ToString().ToUpperInvariant()));

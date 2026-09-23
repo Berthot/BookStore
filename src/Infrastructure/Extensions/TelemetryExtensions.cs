@@ -1,3 +1,4 @@
+using Application.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -21,12 +22,15 @@ public static class TelemetryExtensions
                 .SetResourceBuilder(resourceBuilder)
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
+                .AddSource(FraudTelemetry.ActivitySourceName)
                 // Npgsql instrumentation enabled in TSK-0069 after DbContexts are configured
                 .AddOtlpExporter())
             .WithMetrics(metrics => metrics
                 .SetResourceBuilder(resourceBuilder)
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
+                .AddMeter(FraudTelemetry.MeterName)
+                .AddMeter(BookStoreTelemetry.MeterName)
                 .AddOtlpExporter());
 
         services.AddLogging(logging => logging
