@@ -19,4 +19,14 @@
         <ProjectReference Include="..\Worker\Worker.csproj" IsAspireProjectResource="true" />
     </ItemGroup>
 
+    <!-- Arquivos de configuração para bind mounts dos containers de observabilidade -->
+    <ItemGroup>
+        <Content Include="prometheus.yml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="grafana\**\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
 </Project>
