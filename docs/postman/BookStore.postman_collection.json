@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "BookStore — Antifraude",
-    "description": "Cobre os 11 cenários do desafio técnico (S1–S11). Execute com o ambiente 'BookStore — Local' após subir `docker compose -f deploy/docker-compose.yml up -d --wait`.\n\nBook IDs fixos (seed):\n- 11111111-0000-0000-0000-000000000001 → Clean Code (Paperback, R$ 49,90)\n- 11111111-0000-0000-0000-000000000002 → The Pragmatic Programmer (Ebook, R$ 349,90)\n- 11111111-0000-0000-0000-000000000003 → Domain-Driven Design (Hardcover, R$ 149,90)",
+    "description": "Cobre os 11 cenários do desafio técnico (S1–S11). Execute com o ambiente 'BookStore — Local'.\n\nAjuste a variável baseUrl conforme o stack:\n- Aspire HTTP:   http://localhost:5085  ← padrão do ambiente\n- Aspire HTTPS:  https://localhost:7270  (desative SSL verification no Postman para cert de dev)\n- Docker Compose: http://localhost:8080\n\nBook IDs fixos (seed):\n- 11111111-0000-0000-0000-000000000001 → Clean Code (Paperback, R$ 49,90)\n- 11111111-0000-0000-0000-000000000002 → The Pragmatic Programmer (Ebook, R$ 349,90)\n- 11111111-0000-0000-0000-000000000003 → Domain-Driven Design (Hardcover, R$ 149,90)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -23,6 +23,34 @@
     {
       "name": "Catálogo",
       "item": [
+        {
+          "name": "GET /health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK — API healthy', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        },
         {
           "name": "GET /books",
           "request": {
@@ -287,6 +315,9 @@
                   "if (body.fraudDetails && body.fraudDetails.transactionId) {",
                   "  pm.environment.set('s3TransactionId', body.fraudDetails.transactionId);",
                   "  pm.environment.unset('_s3Retries');",
+                  "  pm.test('fraudDetails.outcome presente', () => pm.expect(body.fraudDetails.outcome).to.be.a('string'));",
+                  "  pm.test('fraudDetails.score presente', () => pm.expect(body.fraudDetails.score).to.be.a('number'));",
+                  "  pm.test('fraudDetails.triggeredRules presente', () => pm.expect(body.fraudDetails.triggeredRules).to.be.an('array'));",
                   "} else if (body.status === 'PENDING_FRAUD_CHECK') {",
                   "  const retries = parseInt(pm.environment.get('_s3Retries') || '0');",
                   "  if (retries < 8) {",
@@ -405,7 +436,20 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('status CONFIRMED ou UNDER_REVIEW', () => {",
+                  "  pm.expect(['CONFIRMED', 'UNDER_REVIEW']).to.include(body.status);",
+                  "});",
+                  "if (body.status !== 'CONFIRMED') {",
+                  "  const retries = parseInt(pm.environment.get('_s4Retries') || '0');",
+                  "  if (retries < 8) {",
+                  "    pm.environment.set('_s4Retries', retries + 1);",
+                  "    pm.execution.setNextRequest('S4.3 — GET /purchases/:id (aguardar CONFIRMED)');",
+                  "  }",
+                  "} else {",
+                  "  pm.environment.unset('_s4Retries');",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
@@ -1065,7 +1109,21 @@
                   "const body = pm.response.json();",
                   "pm.test('status UNDER_REVIEW ou PENDING_FRAUD_CHECK', () => {",
                   "  pm.expect(['UNDER_REVIEW', 'PENDING_FRAUD_CHECK']).to.include(body.status);",
-                  "});"
+                  "});",
+                  "if (body.status === 'UNDER_REVIEW' && body.fraudDetails) {",
+                  "  pm.environment.unset('_s10Retries');",
+                  "  pm.test('fraudDetails.outcome presente', () => pm.expect(body.fraudDetails.outcome).to.be.a('string'));",
+                  "  pm.test('fraudDetails.score presente', () => pm.expect(body.fraudDetails.score).to.be.a('number'));",
+                  "  pm.test('fraudDetails.triggeredRules presente', () => pm.expect(body.fraudDetails.triggeredRules).to.be.an('array'));",
+                  "} else if (body.status === 'PENDING_FRAUD_CHECK') {",
+                  "  const retries = parseInt(pm.environment.get('_s10Retries') || '0');",
+                  "  if (retries < 8) {",
+                  "    pm.environment.set('_s10Retries', retries + 1);",
+                  "    pm.execution.setNextRequest('S10.5 — GET /purchases/:id (aguardar UNDER_REVIEW)');",
+                  "  } else {",
+                  "    pm.environment.unset('_s10Retries');",
+                  "  }",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
