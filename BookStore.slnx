@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/apps/">
+    <Project Path="apps/AppHost/AppHost.csproj" />
     <Project Path="apps/WebApi/WebApi.csproj" />
     <Project Path="apps/Worker/Worker.csproj" />
   </Folder>
