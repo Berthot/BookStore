@@ -8,6 +8,7 @@ using Infrastructure.Persistence.Fraud;
 using Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using WebApi.Endpoints.Catalog;
 using WebApi.Endpoints.FraudAnalysis;
 using WebApi.ErrorHandling;
 using WebApi.Middleware;
@@ -46,6 +47,7 @@ if (app.Environment.IsDevelopment())
 
 var api = app.MapGroup("/api/v1");
 
+app.MapBookEndpoints();
 app.MapTransactionEndpoints();
 app.MapReviewEndpoints();
 
