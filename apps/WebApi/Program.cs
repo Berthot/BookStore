@@ -39,6 +39,16 @@ await ApplyDatabaseMigrationsAsync(app);
 app.UseExceptionHandler();
 app.UseMiddleware<CorrelationIdMiddleware>();
 
+// Enable request body buffering before model binding so that endpoint filters
+// (e.g. IdempotencyFilter) can also read the body after the handler has bound it.
+// Minimal API binding consumes the body before filters run; this middleware ensures
+// the stream is seekable from the start.
+app.Use(static (ctx, next) =>
+{
+    ctx.Request.EnableBuffering();
+    return next();
+});
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
