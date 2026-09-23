@@ -64,11 +64,12 @@ public sealed class TransactionalRulesTests
     // --- NewCustomerHighAmountRule ---
 
     [Test]
-    public void NewCustomerHighAmount_NewCustomerAboveThreshold_Hits()
+    public void NewCustomerHighAmount_NewCustomerDigitalAboveThreshold_Hits()
     {
         var context = FraudContextMother.Default() with
         {
             IsNewCustomer = true,
+            Delivery = DeliveryType.Digital,
             Amount = new Money(NewCustomerHighAmountRule.AmountThreshold + 1m, "BRL")
         };
 
@@ -76,6 +77,21 @@ public sealed class TransactionalRulesTests
 
         result.Hit.Should().BeTrue();
         result.RuleCode.Should().Be("NEW_CUSTOMER_HIGH_AMOUNT");
+    }
+
+    [Test]
+    public void NewCustomerHighAmount_NewCustomerPhysicalAboveThreshold_DoesNotHit()
+    {
+        var context = FraudContextMother.Default() with
+        {
+            IsNewCustomer = true,
+            Delivery = DeliveryType.Physical,
+            Amount = new Money(NewCustomerHighAmountRule.AmountThreshold + 1m, "BRL")
+        };
+
+        var result = new NewCustomerHighAmountRule().Evaluate(context);
+
+        result.Hit.Should().BeFalse();
     }
 
     [Test]
