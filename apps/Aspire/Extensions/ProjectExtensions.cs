@@ -8,7 +8,8 @@ public static class ProjectExtensions
         this IDistributedApplicationBuilder builder,
         IResourceBuilder<PostgresDatabaseResource> db,
         IResourceBuilder<PostgresServerResource> postgres,
-        IResourceBuilder<RabbitMQServerResource> rabbitmq)
+        IResourceBuilder<RabbitMQServerResource> rabbitmq,
+        IResourceBuilder<ContainerResource> prometheus)
     {
         return builder.AddProject<Projects.WebApi>("webapi")
             .WithReference(db)
@@ -20,6 +21,8 @@ public static class ProjectExtensions
             .WithEnvironment("Seeding__Enabled", "true")
             .WithEnvironment("Logging__LogLevel__Microsoft.EntityFrameworkCore", "Warning")
             .WithEnvironment("Logging__LogLevel__Npgsql", "Warning")
+            // Aspire injects the Prometheus base URL; TelemetryExtensions appends /api/v1/otlp
+            .WithEnvironment("PROMETHEUS_OTLP_ENDPOINT", prometheus.GetEndpoint("ui"))
             .WithHttpHealthCheck("/health");
     }
 
@@ -28,7 +31,8 @@ public static class ProjectExtensions
         IResourceBuilder<PostgresDatabaseResource> db,
         IResourceBuilder<PostgresServerResource> postgres,
         IResourceBuilder<RabbitMQServerResource> rabbitmq,
-        IResourceBuilder<ProjectResource> webapi)
+        IResourceBuilder<ProjectResource> webapi,
+        IResourceBuilder<ContainerResource> prometheus)
     {
         return builder.AddProject<Projects.Worker>("worker")
             .WithReference(db)
@@ -40,6 +44,8 @@ public static class ProjectExtensions
             .WithEnvironment("Logging__LogLevel__MassTransit", "Information")
             .WithEnvironment("Logging__LogLevel__Worker.Consumers", "Information")
             .WithEnvironment("Logging__LogLevel__Microsoft.EntityFrameworkCore", "Warning")
-            .WithEnvironment("Logging__LogLevel__Npgsql", "Warning");
+            .WithEnvironment("Logging__LogLevel__Npgsql", "Warning")
+            // Aspire injects the Prometheus base URL; TelemetryExtensions appends /api/v1/otlp
+            .WithEnvironment("PROMETHEUS_OTLP_ENDPOINT", prometheus.GetEndpoint("ui"));
     }
 }

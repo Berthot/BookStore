@@ -7,7 +7,8 @@ public static class InfrastructureExtensions
     public static (
         IResourceBuilder<PostgresServerResource> Postgres,
         IResourceBuilder<PostgresDatabaseResource> Database,
-        IResourceBuilder<RabbitMQServerResource> RabbitMq)
+        IResourceBuilder<RabbitMQServerResource> RabbitMq,
+        IResourceBuilder<ContainerResource> Prometheus)
         AddBookStoreInfrastructure(this IDistributedApplicationBuilder builder)
     {
         var postgres = builder.AddPostgres("postgres")
@@ -25,7 +26,7 @@ public static class InfrastructureExtensions
             .WithImage("rabbitmq", "4-management-alpine");
 
         // Prometheus: OTLP push receiver (--web.enable-otlp-receiver) on port 9090
-        builder.AddContainer("prometheus", "prom/prometheus", "v2.55.0")
+        var prometheus = builder.AddContainer("prometheus", "prom/prometheus", "v2.55.0")
             .WithArgs("--config.file=/etc/prometheus/prometheus.yml", "--web.enable-otlp-receiver")
             .WithBindMount("./prometheus.yml", "/etc/prometheus/prometheus.yml")
             .WithHttpEndpoint(port: 9090, targetPort: 9090, name: "ui");
@@ -39,6 +40,6 @@ public static class InfrastructureExtensions
             .WithEnvironment("GF_AUTH_ANONYMOUS_ENABLED", "true")
             .WithEnvironment("GF_AUTH_ANONYMOUS_ORG_ROLE", "Admin");
 
-        return (postgres, db, rabbitmq);
+        return (postgres, db, rabbitmq, prometheus);
     }
 }
