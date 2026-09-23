@@ -63,7 +63,7 @@ public static class TransactionEndpoints
             await unitOfWork.CommitAsync(cancellationToken);
         }
 
-        return Results.Created($"/api/v1/transactions/{result.Data!.TransactionId}", result.Data);
+        return Results.Accepted($"/api/v1/transactions/{result.Data!.TransactionId}", result.Data);
     }
 
     private static async Task<IResult> GetAsync(

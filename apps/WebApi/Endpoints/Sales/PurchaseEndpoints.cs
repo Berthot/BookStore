@@ -57,7 +57,7 @@ public static class PurchaseEndpoints
             await unitOfWork.CommitAsync(cancellationToken);
         }
 
-        return Results.Created($"/api/v1/purchases/{result.Data!.PurchaseId}", result.Data);
+        return Results.Accepted($"/api/v1/purchases/{result.Data!.PurchaseId}", result.Data);
     }
 
     private static async Task<IResult> GetAsync(
