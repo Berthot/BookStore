@@ -38,7 +38,7 @@ public static class InfrastructureExtensions
             .WithHttpEndpoint(port: 3000, targetPort: 3000, name: "ui")
             .WithEnvironment("GF_SECURITY_ADMIN_PASSWORD", "bookstore")
             .WithEnvironment("GF_AUTH_ANONYMOUS_ENABLED", "true")
-            .WithEnvironment("GF_AUTH_ANONYMOUS_ORG_ROLE", "Admin");
+            .WithEnvironment("GF_AUTH_ANONYMOUS_ORG_ROLE", "Viewer");
 
         return (postgres, db, rabbitmq, prometheus);
     }
