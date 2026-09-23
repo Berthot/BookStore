@@ -2,6 +2,7 @@ using Application.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -11,32 +12,34 @@ namespace Infrastructure.Extensions;
 
 public static class TelemetryExtensions
 {
-    /// <summary>Registers OpenTelemetry traces, metrics and logs exporting via OTLP. Endpoint read from OTEL_EXPORTER_OTLP_ENDPOINT.</summary>
     public static IServiceCollection AddTelemetry(this IServiceCollection services, IConfiguration configuration)
     {
-        var resourceBuilder = ResourceBuilder.CreateDefault()
-            .AddService(serviceName: configuration["OTEL_SERVICE_NAME"] ?? "bookstore");
+        var serviceName = configuration["OTEL_SERVICE_NAME"] ?? "bookstore";
+        var resourceBuilder = ResourceBuilder.CreateDefault().AddService(serviceName);
 
         services.AddOpenTelemetry()
+            .ConfigureResource(r => r.AddService(serviceName))
             .WithTracing(tracing => tracing
-                .SetResourceBuilder(resourceBuilder)
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
                 .AddSource(FraudTelemetry.ActivitySourceName)
-                // Npgsql instrumentation enabled in TSK-0069 after DbContexts are configured
+                .AddSource("MassTransit")
+                .AddNpgsql()
                 .AddOtlpExporter())
             .WithMetrics(metrics => metrics
-                .SetResourceBuilder(resourceBuilder)
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
                 .AddMeter(FraudTelemetry.MeterName)
                 .AddMeter(BookStoreTelemetry.MeterName)
+                .AddMeter("MassTransit")
                 .AddOtlpExporter());
 
         services.AddLogging(logging => logging
             .AddOpenTelemetry(otel =>
             {
                 otel.SetResourceBuilder(resourceBuilder);
+                otel.IncludeScopes = true;
+                otel.IncludeFormattedMessage = true;
                 otel.AddOtlpExporter();
             }));
 

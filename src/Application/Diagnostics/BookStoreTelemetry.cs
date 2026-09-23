@@ -15,5 +15,5 @@ public static class BookStoreTelemetry
 
     /// <summary>Number of idempotency key replays (identical request replayed by the client).</summary>
     public static readonly Counter<long> IdempotencyReplays =
-        Meter.CreateCounter<long>("idempotency.replays");
+        Meter.CreateCounter<long>("bookstore.idempotency.replays");
 }

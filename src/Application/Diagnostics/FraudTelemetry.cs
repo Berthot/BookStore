@@ -25,8 +25,8 @@ public static class FraudTelemetry
     public static readonly Counter<long> RuleHits =
         Meter.CreateCounter<long>("fraud.rule.hits");
 
-    /// <summary>Duration in milliseconds from transaction received to decision recorded.</summary>
+    /// <summary>Duration in seconds from transaction received to decision recorded. Seconds follow OTel semantic conventions.</summary>
     public static readonly Histogram<double> DecisionDuration =
-        Meter.CreateHistogram<double>("fraud.decision.duration", "ms",
-            "Time in milliseconds from transaction creation to fraud decision.");
+        Meter.CreateHistogram<double>("fraud.decision.duration", "s",
+            "Time in seconds from transaction creation to fraud decision.");
 }

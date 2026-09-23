@@ -16,7 +16,7 @@ public sealed class FraudTelemetryTests : UnitTestsBase
         FraudTelemetry.RuleHits.Name.Should().Be("fraud.rule.hits");
         FraudTelemetry.DecisionDuration.Name.Should().Be("fraud.decision.duration");
         BookStoreTelemetry.Purchases.Name.Should().Be("bookstore.purchases");
-        BookStoreTelemetry.IdempotencyReplays.Name.Should().Be("idempotency.replays");
+        BookStoreTelemetry.IdempotencyReplays.Name.Should().Be("bookstore.idempotency.replays");
     }
 
     [Test]

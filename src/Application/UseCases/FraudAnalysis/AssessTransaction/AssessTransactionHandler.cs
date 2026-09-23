@@ -110,7 +110,7 @@ public sealed class AssessTransactionHandler(
 
         FraudTelemetry.Decisions.Add(1, new System.Collections.Generic.KeyValuePair<string, object?>("outcome", assessment.Outcome));
         FraudTelemetry.DecisionDuration.Record(
-            (now - transaction.CreatedAt).TotalMilliseconds,
+            (now - transaction.CreatedAt).TotalSeconds,
             new System.Collections.Generic.KeyValuePair<string, object?>("outcome", assessment.Outcome));
 
         return OperationResult<AssessTransactionResponse>.SuccessResult(
