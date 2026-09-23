@@ -78,37 +78,52 @@ public sealed class AssessTransactionHandler(
 
         var now = DateTime.UtcNow;
 
-        // Evaluate rules under a dedicated span
-        using var evalSpan = FraudTelemetry.ActivitySource.StartActivity("fraud.rules.evaluate");
+        // Sibling span 1: rule evaluation — disposed before the decide span opens
+        Domain.Entities.FraudAnalysis.Assessment assessment;
+        {
+            using var evalSpan = FraudTelemetry.ActivitySource.StartActivity("fraud.rules.evaluate");
+            evalSpan?.SetTag("transaction.id", transaction.Id);
 
-        var assessment = ruleSet.Evaluate(transaction.Id, context, now);
+            assessment = ruleSet.Evaluate(transaction.Id, context, now);
 
-        foreach (var eval in assessment.Evaluations.Where(e => e.Hit))
-            FraudTelemetry.RuleHits.Add(1, new System.Collections.Generic.KeyValuePair<string, object?>("rule_code", eval.RuleCode));
+            var score = (int)Math.Round(assessment.Evaluations.Sum(e => e.Weight) * 100);
 
-        evalSpan?.SetTag("fraud.rules.hit_count", assessment.Evaluations.Count(e => e.Hit));
-        evalSpan?.SetTag("fraud.decision.outcome", assessment.Outcome.ToString());
+            foreach (var eval in assessment.Evaluations.Where(e => e.Hit))
+                FraudTelemetry.RuleHits.Add(1,
+                    new System.Collections.Generic.KeyValuePair<string, object?>("rule_code", eval.RuleCode));
 
-        // Record decision and commit assessment + outbox under a dedicated span
-        using var decideSpan = FraudTelemetry.ActivitySource.StartActivity("fraud.transaction.decide");
+            evalSpan?.SetTag("fraud.rules.hit_count", assessment.Evaluations.Count(e => e.Hit));
+            evalSpan?.SetTag("fraud.outcome", assessment.Outcome.ToString());
+            evalSpan?.SetTag("fraud.score", score);
+        }
 
-        var decideError = transaction.Decide(assessment);
-        if (decideError is not null)
-            return OperationResult<AssessTransactionResponse>.Fail(ErrorCode.Unprocessable, decideError.Message);
+        // Sibling span 2: persist decision and publish event — starts after evalSpan is disposed
+        {
+            using var decideSpan = FraudTelemetry.ActivitySource.StartActivity("fraud.transaction.decide");
+            decideSpan?.SetTag("transaction.id", transaction.Id);
+            decideSpan?.SetTag("fraud.outcome", assessment.Outcome.ToString());
+            decideSpan?.SetTag("fraud.score",
+                (int)Math.Round(assessment.Evaluations.Sum(e => e.Weight) * 100));
 
-        repository.AddAssessment(assessment);
+            var decideError = transaction.Decide(assessment);
+            if (decideError is not null)
+                return OperationResult<AssessTransactionResponse>.Fail(ErrorCode.Unprocessable, decideError.Message);
 
-        await unitOfWork.CommitAsync(cancellationToken);
+            repository.AddAssessment(assessment);
 
-        await publisher.PublishAsync(
-            new TransactionDecided(
-                transaction.Id,
-                assessment.Outcome,
-                transaction.CorrelationId,
-                now),
-            cancellationToken);
+            await unitOfWork.CommitAsync(cancellationToken);
 
-        FraudTelemetry.Decisions.Add(1, new System.Collections.Generic.KeyValuePair<string, object?>("outcome", assessment.Outcome));
+            await publisher.PublishAsync(
+                new TransactionDecided(
+                    transaction.Id,
+                    assessment.Outcome,
+                    transaction.CorrelationId,
+                    now),
+                cancellationToken);
+        }
+
+        FraudTelemetry.Decisions.Add(1,
+            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", assessment.Outcome));
         FraudTelemetry.DecisionDuration.Record(
             (now - transaction.CreatedAt).TotalSeconds,
             new System.Collections.Generic.KeyValuePair<string, object?>("outcome", assessment.Outcome));
