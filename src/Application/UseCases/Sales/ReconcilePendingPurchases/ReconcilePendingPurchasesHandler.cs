@@ -1,0 +1,40 @@
+using Application.Abstractions.Messaging;
+using Application.Commons;
+using Application.Messages;
+using Cortex.Mediator.Commands;
+using Domain.Repositories;
+
+namespace Application.UseCases.Sales.ReconcilePendingPurchases;
+
+public sealed class ReconcilePendingPurchasesHandler(
+    IPurchaseRepository purchaseRepository,
+    IEventPublisher publisher)
+    : ICommandHandler<ReconcilePendingPurchasesRequest, OperationResult<ReconcilePendingPurchasesResponse>>
+{
+    public async Task<OperationResult<ReconcilePendingPurchasesResponse>> Handle(
+        ReconcilePendingPurchasesRequest command,
+        CancellationToken cancellationToken)
+    {
+        var stalePurchases = await purchaseRepository.ListPendingFraudCheckAsync(command.Threshold, cancellationToken);
+
+        foreach (var purchase in stalePurchases)
+        {
+            await publisher.PublishAsync(new PurchasePlaced(
+                purchase.Id,
+                purchase.BookId,
+                purchase.Quantity,
+                purchase.Total.Value,
+                purchase.Total.Currency,
+                purchase.BookFormat,
+                purchase.PaymentType,
+                purchase.PaymentFingerprint,
+                purchase.PaymentLast4,
+                purchase.CustomerId,
+                purchase.CorrelationId,
+                purchase.CreatedAt), cancellationToken);
+        }
+
+        return OperationResult<ReconcilePendingPurchasesResponse>.SuccessResult(
+            new ReconcilePendingPurchasesResponse(stalePurchases.Count));
+    }
+}

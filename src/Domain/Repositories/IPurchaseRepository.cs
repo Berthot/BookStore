@@ -10,4 +10,7 @@ public interface IPurchaseRepository : IRepository<Purchase>
 
     /// <summary>Returns the purchase linked to the given fraud transaction id, or null if not found.</summary>
     Task<Purchase?> GetByTransactionIdAsync(Guid transactionId, CancellationToken cancellationToken = default);
+
+    /// <summary>Returns purchases still in PendingFraudCheck created before the given threshold.</summary>
+    Task<IReadOnlyList<Purchase>> ListPendingFraudCheckAsync(DateTime before, CancellationToken cancellationToken = default);
 }

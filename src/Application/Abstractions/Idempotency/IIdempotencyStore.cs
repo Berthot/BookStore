@@ -5,6 +5,9 @@ public interface IIdempotencyStore
 {
     Task<IdempotencyEntry?> FindAsync(string key, CancellationToken cancellationToken = default);
     void Add(IdempotencyEntry entry);
+
+    /// <summary>Deletes all entries created before the given threshold. Executes directly; no UoW commit needed.</summary>
+    Task<int> DeleteExpiredAsync(DateTime before, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Idempotency store scoped to the BookStore schema.</summary>

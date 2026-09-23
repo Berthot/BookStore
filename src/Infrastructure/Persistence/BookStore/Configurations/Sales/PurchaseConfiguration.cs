@@ -12,7 +12,12 @@ internal sealed class PurchaseConfiguration : IEntityTypeConfiguration<Purchase>
         builder.HasKey(p => p.Id);
 
         builder.Property(p => p.BookId).IsRequired();
+        builder.Property(p => p.BookFormat).HasMaxLength(20).IsRequired();
         builder.Property(p => p.Quantity).IsRequired();
+        builder.Property(p => p.CustomerId).HasMaxLength(100).IsRequired();
+        builder.Property(p => p.PaymentType).HasMaxLength(50).IsRequired();
+        builder.Property(p => p.PaymentFingerprint).HasMaxLength(255).IsRequired();
+        builder.Property(p => p.PaymentLast4).HasMaxLength(4);
         builder.Property(p => p.TransactionId);
         builder.Property(p => p.CorrelationId).HasMaxLength(100).IsRequired();
         builder.Property(p => p.Status).IsRequired();

@@ -24,7 +24,18 @@ public sealed class PurchaseBookHandler(
             return OperationResult<PurchaseBookResponse>.Fail(ErrorCode.NotFound, "Book not found.");
 
         var total = new Money(book.Price.Value * command.Quantity, book.Price.Currency);
-        var purchase = Purchase.Create(command.BookId, command.Quantity, total, command.CorrelationId, DateTime.UtcNow);
+        var bookFormat = book.Format.ToString().ToUpperInvariant();
+        var purchase = Purchase.Create(
+            command.BookId,
+            bookFormat,
+            command.Quantity,
+            total,
+            command.CustomerId,
+            command.PaymentType,
+            command.PaymentFingerprint,
+            command.PaymentLast4,
+            command.CorrelationId,
+            DateTime.UtcNow);
 
         purchaseRepository.Add(purchase);
 

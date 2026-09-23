@@ -14,6 +14,9 @@ internal abstract class IdempotencyStore<TContext>(TContext context) : IIdempote
 
     public void Add(IdempotencyEntry entry) =>
         context.Set<IdempotencyEntry>().Add(entry);
+
+    public Task<int> DeleteExpiredAsync(DateTime before, CancellationToken cancellationToken = default) =>
+        context.Set<IdempotencyEntry>().Where(e => e.CreatedAt < before).ExecuteDeleteAsync(cancellationToken);
 }
 
 internal sealed class BookStoreIdempotencyStore(BookStoreDbContext context)
