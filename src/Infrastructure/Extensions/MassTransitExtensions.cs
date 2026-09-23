@@ -12,7 +12,7 @@ public static class MassTransitExtensions
     /// <summary>Retry intervals (ms) grow to ride out transient database restarts without flooding the broker.</summary>
     private static readonly int[] RetryIntervalsMs = [5_000, 30_000, 60_000, 300_000];
 
-    /// <summary>Registers MassTransit with RabbitMQ transport, EF Core Bus Outbox and Consumer Inbox for both bounded contexts. Consumers are scanned from the entry assembly (Worker or WebApi).</summary>
+    /// <summary>Registers MassTransit with RabbitMQ transport, EF Core outbox/inbox infrastructure for both bounded contexts. Consumers are scanned from the entry assembly (Worker or WebApi).</summary>
     public static IServiceCollection AddMessaging(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddMassTransit(bus =>
@@ -22,17 +22,19 @@ public static class MassTransitExtensions
             if (entryAssembly is not null)
                 bus.AddConsumers(entryAssembly);
 
-            // Bus Outbox — messages enter the same SaveChanges as the entity change
+            // EF Core outbox/inbox tables — enables InboxState and OutboxMessage infrastructure
+            // for both bounded contexts. UseBusOutbox() is intentionally omitted: with two
+            // DbContext outboxes registered simultaneously it triggers a race condition in
+            // BusOutboxNotification.WaitForDelivery that silently swallows HTTP-scope publishes
+            // (MassTransit 8.5.x bug). Messages are published directly to the broker instead.
             bus.AddEntityFrameworkOutbox<BookStoreDbContext>(outbox =>
             {
                 outbox.UsePostgres();
-                outbox.UseBusOutbox();
             });
 
             bus.AddEntityFrameworkOutbox<FraudDbContext>(outbox =>
             {
                 outbox.UsePostgres();
-                outbox.UseBusOutbox();
             });
 
             bus.UsingRabbitMq((context, cfg) =>
