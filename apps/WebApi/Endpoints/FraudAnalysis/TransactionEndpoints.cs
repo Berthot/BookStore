@@ -3,6 +3,9 @@ using Application.UseCases.FraudAnalysis.GetTransaction;
 using Application.UseCases.FraudAnalysis.SubmitTransaction;
 using Cortex.Mediator;
 using Domain.Repositories;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Options;
+using System.Text.Json;
 using WebApi.Extensions;
 using WebApi.Filters.Idempotency;
 using WebApi.OpenApi;
@@ -32,6 +35,7 @@ public static class TransactionEndpoints
         IFraudUnitOfWork unitOfWork,
         IFraudIdempotencyStore idempotencyStore,
         IMediator mediator,
+        IOptions<JsonOptions> jsonOptions,
         CancellationToken cancellationToken)
     {
         var correlationId = httpContext.Request.Headers["X-Correlation-Id"].ToString();
@@ -58,7 +62,7 @@ public static class TransactionEndpoints
         // Complete the idempotency entry and commit it
         if (httpContext.Items[IdempotencyFilter<IFraudIdempotencyStore>.HttpContextEntryKey] is IdempotencyEntry entry)
         {
-            var responseJson = System.Text.Json.JsonSerializer.Serialize(result.Data);
+            var responseJson = JsonSerializer.Serialize(result.Data, jsonOptions.Value.SerializerOptions);
             entry.Complete(responseJson, result.Data!.TransactionId);
             await unitOfWork.CommitAsync(cancellationToken);
         }
