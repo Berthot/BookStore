@@ -27,7 +27,7 @@ public sealed class GetPurchaseHandler(IPurchaseRepository repository)
     internal static GetPurchaseResponse MapToResponse(Purchase p) =>
         new(
             p.Id,
-            p.Status.ToString().ToUpperInvariant(),
+            p.Status,
             GetCustomerMessage(p.Status),
             GetFraudDetails(p.Status),
             p.CreatedAt);

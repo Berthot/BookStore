@@ -2,6 +2,7 @@ using Application.Abstractions.Messaging;
 using Application.Commons;
 using Application.Messages;
 using Application.UseCases.Sales.PurchaseBook;
+using Domain.Enums;
 using Domain.Repositories;
 using NSubstitute;
 using Tests.Shared.Attributes;
@@ -97,7 +98,7 @@ public sealed class PurchaseBookHandlerTests : UnitTestsBase
         var result = await _handler.Handle(ValidRequest(book.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        result.Data!.Status.Should().Be("PENDINGFRAUDCHECK");
+        result.Data!.Status.Should().Be(PurchaseStatus.PendingFraudCheck);
     }
 
     [Test]

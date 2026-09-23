@@ -56,6 +56,6 @@ public sealed class PurchaseBookHandler(
         await unitOfWork.CommitAsync(cancellationToken);
 
         return OperationResult<PurchaseBookResponse>.SuccessResult(
-            new PurchaseBookResponse(purchase.Id, purchase.Status.ToString().ToUpperInvariant()));
+            new PurchaseBookResponse(purchase.Id, purchase.Status));
     }
 }

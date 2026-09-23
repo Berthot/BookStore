@@ -1,5 +1,6 @@
 using Application.Commons;
 using Application.UseCases.Sales.ApplyFraudDecision;
+using Domain.Enums;
 using Domain.Repositories;
 using NSubstitute;
 using Tests.Shared.Attributes;
@@ -46,7 +47,7 @@ public sealed class ApplyFraudDecisionHandlerTests : UnitTestsBase
         var result = await _handler.Handle(new ApplyFraudDecisionRequest(transactionId, "Approved"), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        result.Data!.Status.Should().Be("CONFIRMED");
+        result.Data!.Status.Should().Be(PurchaseStatus.Confirmed);
     }
 
     [Test]
@@ -60,7 +61,7 @@ public sealed class ApplyFraudDecisionHandlerTests : UnitTestsBase
         var result = await _handler.Handle(new ApplyFraudDecisionRequest(transactionId, "Rejected"), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        result.Data!.Status.Should().Be("CANCELLED");
+        result.Data!.Status.Should().Be(PurchaseStatus.Cancelled);
     }
 
     [Test]
@@ -74,7 +75,7 @@ public sealed class ApplyFraudDecisionHandlerTests : UnitTestsBase
         var result = await _handler.Handle(new ApplyFraudDecisionRequest(transactionId, "Review"), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        result.Data!.Status.Should().Be("UNDERREVIEW");
+        result.Data!.Status.Should().Be(PurchaseStatus.UnderReview);
     }
 
     [Test]
@@ -102,7 +103,7 @@ public sealed class ApplyFraudDecisionHandlerTests : UnitTestsBase
         var result = await _handler.Handle(new ApplyFraudDecisionRequest(transactionId, "Approved"), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        result.Data!.Status.Should().Be("CONFIRMED");
+        result.Data!.Status.Should().Be(PurchaseStatus.Confirmed);
     }
 
     [Test]

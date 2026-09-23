@@ -21,7 +21,7 @@ public sealed class ApplyFraudDecisionHandler(
 
         if (purchase.Status is PurchaseStatus.Confirmed or PurchaseStatus.Cancelled)
             return OperationResult<ApplyFraudDecisionResponse>.SuccessResult(
-                new ApplyFraudDecisionResponse(purchase.Id, purchase.Status.ToString().ToUpperInvariant()));
+                new ApplyFraudDecisionResponse(purchase.Id, purchase.Status));
 
         if (!Enum.TryParse<Outcome>(command.Outcome, ignoreCase: true, out var outcome))
             return OperationResult<ApplyFraudDecisionResponse>.Fail(ErrorCode.Unprocessable, $"Unknown outcome: {command.Outcome}");
@@ -35,6 +35,6 @@ public sealed class ApplyFraudDecisionHandler(
         BookStoreTelemetry.Purchases.Add(1);
 
         return OperationResult<ApplyFraudDecisionResponse>.SuccessResult(
-            new ApplyFraudDecisionResponse(purchase.Id, purchase.Status.ToString().ToUpperInvariant()));
+            new ApplyFraudDecisionResponse(purchase.Id, purchase.Status));
     }
 }

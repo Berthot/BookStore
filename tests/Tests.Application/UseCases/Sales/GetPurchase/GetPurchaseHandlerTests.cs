@@ -1,5 +1,6 @@
 using Application.Commons;
 using Application.UseCases.Sales.GetPurchase;
+using Domain.Enums;
 using Domain.Repositories;
 using NSubstitute;
 using Tests.Shared.Attributes;
@@ -93,6 +94,6 @@ public sealed class GetPurchaseHandlerTests : UnitTestsBase
 
         var result = await _handler.Handle(new GetPurchaseRequest(purchase.Id), CancellationToken.None);
 
-        result.Data!.Status.Should().Be("PENDINGFRAUDCHECK");
+        result.Data!.Status.Should().Be(PurchaseStatus.PendingFraudCheck);
     }
 }
