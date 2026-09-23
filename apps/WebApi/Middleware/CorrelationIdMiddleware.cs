@@ -9,7 +9,11 @@ public sealed class CorrelationIdMiddleware(RequestDelegate next)
         var correlationId = context.Request.Headers[HeaderName].FirstOrDefault();
 
         if (string.IsNullOrWhiteSpace(correlationId))
+        {
             correlationId = Guid.NewGuid().ToString();
+            // Propagate to request headers so downstream handlers see the generated value.
+            context.Request.Headers[HeaderName] = correlationId;
+        }
 
         context.Response.Headers[HeaderName] = correlationId;
 
