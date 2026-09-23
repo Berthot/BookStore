@@ -29,6 +29,8 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
+builder.Services.AddHealthChecks();
+
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
@@ -55,6 +57,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
         options.SwaggerEndpoint("/openapi/v1.json", "BookStore API v1"));
 }
+
+app.MapHealthChecks("/health");
 
 var api = app.MapGroup("/api/v1");
 
