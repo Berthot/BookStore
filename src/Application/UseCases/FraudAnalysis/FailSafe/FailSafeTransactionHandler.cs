@@ -38,6 +38,8 @@ public sealed class FailSafeTransactionHandler(
         if (error is not null)
             return OperationResult<FailSafeTransactionResponse>.Fail(ErrorCode.Unprocessable, error.Message);
 
+        repository.AddAssessment(transaction.CurrentAssessment()!);
+
         await publisher.PublishAsync(
             new TransactionDecided(
                 transaction.Id,

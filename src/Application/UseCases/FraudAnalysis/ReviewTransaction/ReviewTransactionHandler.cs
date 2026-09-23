@@ -56,6 +56,8 @@ public sealed class ReviewTransactionHandler(
         if (reviewError is not null)
             return OperationResult<GetTransactionResponse>.Fail(ErrorCode.Unprocessable, reviewError.Message);
 
+        repository.AddAssessment(assessment);
+
         await publisher.PublishAsync(
             new TransactionDecided(
                 transaction.Id,

@@ -96,6 +96,8 @@ public sealed class AssessTransactionHandler(
         if (decideError is not null)
             return OperationResult<AssessTransactionResponse>.Fail(ErrorCode.Unprocessable, decideError.Message);
 
+        repository.AddAssessment(assessment);
+
         await publisher.PublishAsync(
             new TransactionDecided(
                 transaction.Id,

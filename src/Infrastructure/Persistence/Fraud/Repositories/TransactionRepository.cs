@@ -13,6 +13,8 @@ internal sealed class TransactionRepository(FraudDbContext context) : ITransacti
 
     public void Add(Transaction entity) => context.Transactions.Add(entity);
 
+    public void AddAssessment(Assessment assessment) => context.Assessments.Add(assessment);
+
     public async Task<Transaction?> GetByCorrelationIdAsync(string correlationId, CancellationToken cancellationToken = default) =>
         await context.Transactions
             .Include(t => t.Assessments)
