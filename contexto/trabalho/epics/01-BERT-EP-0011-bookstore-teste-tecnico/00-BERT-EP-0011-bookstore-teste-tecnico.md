@@ -3,7 +3,7 @@ id: BERT-EP-0011
 title: "EP-0011 — BookStore: implementação do teste técnico .NET"
 type: epic
 versão: "1.0.0"
-status: pendente
+status: concluido
 executor: claude-code
 references:
   - 05-matheus/05-brainstorm/03-ancora-teste-tecnico-dotnet.md
@@ -11,7 +11,7 @@ tags:
 - '#contexto/bertho'
 - '#area/trabalho'
 created_at: 2026-09-22
-updated_at: 2026-09-22
+updated_at: 2026-09-23
 governed_by:
 - '[[trabalho-bertho]]'
 children:
