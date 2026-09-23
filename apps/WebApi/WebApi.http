@@ -1,6 +1,113 @@
-@WebApi_HostAddress = http://localhost:5085
+@baseUrl = http://localhost:8080
+@bookCleanCode  = 11111111-0000-0000-0000-000000000001
+@bookPragmatic  = 11111111-0000-0000-0000-000000000002
+@bookDdd        = 11111111-0000-0000-0000-000000000003
 
-GET {{WebApi_HostAddress}}/weatherforecast/
+### GET /api/v1/books — catálogo completo
+GET {{baseUrl}}/api/v1/books
 Accept: application/json
+
+###
+
+### POST /api/v1/purchases — nova compra (S1: físico, valor baixo)
+POST {{baseUrl}}/api/v1/purchases
+Content-Type: application/json
+Idempotency-Key: s1-physical-low-value
+
+{
+  "bookId": "{{bookCleanCode}}",
+  "quantity": 1,
+  "customerId": "cus_s1_established",
+  "payment": {
+    "type": "CREDIT_CARD",
+    "fingerprint": "fp_s1_physical_low",
+    "last4": "1234"
+  },
+  "channel": "WEB"
+}
+
+###
+
+### POST /api/v1/purchases — nova compra (S2: ebook caro, cliente novo → REJECTED)
+POST {{baseUrl}}/api/v1/purchases
+Content-Type: application/json
+Idempotency-Key: s2-ebook-expensive-new
+
+{
+  "bookId": "{{bookPragmatic}}",
+  "quantity": 2,
+  "customerId": "cus_s2_new",
+  "payment": {
+    "type": "CREDIT_CARD",
+    "fingerprint": "fp_s2_ebook_expensive",
+    "last4": "9999"
+  },
+  "channel": "WEB"
+}
+
+###
+
+### POST /api/v1/purchases — nova compra (S3: bulk 10x → REVIEW)
+POST {{baseUrl}}/api/v1/purchases
+Content-Type: application/json
+Idempotency-Key: s3-bulk-ten-units
+
+{
+  "bookId": "{{bookCleanCode}}",
+  "quantity": 10,
+  "customerId": "cus_s3_bulk",
+  "payment": {
+    "type": "CREDIT_CARD",
+    "fingerprint": "fp_s3_bulk",
+    "last4": "5678"
+  },
+  "channel": "WEB"
+}
+
+###
+
+### GET /api/v1/purchases/:id — status da compra
+@purchaseId = <cole o purchaseId aqui>
+
+GET {{baseUrl}}/api/v1/purchases/{{purchaseId}}
+Accept: application/json
+
+###
+
+### POST /api/v1/transactions — submeter transação diretamente (S11: estruturação)
+POST {{baseUrl}}/api/v1/transactions
+Content-Type: application/json
+Idempotency-Key: s11-structuring-001
+
+{
+  "externalReference": "s11-structuring-1",
+  "customerId": "cus_s11_structuring",
+  "amount": { "value": 475.00, "currency": "BRL" },
+  "payment": { "type": "CREDIT_CARD", "fingerprint": "fp_s11_struct", "last4": "3333" },
+  "channel": "WEB",
+  "delivery": "PHYSICAL",
+  "itemCount": 1,
+  "occurredAt": "2026-09-22T14:30:00Z"
+}
+
+###
+
+### GET /api/v1/transactions/:id — status da transação
+@transactionId = <cole o transactionId aqui>
+
+GET {{baseUrl}}/api/v1/transactions/{{transactionId}}
+Accept: application/json
+
+###
+
+### POST /api/v1/transactions/:id/review — revisão humana (S4)
+POST {{baseUrl}}/api/v1/transactions/{{transactionId}}/review
+Content-Type: application/json
+
+{
+  "outcome": "APPROVED",
+  "reviewerId": "revisor_01",
+  "justification": "Cliente confirmou a compra via telefone."
+}
 
 ###

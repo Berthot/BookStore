@@ -1,0 +1,783 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "BookStore — Antifraude",
+    "description": "Cobre os 11 cenários do desafio técnico (S1–S11). Execute com o ambiente 'BookStore — Local' após subir `docker compose -f deploy/docker-compose.yml up -d --wait`.\n\nBook IDs fixos (seed):\n- 11111111-0000-0000-0000-000000000001 → Clean Code (Paperback, R$ 49,90)\n- 11111111-0000-0000-0000-000000000002 → The Pragmatic Programmer (Ebook, R$ 349,90)\n- 11111111-0000-0000-0000-000000000003 → Domain-Driven Design (Hardcover, R$ 149,90)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "BOOK_CLEAN_CODE", "value": "11111111-0000-0000-0000-000000000001" },
+    { "key": "BOOK_PRAGMATIC", "value": "11111111-0000-0000-0000-000000000002" },
+    { "key": "BOOK_DDD", "value": "11111111-0000-0000-0000-000000000003" }
+  ],
+  "item": [
+    {
+      "name": "Catálogo",
+      "item": [
+        {
+          "name": "GET /books",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/books", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "S1 — Livro físico, cliente com histórico → APPROVED",
+      "item": [
+        {
+          "name": "S1.1 — POST /purchases (Clean Code ×1)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set('s1IdempotencyKey', pm.variables.replaceIn('{{$guid}}'));"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));",
+                  "const body = pm.response.json();",
+                  "pm.test('status PENDING_FRAUD_CHECK', () => pm.expect(body.status).to.eql('PENDING_FRAUD_CHECK'));",
+                  "pm.environment.set('s1PurchaseId', body.purchaseId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{s1IdempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s1_established\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s1_physical_low\",\n    \"last4\": \"1234\"\n  },\n  \"channel\": \"WEB\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S1.2 — GET /purchases/:id (aguardar CONFIRMED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('status CONFIRMED ou PENDING_FRAUD_CHECK', () => {",
+                  "  pm.expect(['CONFIRMED', 'PENDING_FRAUD_CHECK', 'UNDER_REVIEW']).to.include(body.status);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases/{{s1PurchaseId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases", "{{s1PurchaseId}}"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "S2 — E-book caro, cliente novo → REJECTED",
+      "item": [
+        {
+          "name": "S2.1 — POST /purchases (Pragmatic Programmer ×2, cliente novo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('s2PurchaseId', body.purchaseId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{BOOK_PRAGMATIC}}\",\n  \"quantity\": 2,\n  \"customerId\": \"cus_s2_new\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s2_ebook_expensive\",\n    \"last4\": \"9999\"\n  },\n  \"channel\": \"WEB\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S2.2 — GET /purchases/:id (aguardar CANCELLED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('status CANCELLED ou PENDING_FRAUD_CHECK', () => {",
+                  "  pm.expect(['CANCELLED', 'PENDING_FRAUD_CHECK']).to.include(body.status);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases/{{s2PurchaseId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases", "{{s2PurchaseId}}"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "S3 — 10 unidades → REVIEW",
+      "item": [
+        {
+          "name": "S3.1 — POST /purchases (Clean Code ×10)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('s3PurchaseId', body.purchaseId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 10,\n  \"customerId\": \"cus_s3_bulk\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s3_bulk\",\n    \"last4\": \"5678\"\n  },\n  \"channel\": \"WEB\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S3.2 — GET /purchases/:id (aguardar UNDER_REVIEW)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('status UNDER_REVIEW ou PENDING_FRAUD_CHECK', () => {",
+                  "  pm.expect(['UNDER_REVIEW', 'PENDING_FRAUD_CHECK']).to.include(body.status);",
+                  "});",
+                  "if (body.fraudDetails && body.fraudDetails.transactionId) {",
+                  "  pm.environment.set('s3TransactionId', body.fraudDetails.transactionId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases/{{s3PurchaseId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases", "{{s3PurchaseId}}"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "S4 — Revisão humana aprova S3 → CONFIRMED",
+      "item": [
+        {
+          "name": "S4.1 — GET /transactions/:id (verificar status REVIEW)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('tem decision', () => pm.expect(body.decision).to.not.be.null);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/transactions/{{s3TransactionId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transactions", "{{s3TransactionId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S4.2 — POST /transactions/:id/review (APPROVED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('decisão APPROVED', () => pm.expect(body.decision.outcome).to.eql('APPROVED'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"outcome\": \"APPROVED\",\n  \"reviewerId\": \"revisor_01\",\n  \"justification\": \"Cliente confirmou a compra via telefone. Pedido bulk legítimo para distribuição interna.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/transactions/{{s3TransactionId}}/review", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transactions", "{{s3TransactionId}}", "review"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S4.3 — GET /purchases/:id (aguardar CONFIRMED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases/{{s3PurchaseId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases", "{{s3PurchaseId}}"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "S5 — Velocidade de cartão → REJECTED na 6ª compra",
+      "description": "Executa 5 compras com o mesmo fingerprint (APPROVED) e depois a 6ª que aciona CARD_VELOCITY.",
+      "item": [
+        {
+          "name": "S5.1 — Compra 1 (mesmo cartão)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S5.2 — Compra 2 (mesmo cartão)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S5.3 — Compra 3 (mesmo cartão)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S5.4 — Compra 4 (mesmo cartão)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S5.5 — Compra 5 (mesmo cartão)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S5.6 — Compra 6 → CARD_VELOCITY → REJECTED",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('s5LastPurchaseId', body.purchaseId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S5.7 — GET /purchases/:id (aguardar CANCELLED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('status CANCELLED ou PENDING_FRAUD_CHECK', () => {",
+                  "  pm.expect(['CANCELLED', 'PENDING_FRAUD_CHECK']).to.include(body.status);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases/{{s5LastPurchaseId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases", "{{s5LastPurchaseId}}"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "S6 — Replay: mesma Idempotency-Key → mesma resposta",
+      "item": [
+        {
+          "name": "S6 — POST /purchases (replay de S1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('2xx (replay)', () => pm.expect(pm.response.code).to.be.oneOf([200, 202]));",
+                  "const body = pm.response.json();",
+                  "pm.test('purchaseId igual ao de S1', () => {",
+                  "  pm.expect(body.purchaseId).to.eql(pm.environment.get('s1PurchaseId'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{s1IdempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s1_established\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s1_physical_low\",\n    \"last4\": \"1234\"\n  },\n  \"channel\": \"WEB\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "S7 — Mesma chave, corpo diferente → 422",
+      "item": [
+        {
+          "name": "S7 — POST /purchases (mesma key de S1, corpo diferente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('422 Unprocessable Entity', () => pm.response.to.have.status(422));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{s1IdempotencyKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{BOOK_DDD}}\",\n  \"quantity\": 2,\n  \"customerId\": \"cus_diferente\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_diferente\",\n    \"last4\": \"0001\"\n  },\n  \"channel\": \"WEB\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "S8 — Sem Idempotency-Key → 400",
+      "item": [
+        {
+          "name": "S8 — POST /purchases sem Idempotency-Key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('400 Bad Request', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s8\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s8\",\n    \"last4\": \"1111\"\n  },\n  \"channel\": \"WEB\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "S10 — Valor acima da média → REVIEW",
+      "description": "Realiza 3 compras baratas para estabelecer histórico, depois submete uma transação 3x acima da média.",
+      "item": [
+        {
+          "name": "S10.1 — Compra 1 histórico (R$ 49,90)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s10_deviation\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s10_history\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S10.2 — Compra 2 histórico (R$ 49,90)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s10_deviation\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s10_history\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S10.3 — Compra 3 histórico (R$ 49,90)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s10_deviation\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s10_history\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S10.4 — Compra alta (DDD R$ 149,90 > 3×49,90=149,70) → REVIEW",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('s10PurchaseId', body.purchaseId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": \"{{BOOK_DDD}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s10_deviation\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s10_history\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S10.5 — GET /purchases/:id (aguardar UNDER_REVIEW)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('status UNDER_REVIEW ou PENDING_FRAUD_CHECK', () => {",
+                  "  pm.expect(['UNDER_REVIEW', 'PENDING_FRAUD_CHECK']).to.include(body.status);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/purchases/{{s10PurchaseId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchases", "{{s10PurchaseId}}"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "S11 — Estruturação (3 compras abaixo do limite) → REVIEW",
+      "description": "Três transações no intervalo [450, 500) acionam STRUCTURING. Usa o endpoint /transactions diretamente.",
+      "item": [
+        {
+          "name": "S11.1 — Transação R$ 475 (abaixo de R$ 500)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalReference\": \"s11-structuring-1\",\n  \"customerId\": \"cus_s11_structuring\",\n  \"amount\": { \"value\": 475.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"fp_s11_struct\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/transactions", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transactions"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S11.2 — Transação R$ 480 (abaixo de R$ 500)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('202 Accepted', () => pm.response.to.have.status(202));"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalReference\": \"s11-structuring-2\",\n  \"customerId\": \"cus_s11_structuring\",\n  \"amount\": { \"value\": 480.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"fp_s11_struct\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/transactions", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transactions"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S11.3 — Transação R$ 490 → STRUCTURING → REVIEW",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('s11TransactionId', body.transactionId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"externalReference\": \"s11-structuring-3\",\n  \"customerId\": \"cus_s11_structuring\",\n  \"amount\": { \"value\": 490.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"fp_s11_struct\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/transactions", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transactions"] }
+          },
+          "response": []
+        },
+        {
+          "name": "S11.4 — GET /transactions/:id (aguardar REVIEW)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('status DECIDED ou PROCESSING', () => {",
+                  "  pm.expect(['DECIDED', 'PROCESSING', 'RECEIVED']).to.include(body.status);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/transactions/{{s11TransactionId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transactions", "{{s11TransactionId}}"] }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
