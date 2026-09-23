@@ -3,13 +3,13 @@ id: BERT-TSK-0077
 title: "TSK-0077 — Métricas de negócio e spans das regras"
 type: task
 versão: "1.0.0"
-status: pendente
+status: concluido
 executor: claude-code
 tags:
 - '#contexto/bertho'
 - '#area/trabalho'
 created_at: 2026-09-22
-updated_at: 2026-09-22
+updated_at: 2026-09-23
 governed_by:
 - '[[00-BERT-ST-0043-antifraude-api-e-worker]]'
 vault_path: 04-trabalho/01-entidades/05-bertho/03-trabalho/01-epics/bookstore/01-BERT-EP-0011-bookstore-teste-tecnico/04-BERT-ST-0043-antifraude-api-e-worker/05-BERT-TSK-0077-metricas-de-negocio.md
@@ -47,9 +47,9 @@ tests/Tests.Application/Diagnostics/**
 
 ## Critério de Aceite
 
-- [ ] As seis métricas existem com os nomes da tabela
-- [ ] `fraud.rule.hits` incrementa uma vez por regra disparada (teste com `MeterListener`)
-- [ ] Spans aparecem com nome de negócio
+- [x] As seis métricas existem com os nomes da tabela
+- [x] `fraud.rule.hits` incrementa uma vez por regra disparada (teste com `MeterListener`)
+- [x] Spans aparecem com nome de negócio
 
 ## Prova de Funcionamento
 
@@ -61,4 +61,18 @@ Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a 
 
 ## Notas de execução
 
-> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
+Implementado `BookStoreTelemetry` (estático) em `src/Application/Diagnostics/` com as seis métricas
+e o `ActivitySource`. `TelemetryExtensions` registra `Meter` e `ActivitySource` no DI para exportação
+via OpenTelemetry. Testes usam `MeterListener` da BCL para verificar incrementos por regra disparada.
+
+**Saída da prova (2026-09-23):**
+```
+dotnet test tests/Tests.Application --filter "FullyQualifiedName~Diagnostics"
+
+Aprovado ActivitySource_has_correct_name
+Aprovado All_six_metrics_are_defined_with_correct_names
+Aprovado Decisions_counter_increments_with_outcome_tag
+Aprovado RuleHits_increments_once_per_triggered_rule_with_rule_code_tag
+
+Total de testes: 4  |  Aprovados: 4  |  Tempo total: 0,76 s
+```

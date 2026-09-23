@@ -3,13 +3,13 @@ id: BERT-TSK-0076
 title: "TSK-0076 — Fail-safe e endpoint de revisão"
 type: task
 versão: "1.0.0"
-status: pendente
+status: concluido
 executor: claude-code
 tags:
 - '#contexto/bertho'
 - '#area/trabalho'
 created_at: 2026-09-22
-updated_at: 2026-09-22
+updated_at: 2026-09-23
 governed_by:
 - '[[00-BERT-ST-0043-antifraude-api-e-worker]]'
 vault_path: 04-trabalho/01-entidades/05-bertho/03-trabalho/01-epics/bookstore/01-BERT-EP-0011-bookstore-teste-tecnico/04-BERT-ST-0043-antifraude-api-e-worker/04-BERT-TSK-0076-fail-safe-e-revisao.md
@@ -50,10 +50,10 @@ tests/Tests.Application/UseCases/FraudAnalysis/FailSafe/**
 
 ## Critério de Aceite
 
-- [ ] Fail-safe só produz `Review` (teste)
-- [ ] Segunda revisão recebe `409` (teste)
-- [ ] Revisão sem justificativa recebe `422` (teste)
-- [ ] Revisão grava novo `Assessment`; o anterior fica no histórico
+- [x] Fail-safe só produz `Review` (teste)
+- [x] Segunda revisão recebe `409` (teste)
+- [x] Revisão sem justificativa recebe `422` (teste)
+- [x] Revisão grava novo `Assessment`; o anterior fica no histórico
 
 ## Prova de Funcionamento
 
@@ -65,4 +65,26 @@ Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a 
 
 ## Notas de execução
 
-> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
+Implementados `ReviewTransactionHandler` e `FailSafeTransactionHandler`. O fail-safe nunca aprova:
+sempre produz `Outcome = Review` com `DecidedBy = System`. O handler de revisão rejeita segunda revisão
+com `409 Conflict` (domain rule: `Review_WhenCurrentOutcomeIsNotReview_ReturnsDomainError`). Histório
+preservado: o `Assessment` anterior permanece em `transaction.History`.
+
+Revisor genérico: `reviewerId` é opcional; internamente gravado como constante (premissa de revisor único
+documentada em `<summary>` em inglês).
+
+**Saída da prova (2026-09-23):**
+```
+dotnet test tests/Tests.Application --filter "FullyQualifiedName~ReviewTransaction|FullyQualifiedName~FailSafe"
+
+Aprovado Handle_already_decided_returns_success_without_side_effects
+Aprovado Handle_fail_safe_always_produces_review_outcome
+Aprovado Handle_processing_transaction_commits_and_publishes_review
+Aprovado Handle_empty_justification_returns_unprocessable
+Aprovado Handle_invalid_outcome_returns_unprocessable
+Aprovado Handle_transaction_not_pending_review_returns_conflict
+Aprovado Handle_unknown_transaction_returns_not_found
+Aprovado Handle_valid_review_records_assessment_and_keeps_history
+
+Total de testes: 8  |  Aprovados: 8  |  Tempo total: 0,93 s
+```

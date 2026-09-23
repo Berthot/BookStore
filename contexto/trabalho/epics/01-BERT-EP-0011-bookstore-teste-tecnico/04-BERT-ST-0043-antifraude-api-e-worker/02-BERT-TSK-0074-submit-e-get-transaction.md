@@ -3,13 +3,13 @@ id: BERT-TSK-0074
 title: "TSK-0074 — SubmitTransaction e GetTransaction (POST e GET /api/v1/transactions)"
 type: task
 versão: "1.0.0"
-status: em-andamento
+status: concluido
 executor: claude-code
 tags:
 - '#contexto/bertho'
 - '#area/trabalho'
 created_at: 2026-09-22
-updated_at: 2026-09-22
+updated_at: 2026-09-23
 governed_by:
 - '[[00-BERT-ST-0043-antifraude-api-e-worker]]'
 vault_path: 04-trabalho/01-entidades/05-bertho/03-trabalho/01-epics/bookstore/01-BERT-EP-0011-bookstore-teste-tecnico/04-BERT-ST-0043-antifraude-api-e-worker/02-BERT-TSK-0074-submit-e-get-transaction.md
@@ -45,10 +45,10 @@ tests/Tests.Application/UseCases/FraudAnalysis/GetTransaction/**
 
 ## Critério de Aceite
 
-- [ ] POST responde `202` com `Location` e `status: RECEIVED`
-- [ ] Handler do Submit chama `CommitAsync` uma única vez (teste)
-- [ ] GET devolve `404` para id inexistente
-- [ ] Corpo do GET não contém `correlationId`
+- [x] POST responde `202` com `Location` e `status: RECEIVED`
+- [x] Handler do Submit chama `CommitAsync` uma única vez (teste)
+- [x] GET devolve `404` para id inexistente
+- [x] Corpo do GET não contém `correlationId`
 
 ## Prova de Funcionamento
 
@@ -60,4 +60,27 @@ Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a 
 
 ## Notas de execução
 
-> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
+Implementados `SubmitTransactionRequest/Response/Handler` e `GetTransactionRequest/Response/Handler` em
+`src/Application/UseCases/FraudAnalysis/`. Handler do Submit grava `Transaction` + chave de idempotência +
+evento `TransactionSubmitted` na outbox em um único `CommitAsync`. Resposta 202 + `Location` header.
+`GetTransaction` retorna `decision: null` enquanto não há decisão; `history` é lista de `Assessment`.
+Corpo do GET não inclui `correlationId` — presente apenas no `X-Correlation-Id` de resposta.
+
+Validators FluentValidation criados na mesma pasta dos handlers.
+
+**Saída da prova (2026-09-23):**
+```
+dotnet test tests/Tests.Application --filter "FullyQualifiedName~SubmitTransaction|FullyQualifiedName~GetTransaction"
+
+Aprovado Handle_decided_transaction_includes_decision_and_history
+Aprovado Handle_existing_transaction_returns_response_without_correlation_id
+Aprovado Handle_received_transaction_decision_is_null
+Aprovado Handle_unknown_id_returns_not_found
+Aprovado Handle_publish_is_called_before_commit
+Aprovado Handle_valid_request_adds_transaction_and_publishes_event
+Aprovado Handle_valid_request_calls_commit_async_exactly_once
+Aprovado Handle_valid_request_returns_success_with_received_status
+Aprovado Handle_zero_amount_returns_validation_failure_without_side_effects
+
+Total de testes: 9  |  Aprovados: 9  |  Tempo total: 0,86 s
+```

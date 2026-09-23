@@ -3,13 +3,13 @@ id: BERT-TSK-0080
 title: "TSK-0080 — IFraudCheckGateway e consumidor de PurchasePlaced"
 type: task
 versão: "1.0.0"
-status: pendente
+status: concluido
 executor: claude-code
 tags:
 - '#contexto/bertho'
 - '#area/trabalho'
 created_at: 2026-09-22
-updated_at: 2026-09-22
+updated_at: 2026-09-23
 governed_by:
 - '[[00-BERT-ST-0044-marketplace]]'
 vault_path: 04-trabalho/01-entidades/05-bertho/03-trabalho/01-epics/bookstore/01-BERT-EP-0011-bookstore-teste-tecnico/05-BERT-ST-0044-marketplace/03-BERT-TSK-0080-porta-para-o-antifraude.md
@@ -42,9 +42,9 @@ tests/Tests.Application/UseCases/Sales/SubmitPurchaseToFraud/**
 
 ## Critério de Aceite
 
-- [ ] Nenhum tipo de `FraudAnalysis` é referenciado dentro de `Sales` (exceto no adaptador de Infrastructure)
-- [ ] Submeter a mesma compra duas vezes gera uma transação só (teste com a chave)
-- [ ] `EBOOK` vira `DIGITAL`
+- [x] Nenhum tipo de `FraudAnalysis` é referenciado dentro de `Sales` (exceto no adaptador de Infrastructure)
+- [x] Submeter a mesma compra duas vezes gera uma transação só (teste com a chave)
+- [x] `EBOOK` vira `DIGITAL`
 
 ## Prova de Funcionamento
 
@@ -56,4 +56,23 @@ Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a 
 
 ## Notas de execução
 
-> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
+`IFraudCheckGateway` definida em `src/Application/UseCases/Sales/Ports/`. Adaptador em
+`src/Infrastructure/Adapters/FraudCheckGateway.cs` — chama `SubmitTransactionHandler` via mediator.
+Nenhum namespace de `FraudAnalysis` é importado no projeto `Application` dentro do contexto `Sales`.
+
+`EBOOK → DIGITAL`, `PHYSICAL_BOOK → PHYSICAL` na tradução. Chave de idempotência = `PurchaseId`.
+Idempotência: segunda submissão retorna sucesso sem efeito colateral (gateway checa se `TransactionId` já
+está vinculado à `Purchase`).
+
+**Saída da prova (2026-09-23):**
+```
+dotnet test tests/Tests.Application --filter "FullyQualifiedName~SubmitPurchaseToFraud"
+
+Aprovado Handle_calls_gateway_and_links_transaction
+Aprovado Handle_commits_once_after_linking
+Aprovado Handle_does_not_commit_when_already_idempotent
+Aprovado Handle_is_idempotent_when_transaction_already_linked
+Aprovado Handle_returns_not_found_when_purchase_missing
+
+Total de testes: 5  |  Aprovados: 5  |  Tempo total: 0,74 s
+```

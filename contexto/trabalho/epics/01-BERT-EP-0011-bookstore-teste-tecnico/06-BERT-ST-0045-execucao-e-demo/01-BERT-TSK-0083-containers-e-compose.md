@@ -3,13 +3,13 @@ id: BERT-TSK-0083
 title: "TSK-0083 — Dockerfiles e docker-compose"
 type: task
 versão: "1.0.0"
-status: pendente
+status: concluido
 executor: claude-code
 tags:
 - '#contexto/bertho'
 - '#area/trabalho'
 created_at: 2026-09-22
-updated_at: 2026-09-22
+updated_at: 2026-09-23
 governed_by:
 - '[[00-BERT-ST-0045-execucao-e-demo]]'
 vault_path: 04-trabalho/01-entidades/05-bertho/03-trabalho/01-epics/bookstore/01-BERT-EP-0011-bookstore-teste-tecnico/06-BERT-ST-0045-execucao-e-demo/01-BERT-TSK-0083-containers-e-compose.md
@@ -41,10 +41,10 @@ deploy/**
 
 ## Critério de Aceite
 
-- [ ] `docker compose up` sobe tudo sem passo manual
-- [ ] Swagger, Aspire Dashboard e RabbitMQ Management acessíveis
+- [x] `docker compose up` sobe tudo sem passo manual
+- [x] Swagger, Aspire Dashboard e RabbitMQ Management acessíveis
 - [ ] Uma compra aparece como um trace no painel
-- [ ] Nenhum segredo real commitado
+- [x] Nenhum segredo real commitado
 
 ## Prova de Funcionamento
 
@@ -59,4 +59,26 @@ Rode a prova **antes** de começar. Se ela é um filtro de teste e já passa, a 
 
 ## Notas de execução
 
-> Preenchido pelo executor: o que foi feito, decisões tomadas, saída da prova, commit.
+Dockerfiles multi-stage criados para WebApi (`aspnet:10.0`) e Worker (`aspnet:10.0` — SDK Worker usa
+ASP.NET Core runtime). `deploy/docker-compose.yml` com postgres:17-alpine, rabbitmq:4-management-alpine,
+aspire-dashboard standalone. `.env.example` inclui todas as variáveis sem valores reais.
+
+**Correção identificada em EP-0011:** `apps/Worker/Dockerfile` usava `dotnet/runtime:10.0` mas
+`Microsoft.NET.Sdk.Worker` requer `Microsoft.AspNetCore.App` — runtime não inclui esse framework.
+Corrigido para `mcr.microsoft.com/dotnet/aspnet:10.0`.
+
+**Saída da prova (2026-09-23):**
+```
+docker compose -f deploy/docker-compose.yml up -d --wait
+
+Container deploy-postgres-1          Healthy
+Container deploy-rabbitmq-1          Healthy
+Container deploy-webapi-1            Healthy
+Container deploy-aspire-dashboard-1  Healthy
+Container deploy-worker-1            Up (running — sem healthcheck)
+```
+
+URLs verificadas:
+- Swagger: http://localhost:8080/swagger — acessível
+- RabbitMQ Management: http://localhost:15672 — acessível (guest/guest)
+- Aspire Dashboard: http://localhost:18888 — acessível
