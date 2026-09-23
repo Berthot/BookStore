@@ -1,3 +1,4 @@
+using Application.Commons;
 using Application.Messages;
 using Application.UseCases.Sales.SubmitPurchaseToFraud;
 using Cortex.Mediator;
@@ -9,7 +10,7 @@ public sealed class PurchasePlacedConsumer(IMediator mediator) : IConsumer<Purch
 {
     public async Task Consume(ConsumeContext<PurchasePlaced> context)
     {
-        await mediator.SendCommandAsync(
+        var result = await mediator.SendCommandAsync(
             new SubmitPurchaseToFraudRequest(
                 context.Message.PurchaseId,
                 context.Message.BookId,
@@ -24,5 +25,11 @@ public sealed class PurchasePlacedConsumer(IMediator mediator) : IConsumer<Purch
                 context.Message.CorrelationId,
                 context.Message.PlacedAt),
             context.CancellationToken);
+
+        // NotFound is idempotent: the purchase was deleted or never persisted — nothing to do.
+        // Any other failure must throw so MassTransit retries and ultimately routes to the error queue.
+        if (!result.IsSuccess && result.ErrorCode != ErrorCode.NotFound)
+            throw new InvalidOperationException(
+                $"SubmitPurchaseToFraud failed [{result.ErrorCode}]: {string.Join("; ", result.Errors)}");
     }
 }

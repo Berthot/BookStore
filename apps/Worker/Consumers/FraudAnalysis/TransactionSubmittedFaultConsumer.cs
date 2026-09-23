@@ -1,3 +1,4 @@
+using Application.Commons;
 using Application.Messages;
 using Application.UseCases.FraudAnalysis.FailSafe;
 using Cortex.Mediator;
@@ -9,10 +10,16 @@ public sealed class TransactionSubmittedFaultConsumer(IMediator mediator) : ICon
 {
     public async Task Consume(ConsumeContext<Fault<TransactionSubmitted>> context)
     {
-        var command = new FailSafeTransactionRequest(
-            context.Message.Message.TransactionId,
-            "Processing unavailable after maximum retry attempts.");
+        var result = await mediator.SendCommandAsync(
+            new FailSafeTransactionRequest(
+                context.Message.Message.TransactionId,
+                "Processing unavailable after maximum retry attempts."),
+            context.CancellationToken);
 
-        await mediator.SendCommandAsync(command, context.CancellationToken);
+        // NotFound is idempotent: transaction was already cleaned up.
+        // Any other failure throws so the fault is nacked and routed to the error queue.
+        if (!result.IsSuccess && result.ErrorCode != ErrorCode.NotFound)
+            throw new InvalidOperationException(
+                $"FailSafeTransaction failed [{result.ErrorCode}]: {string.Join("; ", result.Errors)}");
     }
 }
