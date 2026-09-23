@@ -18,7 +18,8 @@ public static class ProjectExtensions
             .WithEnvironment("OTEL_SERVICE_NAME", "bookstore-webapi")
             .WithEnvironment("Database__ApplyMigrationsOnStartup", "true")
             .WithEnvironment("Seeding__Enabled", "true")
-            .WithEnvironment("Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command", "Warning")
+            .WithEnvironment("Logging__LogLevel__Microsoft.EntityFrameworkCore", "Warning")
+            .WithEnvironment("Logging__LogLevel__Npgsql", "Warning")
             .WithHttpHealthCheck("/health");
     }
 
@@ -37,6 +38,8 @@ public static class ProjectExtensions
             .WaitFor(webapi)
             .WithEnvironment("OTEL_SERVICE_NAME", "bookstore-worker")
             .WithEnvironment("Logging__LogLevel__MassTransit", "Information")
-            .WithEnvironment("Logging__LogLevel__Worker.Consumers", "Information");
+            .WithEnvironment("Logging__LogLevel__Worker.Consumers", "Information")
+            .WithEnvironment("Logging__LogLevel__Microsoft.EntityFrameworkCore", "Warning")
+            .WithEnvironment("Logging__LogLevel__Npgsql", "Warning");
     }
 }

@@ -19,13 +19,16 @@ public static class TelemetryExtensions
 
         services.AddOpenTelemetry()
             .ConfigureResource(r => r.AddService(serviceName))
-            .WithTracing(tracing => tracing
-                .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation()
-                .AddSource(FraudTelemetry.ActivitySourceName)
-                .AddSource("MassTransit")
-                .AddNpgsql()
-                .AddOtlpExporter())
+            .WithTracing(tracing =>
+            {
+                tracing
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddSource(FraudTelemetry.ActivitySourceName)
+                    .AddSource("MassTransit")
+                    .AddNpgsql()
+                    .AddOtlpExporter();
+            })
             .WithMetrics(metrics => metrics
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()

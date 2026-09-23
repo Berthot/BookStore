@@ -24,6 +24,21 @@ public static class InfrastructureExtensions
         var rabbitmq = builder.AddRabbitMQ("RabbitMQ")
             .WithImage("rabbitmq", "4-management-alpine");
 
+        // Prometheus: OTLP push receiver (--web.enable-otlp-receiver) on port 9090
+        builder.AddContainer("prometheus", "prom/prometheus", "v2.55.0")
+            .WithArgs("--config.file=/etc/prometheus/prometheus.yml", "--web.enable-otlp-receiver")
+            .WithBindMount("./prometheus.yml", "/etc/prometheus/prometheus.yml")
+            .WithHttpEndpoint(port: 9090, targetPort: 9090, name: "ui");
+
+        // Grafana: auto-provisioned datasource + dashboards
+        builder.AddContainer("grafana", "grafana/grafana", "11.4.0")
+            .WithBindMount("./grafana/provisioning", "/etc/grafana/provisioning")
+            .WithBindMount("./grafana/dashboards", "/var/lib/grafana/dashboards")
+            .WithHttpEndpoint(port: 3000, targetPort: 3000, name: "ui")
+            .WithEnvironment("GF_SECURITY_ADMIN_PASSWORD", "bookstore")
+            .WithEnvironment("GF_AUTH_ANONYMOUS_ENABLED", "true")
+            .WithEnvironment("GF_AUTH_ANONYMOUS_ORG_ROLE", "Admin");
+
         return (postgres, db, rabbitmq);
     }
 }
