@@ -17,4 +17,28 @@ internal sealed class TransactionRepository(FraudDbContext context) : ITransacti
         await context.Transactions
             .Include(t => t.Assessments)
             .FirstOrDefaultAsync(t => t.CorrelationId == correlationId, cancellationToken);
+
+    public async Task<int> CountRecentByFingerprintAsync(string fingerprint, DateTime since, Guid excludeId, CancellationToken cancellationToken = default) =>
+        await context.Transactions
+            .Where(t => t.PaymentFingerprint == fingerprint && t.OccurredAt >= since && t.Id != excludeId)
+            .CountAsync(cancellationToken);
+
+    public async Task<(int Count, decimal AverageAmount)> GetCustomerStatsAsync(string customerId, Guid excludeId, CancellationToken cancellationToken = default)
+    {
+        var amounts = await context.Transactions
+            .Where(t => t.CustomerId == customerId && t.Id != excludeId)
+            .Select(t => t.Amount.Value)
+            .ToListAsync(cancellationToken);
+
+        return (amounts.Count, amounts.Count > 0 ? amounts.Average() : 0m);
+    }
+
+    public async Task<int> CountJustBelowThresholdAsync(string customerId, decimal lower, decimal upper, DateTime since, Guid excludeId, CancellationToken cancellationToken = default) =>
+        await context.Transactions
+            .Where(t => t.CustomerId == customerId
+                     && t.Amount.Value >= lower
+                     && t.Amount.Value < upper
+                     && t.OccurredAt >= since
+                     && t.Id != excludeId)
+            .CountAsync(cancellationToken);
 }
