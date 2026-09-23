@@ -1,0 +1,22 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.5.4">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AspireUseCliBundle>true</AspireUseCliBundle>
+        <UserSecretsId>2ff9a495-750f-49a3-8a78-3bf292fd52fa</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+        <PackageReference Include="Aspire.Hosting.RabbitMQ" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\WebApi\WebApi.csproj" IsAspireProjectResource="true" />
+        <ProjectReference Include="..\Worker\Worker.csproj" IsAspireProjectResource="true" />
+    </ItemGroup>
+
+</Project>
