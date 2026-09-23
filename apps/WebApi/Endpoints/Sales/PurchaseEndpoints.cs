@@ -14,9 +14,9 @@ namespace WebApi.Endpoints.Sales;
 
 public static class PurchaseEndpoints
 {
-    public static IEndpointRouteBuilder MapPurchaseEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapPurchaseEndpoints(this IEndpointRouteBuilder api)
     {
-        var group = app.MapGroup("/api/v1/purchases").WithTags("Purchases");
+        var group = api.MapGroup("/purchases").WithTags("Purchases");
 
         group.MapPost("/", PurchaseAsync)
             .AddEndpointFilter<IdempotencyFilter<IBookStoreIdempotencyStore>>()
@@ -26,7 +26,7 @@ public static class PurchaseEndpoints
         group.MapGet("/{id:guid}", GetAsync)
             .WithName("GetPurchase");
 
-        return app;
+        return api;
     }
 
     private static async Task<IResult> PurchaseAsync(

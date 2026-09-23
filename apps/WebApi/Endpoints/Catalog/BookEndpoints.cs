@@ -6,13 +6,13 @@ namespace WebApi.Endpoints.Catalog;
 
 public static class BookEndpoints
 {
-    public static IEndpointRouteBuilder MapBookEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapBookEndpoints(this IEndpointRouteBuilder api)
     {
-        app.MapGroup("/api/v1/books").WithTags("Books")
+        api.MapGroup("/books").WithTags("Books")
             .MapGet("/", ListAsync)
             .WithName("ListBooks");
 
-        return app;
+        return api;
     }
 
     private static async Task<IResult> ListAsync(

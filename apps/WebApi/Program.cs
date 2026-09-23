@@ -58,10 +58,10 @@ if (app.Environment.IsDevelopment())
 
 var api = app.MapGroup("/api/v1");
 
-app.MapBookEndpoints();
-app.MapPurchaseEndpoints();
-app.MapTransactionEndpoints();
-app.MapReviewEndpoints();
+api.MapBookEndpoints();
+api.MapPurchaseEndpoints();
+api.MapTransactionEndpoints();
+api.MapReviewEndpoints();
 
 app.Run();
 

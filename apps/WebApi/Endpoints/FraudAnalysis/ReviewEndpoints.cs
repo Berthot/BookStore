@@ -6,13 +6,13 @@ namespace WebApi.Endpoints.FraudAnalysis;
 
 public static class ReviewEndpoints
 {
-    public static IEndpointRouteBuilder MapReviewEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapReviewEndpoints(this IEndpointRouteBuilder api)
     {
-        app.MapGroup("/api/v1/transactions").WithTags("Transactions")
+        api.MapGroup("/transactions").WithTags("Transactions")
             .MapPost("/{id:guid}/review", ReviewAsync)
             .WithName("ReviewTransaction");
 
-        return app;
+        return api;
     }
 
     private static async Task<IResult> ReviewAsync(

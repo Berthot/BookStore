@@ -14,9 +14,9 @@ namespace WebApi.Endpoints.FraudAnalysis;
 
 public static class TransactionEndpoints
 {
-    public static IEndpointRouteBuilder MapTransactionEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapTransactionEndpoints(this IEndpointRouteBuilder api)
     {
-        var group = app.MapGroup("/api/v1/transactions").WithTags("Transactions");
+        var group = api.MapGroup("/transactions").WithTags("Transactions");
 
         group.MapPost("/", SubmitAsync)
             .AddEndpointFilter<IdempotencyFilter<IFraudIdempotencyStore>>()
@@ -26,7 +26,7 @@ public static class TransactionEndpoints
         group.MapGet("/{id:guid}", GetAsync)
             .WithName("GetTransaction");
 
-        return app;
+        return api;
     }
 
     private static async Task<IResult> SubmitAsync(
