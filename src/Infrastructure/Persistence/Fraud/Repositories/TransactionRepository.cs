@@ -9,6 +9,7 @@ internal sealed class TransactionRepository(FraudDbContext context) : ITransacti
     public async Task<Transaction?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         await context.Transactions
             .Include(t => t.Assessments)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
 
     public void Add(Transaction entity) => context.Transactions.Add(entity);
@@ -18,6 +19,7 @@ internal sealed class TransactionRepository(FraudDbContext context) : ITransacti
     public async Task<Transaction?> GetByCorrelationIdAsync(string correlationId, CancellationToken cancellationToken = default) =>
         await context.Transactions
             .Include(t => t.Assessments)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(t => t.CorrelationId == correlationId, cancellationToken);
 
     public async Task<int> CountRecentByFingerprintAsync(string fingerprint, DateTime since, Guid excludeId, CancellationToken cancellationToken = default) =>
