@@ -37,14 +37,16 @@ internal sealed class InMemoryFraudIdempotencyStore(InMemoryIdempotencyDatabase 
 }
 
 /// <summary>
-/// Integration tests that verify idempotency semantics across multiple sequential requests.
-/// Tests use the real IdempotencyFilter with an in-memory transactional store that mirrors
-/// the two-phase commit pattern used in production (entry added → handler commits → entry
-/// marked complete → second commit). Each "request" creates a new store scope; the singleton
-/// database survives across scopes, just like PostgreSQL would.
+/// Unit tests for IdempotencyFilter semantics (no database).
+/// Uses an in-memory store that mirrors the two-phase commit pattern: entry added → handler
+/// commits → entry marked complete → second commit. Each "request" creates a new store scope;
+/// the singleton database survives across scopes, mirroring PostgreSQL behaviour.
+///
+/// Real database tests (unique index, lock_timeout, concurrency) live in
+/// tests/Tests.Infrastructure/Persistence/IdempotencyIntegrationTests.cs.
 /// </summary>
-[Integration]
-public sealed class IdempotencyIntegrationTests : UnitTestsBase
+[Unit]
+public sealed class IdempotencyFilterTests : UnitTestsBase
 {
     private InMemoryIdempotencyDatabase _db = null!;
 

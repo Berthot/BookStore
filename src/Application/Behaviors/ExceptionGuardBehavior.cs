@@ -1,3 +1,4 @@
+using Application.Abstractions.Idempotency;
 using Application.Commons;
 using Cortex.Mediator.Commands;
 using Cortex.Mediator.Queries;
@@ -5,7 +6,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Application.Behaviors;
 
-/// <summary>Converts unexpected exceptions to Internal OperationResult; re-throws OperationCanceledException.</summary>
+/// <summary>Converts unexpected exceptions to Internal OperationResult; re-throws OperationCanceledException
+/// and idempotency conflict signals so the endpoint filter can handle them.</summary>
 public sealed class ExceptionGuardCommandBehavior<TCommand, TResult>(
     ILogger<ExceptionGuardCommandBehavior<TCommand, TResult>> logger)
     : ICommandPipelineBehavior<TCommand, TResult>
@@ -18,7 +20,7 @@ public sealed class ExceptionGuardCommandBehavior<TCommand, TResult>(
         {
             return await next();
         }
-        catch (OperationCanceledException)
+        catch (Exception ex) when (ex is OperationCanceledException or IdempotencyConflictException or IdempotencyLockTimeoutException)
         {
             throw;
         }

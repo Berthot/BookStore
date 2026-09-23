@@ -66,6 +66,30 @@ public sealed class IdempotencyFilter<TStore>(TStore store) : IEndpointFilter
         store.Add(entry);
         context.HttpContext.Items[HttpContextEntryKey] = entry;
 
-        return await next(context);
+        try
+        {
+            return await next(context);
+        }
+        catch (IdempotencyConflictException)
+        {
+            // The handler's commit hit the unique constraint (PostgreSQL 23505):
+            // another concurrent request already committed this key.
+            // Re-read from the DB (bypasses any stale EF change tracker state).
+            var committed = await store.FindAsync(key, context.HttpContext.RequestAborted);
+            if (committed is { Status: IdempotencyStatus.Completed })
+            {
+                BookStoreTelemetry.IdempotencyReplays.Add(1);
+                return Results.Content(committed.ResponseBody!, "application/json");
+            }
+            return Results.Problem(statusCode: 409, title: "Conflict",
+                detail: "A request with the same Idempotency-Key is currently being processed.");
+        }
+        catch (IdempotencyLockTimeoutException)
+        {
+            // lock_timeout fired (PostgreSQL 55P03): the concurrent request holding this key
+            // did not finish within the allowed window.
+            return Results.Problem(statusCode: 409, title: "Conflict",
+                detail: "A request with the same Idempotency-Key is currently being processed. Retry later.");
+        }
     }
 }
