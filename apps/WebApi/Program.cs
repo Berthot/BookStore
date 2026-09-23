@@ -47,6 +47,7 @@ if (app.Environment.IsDevelopment())
 var api = app.MapGroup("/api/v1");
 
 app.MapTransactionEndpoints();
+app.MapReviewEndpoints();
 
 app.Run();
 

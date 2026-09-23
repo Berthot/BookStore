@@ -20,7 +20,7 @@ public sealed class GetTransactionHandler(ITransactionRepository repository)
         return OperationResult<GetTransactionResponse>.SuccessResult(MapToResponse(transaction));
     }
 
-    private static GetTransactionResponse MapToResponse(Transaction t)
+    internal static GetTransactionResponse MapToResponse(Transaction t)
     {
         var current = t.CurrentAssessment();
         var sorted = t.Assessments.OrderBy(a => a.CreatedAt).ToList();
