@@ -433,3 +433,6 @@ FodyWeavers.xsd
 
 # JetBrains IDEs
 .idea/
+
+# Newman reports (gerados por docs/postman/run-demo.ps1)
+docs/postman/newman/
