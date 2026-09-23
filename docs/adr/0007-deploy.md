@@ -33,7 +33,7 @@ implementado.
 - **`deploy/.env.example`**: todas as variáveis, com valores de demonstração.
 - **Migrations** aplicadas pela WebApi no startup, ligadas por configuração (ADR-0003).
 - **Dados de exemplo** (livros) para os cenários de simulação funcionarem de imediato.
-- **Aspire AppHost** (`apps/AppHost`) para desenvolvimento local, com as mesmas chaves de configuração
+- **Aspire AppHost** (`apps/Aspire`) para desenvolvimento local, com as mesmas chaves de configuração
   do compose.
 
 Execução: `docker compose -f deploy/docker-compose.yml up`.
@@ -64,5 +64,6 @@ A mesma imagem de container roda no compose e no Kubernetes; muda apenas a confi
 - **Compose não é produção.** Mitigação: o caminho para Kubernetes está descrito acima, e as decisões
   já tomadas (configuração por variáveis de ambiente, processos sem estado, migrations desligáveis) o
   tornam direto.
-- **Duas formas de executar (compose e AppHost).** Mitigação: papéis distintos — compose é o contrato
-  de execução; AppHost, a experiência de desenvolvimento — e as mesmas chaves de configuração nos dois.
+- **Duas formas de executar (compose e Aspire AppHost).** Mitigação: papéis distintos — compose é o
+  contrato de execução; Aspire, a experiência de desenvolvimento — e as mesmas chaves de configuração
+  nos dois.

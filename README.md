@@ -340,7 +340,7 @@ Base path `/api/v1`. Erros em *Problem Details* (RFC 9457).
 
 ```text
 apps/
-  AppHost/          orquestração de desenvolvimento (Aspire)
+  Aspire/           orquestração de desenvolvimento (Aspire AppHost)
   WebApi/           HTTP — marketplace e antifraude
   Worker/           consumidores, reconciliação, limpeza
 src/

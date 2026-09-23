@@ -21,8 +21,8 @@ precisa ligar uma decisão ao fluxo que a produziu.
 ## Decisão
 
 **OpenTelemetry nos dois processos (API e Worker), exportando por OTLP.** Na demonstração, o destino é
-o **Aspire Dashboard** (container no docker-compose, ou embutido no AppHost em desenvolvimento).
-Trocar por Jaeger, Grafana ou outro backend é mudar `OTEL_EXPORTER_OTLP_ENDPOINT`.
+o **Aspire Dashboard** (container no docker-compose, ou embutido no Aspire AppHost em desenvolvimento).
+Métricas de negócio também são exportadas para Prometheus + Grafana quando rodando via Aspire (ADR-0009).
 
 Toda a configuração fica em `TelemetryExtensions`, reutilizada pela API e pelo Worker.
 
