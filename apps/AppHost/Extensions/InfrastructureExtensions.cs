@@ -20,9 +20,10 @@ public static class InfrastructureExtensions
 
         // "RabbitMQ" → injects ConnectionStrings__RabbitMQ, matching GetConnectionString("RabbitMQ") in
         // MassTransitExtensions.cs (case-sensitive key).
+        // 4-management-alpine already includes the management plugin — WithManagementPlugin()
+        // rejects unrecognized tags so it cannot be combined with a custom image tag.
         var rabbitmq = builder.AddRabbitMQ("RabbitMQ")
-            .WithImage("rabbitmq", "4-management-alpine")   // matches cached image from docker-compose
-            .WithManagementPlugin();
+            .WithImage("rabbitmq", "4-management-alpine");
 
         return (postgres, db, rabbitmq);
     }
