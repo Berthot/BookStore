@@ -19,11 +19,9 @@ public sealed class TransactionSubmittedConsumer(
             nameof(TransactionSubmitted), context.Message.TransactionId);
 
         var delay = demoOptions.Value.FraudProcessingDelaySeconds;
-        if (delay > 0)
-            await Task.Delay(TimeSpan.FromSeconds(delay), context.CancellationToken);
 
         var result = await mediator.SendCommandAsync(
-            new AssessTransactionRequest(context.Message.TransactionId),
+            new AssessTransactionRequest(context.Message.TransactionId, delay),
             context.CancellationToken);
 
         if (!result.IsSuccess && result.ErrorCode != ErrorCode.NotFound)

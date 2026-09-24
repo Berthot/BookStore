@@ -49,6 +49,10 @@ public sealed class AssessTransactionHandler(
                 return OperationResult<AssessTransactionResponse>.Fail(ErrorCode.Unprocessable, processingError.Message);
 
             await unitOfWork.CommitAsync(cancellationToken);
+
+            // Demo delay: transaction is now visibly PROCESSING; sleep keeps it there so the dashboard shows the intermediate status
+            if (command.DelaySeconds > 0)
+                await Task.Delay(TimeSpan.FromSeconds(command.DelaySeconds), cancellationToken);
         }
 
         // Compute signals — all queries use the (payment_fingerprint, occurred_at) index
