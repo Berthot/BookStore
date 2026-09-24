@@ -1,3 +1,4 @@
+using Domain.Entities.Sales;
 using Domain.Enums;
 
 namespace Application.Messages;
@@ -7,4 +8,7 @@ public sealed record TransactionDecided(
     Guid TransactionId,
     Outcome Outcome,
     string CorrelationId,
-    DateTime DecidedAt);
+    DateTime DecidedAt,
+    int Score = 0,
+    string DecidedBy = "ENGINE",
+    IReadOnlyList<FraudTriggeredRule>? TriggeredRules = null);

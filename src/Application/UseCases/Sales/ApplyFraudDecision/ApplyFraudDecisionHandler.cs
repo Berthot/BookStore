@@ -1,6 +1,7 @@
 using Application.Commons;
 using Application.Diagnostics;
 using Cortex.Mediator.Commands;
+using Domain.Entities.Sales;
 using Domain.Enums;
 using Domain.Repositories;
 
@@ -23,7 +24,14 @@ public sealed class ApplyFraudDecisionHandler(
             return OperationResult<ApplyFraudDecisionResponse>.SuccessResult(
                 new ApplyFraudDecisionResponse(purchase.Id, purchase.Status));
 
-        var error = purchase.ApplyDecision(command.Outcome);
+        var fraudOutcome = command.Outcome == Outcome.Review
+            ? null
+            : new FraudOutcomeSnapshot(
+                command.Score,
+                command.DecidedBy,
+                command.TriggeredRules ?? []);
+
+        var error = purchase.ApplyDecision(command.Outcome, fraudOutcome);
         if (error is not null)
             return OperationResult<ApplyFraudDecisionResponse>.Fail(ErrorCode.Unprocessable, error.Message);
 

@@ -21,11 +21,24 @@ public sealed class GetPurchaseHandler(IPurchaseRepository repository)
             return OperationResult<GetPurchaseResponse>.Fail(ErrorCode.NotFound, "Purchase not found.");
 
         // Only surface fraud details once the decision is final.
-        // Detailed score/rules are available via GET /api/v1/transactions/{id} in Fraud.Api.
         FraudDetailsResponse? fraudDetails = purchase.Status switch
         {
-            PurchaseStatus.Confirmed => new FraudDetailsResponse(purchase.TransactionId, Outcome.Approved, null, null),
-            PurchaseStatus.Cancelled => new FraudDetailsResponse(purchase.TransactionId, Outcome.Rejected, null, null),
+            PurchaseStatus.Confirmed => new FraudDetailsResponse(
+                purchase.TransactionId,
+                Outcome.Approved,
+                purchase.FraudOutcome?.Score,
+                purchase.FraudOutcome?.DecidedBy,
+                purchase.FraudOutcome?.TriggeredRules
+                    ?.Select(r => new TriggeredRuleSummary(r.Code, r.Reason))
+                    .ToList()),
+            PurchaseStatus.Cancelled => new FraudDetailsResponse(
+                purchase.TransactionId,
+                Outcome.Rejected,
+                purchase.FraudOutcome?.Score,
+                purchase.FraudOutcome?.DecidedBy,
+                purchase.FraudOutcome?.TriggeredRules
+                    ?.Select(r => new TriggeredRuleSummary(r.Code, r.Reason))
+                    .ToList()),
             _ => null
         };
 

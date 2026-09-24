@@ -3,6 +3,7 @@ using Application.Commons;
 using Application.Diagnostics;
 using Application.Messages;
 using Cortex.Mediator.Commands;
+using Domain.Entities.Sales;
 using Domain.Enums;
 using Domain.Repositories;
 using Domain.Rules;
@@ -117,12 +118,22 @@ public sealed class AssessTransactionHandler(
 
             await unitOfWork.CommitAsync(cancellationToken);
 
+            var score = (int)Math.Round(assessment.Evaluations.Sum(e => e.Weight) * 100);
+            var triggeredRules = assessment.Evaluations
+                .OrderBy(e => e.Position)
+                .Where(e => e.Hit)
+                .Select(e => new FraudTriggeredRule(e.RuleCode, e.Reason))
+                .ToList();
+
             await publisher.PublishAsync(
                 new TransactionDecided(
                     transaction.Id,
                     assessment.Outcome,
                     transaction.CorrelationId,
-                    now),
+                    now,
+                    score,
+                    "ENGINE",
+                    triggeredRules),
                 cancellationToken);
         }
 

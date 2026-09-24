@@ -47,7 +47,10 @@ public sealed class FailSafeTransactionHandler(
                 transaction.Id,
                 transaction.CurrentAssessment()!.Outcome,
                 transaction.CorrelationId,
-                now),
+                now,
+                Score: 0,
+                DecidedBy: "SYSTEM",
+                TriggeredRules: []),
             cancellationToken);
 
         return OperationResult<FailSafeTransactionResponse>.SuccessResult(

@@ -17,7 +17,12 @@ public sealed class TransactionDecidedConsumer(
             nameof(TransactionDecided), context.Message.TransactionId, context.Message.Outcome);
 
         var result = await mediator.SendCommandAsync(
-            new ApplyFraudDecisionRequest(context.Message.TransactionId, context.Message.Outcome),
+            new ApplyFraudDecisionRequest(
+                context.Message.TransactionId,
+                context.Message.Outcome,
+                context.Message.Score,
+                context.Message.DecidedBy,
+                context.Message.TriggeredRules),
             context.CancellationToken);
 
         if (!result.IsSuccess && result.ErrorCode != ErrorCode.NotFound)

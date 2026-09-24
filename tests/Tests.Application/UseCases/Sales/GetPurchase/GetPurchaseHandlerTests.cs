@@ -101,8 +101,9 @@ public sealed class GetPurchaseHandlerTests : UnitTestsBase
         result.IsSuccess.Should().BeTrue();
         result.Data!.FraudDetails!.TransactionId.Should().Be(transactionId);
         result.Data.FraudDetails.Outcome.Should().Be(Outcome.Approved);
-        // Score and rules are available via GET /api/v1/transactions/{id} in Fraud.Api
+        // No FraudOutcome snapshot stored when ApplyDecision is called without one
         result.Data.FraudDetails.Score.Should().BeNull();
+        result.Data.FraudDetails.DecidedBy.Should().BeNull();
     }
 
     [Test]

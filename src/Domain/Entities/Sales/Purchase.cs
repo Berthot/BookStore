@@ -17,6 +17,7 @@ public sealed class Purchase : Entity
     public Guid? TransactionId { get; private set; }
     public string CorrelationId { get; init; } = string.Empty;
     public PurchaseStatus Status { get; private set; }
+    public FraudOutcomeSnapshot? FraudOutcome { get; private set; }
 
     public static Purchase Create(
         Guid bookId,
@@ -55,7 +56,7 @@ public sealed class Purchase : Entity
         return null;
     }
 
-    public DomainError? ApplyDecision(Outcome outcome)
+    public DomainError? ApplyDecision(Outcome outcome, FraudOutcomeSnapshot? fraudOutcome = null)
     {
         if (Status is PurchaseStatus.Confirmed or PurchaseStatus.Cancelled)
             return new DomainError("PURCHASE_FINAL_STATE", $"Purchase in state {Status} is final and cannot be changed.");
@@ -70,6 +71,9 @@ public sealed class Purchase : Entity
             Outcome.Review => PurchaseStatus.UnderReview,
             _ => Status
         };
+
+        if (fraudOutcome is not null)
+            FraudOutcome = fraudOutcome;
 
         UpdatedAt = DateTime.UtcNow;
         return null;

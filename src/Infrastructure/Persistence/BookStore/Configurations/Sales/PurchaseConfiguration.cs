@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Domain.Entities.Sales;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -27,6 +28,13 @@ internal sealed class PurchaseConfiguration : IEntityTypeConfiguration<Purchase>
             total.Property(t => t.Value).HasColumnName("total_value").HasColumnType("numeric(18,2)").IsRequired();
             total.Property(t => t.Currency).HasColumnName("total_currency").HasMaxLength(3).IsRequired();
         });
+
+        builder.Property(p => p.FraudOutcome)
+            .HasColumnName("fraud_outcome")
+            .HasColumnType("jsonb")
+            .HasConversion(
+                fo => JsonSerializer.Serialize(fo, (JsonSerializerOptions?)null),
+                s => JsonSerializer.Deserialize<FraudOutcomeSnapshot>(s, (JsonSerializerOptions?)null));
 
         builder.HasIndex(p => p.CorrelationId).IsUnique();
 
