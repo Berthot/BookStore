@@ -7,8 +7,9 @@ public sealed class StructuringRule : IFraudRule
     public string Code => "STRUCTURING";
     public string Version => "1.0";
 
-    /// <summary>Number of recent transactions just below a threshold required to flag structuring (S11). Three occurrences suggest deliberate avoidance of a reporting limit.</summary>
-    public const int RecentJustBelowThresholdCount = 3;
+    /// <summary>Minimum number of PRIOR transactions just below a threshold before the current one is flagged (S11).
+    /// CountJustBelowThresholdAsync excludes the current transaction, so threshold=2 means the 3rd transaction triggers the rule.</summary>
+    public const int RecentJustBelowThresholdCount = 2;
 
     /// <summary>Risk weight applied when the rule fires. Alone reaches ReviewThreshold — structuring warrants investigation, not automatic rejection (ADR-0008).</summary>
     public const decimal Weight = 0.4m;
