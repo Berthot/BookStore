@@ -48,6 +48,10 @@ public static class TelemetryExtensions
                         // OTel SDK appends /v1/metrics to the base path automatically (http/protobuf)
                         o.Endpoint = new Uri(prometheusBase.TrimEnd('/') + "/api/v1/otlp");
                         o.Protocol = OtlpExportProtocol.HttpProtobuf;
+                    }, reader =>
+                    {
+                        // 15s for responsive Grafana during demos (default is 60s)
+                        reader.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 15_000;
                     });
             });
 
