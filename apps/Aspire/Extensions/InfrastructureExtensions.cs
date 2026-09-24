@@ -21,7 +21,8 @@ public static class InfrastructureExtensions
         // MassTransitExtensions.cs (case-sensitive key).
         // 4-management-alpine already includes the management plugin.
         var rabbitmq = builder.AddRabbitMQ("RabbitMQ")
-            .WithImage("rabbitmq", "4-management-alpine");
+            .WithImage("rabbitmq", "4-management-alpine")
+            .WithManagementPlugin();
 
         // Prometheus: OTLP write receiver is a feature flag in 2.x (--web.enable-otlp-receiver is 3.x only)
         var prometheus = builder.AddContainer("prometheus", "prom/prometheus", "v2.55.0")
