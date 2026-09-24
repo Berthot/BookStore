@@ -2,18 +2,25 @@ using Application.Commons;
 using Application.Messages;
 using Application.UseCases.FraudAnalysis.AssessTransaction;
 using Cortex.Mediator;
+using Infrastructure.Options;
 using MassTransit;
+using Microsoft.Extensions.Options;
 
 namespace Fraud.Worker.Consumers.FraudAnalysis;
 
 public sealed class TransactionSubmittedConsumer(
     IMediator mediator,
+    IOptions<DemoOptions> demoOptions,
     ILogger<TransactionSubmittedConsumer> logger) : IConsumer<TransactionSubmitted>
 {
     public async Task Consume(ConsumeContext<TransactionSubmitted> context)
     {
         logger.LogInformation("Consuming {MessageType} for transaction {TransactionId}",
             nameof(TransactionSubmitted), context.Message.TransactionId);
+
+        var delay = demoOptions.Value.FraudProcessingDelaySeconds;
+        if (delay > 0)
+            await Task.Delay(TimeSpan.FromSeconds(delay), context.CancellationToken);
 
         var result = await mediator.SendCommandAsync(
             new AssessTransactionRequest(context.Message.TransactionId),

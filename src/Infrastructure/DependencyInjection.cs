@@ -45,6 +45,9 @@ public static class DependencyInjection
 
         services.AddScoped<IEventPublisher, EventPublisher>();
 
+        services.AddOptions<DemoOptions>()
+            .BindConfiguration(DemoOptions.SectionName);
+
         return services;
     }
 

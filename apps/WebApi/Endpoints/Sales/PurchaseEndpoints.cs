@@ -19,12 +19,18 @@ public static class PurchaseEndpoints
         var group = api.MapGroup("/purchases").WithTags("Purchases");
 
         group.MapPost("/", PurchaseAsync)
+            .Produces<PurchaseBookResponse>(202)
+            .ProducesProblem(400)
+            .ProducesProblem(409)
+            .ProducesProblem(422)
             .AddEndpointFilter<IdempotencyFilter<IBookStoreIdempotencyStore>>()
             .RequireIdempotencyKey()
             .WithPurchaseExamples()
             .WithName("PurchaseBook");
 
         group.MapGet("/{id:guid}", GetAsync)
+            .Produces<GetPurchaseResponse>(200)
+            .ProducesProblem(404)
             .WithName("GetPurchase");
 
         return api;

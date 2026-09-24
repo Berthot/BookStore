@@ -19,12 +19,18 @@ public static class TransactionEndpoints
         var group = api.MapGroup("/transactions").WithTags("Transactions");
 
         group.MapPost("/", SubmitAsync)
+            .Produces<SubmitTransactionResponse>(202)
+            .ProducesProblem(400)
+            .ProducesProblem(409)
+            .ProducesProblem(422)
             .AddEndpointFilter<IdempotencyFilter<IFraudIdempotencyStore>>()
             .RequireIdempotencyKey()
             .WithTransactionExamples()
             .WithName("SubmitTransaction");
 
         group.MapGet("/{id:guid}", GetAsync)
+            .Produces<GetTransactionResponse>(200)
+            .ProducesProblem(404)
             .WithName("GetTransaction");
 
         return api;

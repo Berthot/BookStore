@@ -54,6 +54,8 @@ public sealed class GetTransactionHandler(ITransactionRepository repository)
     private static HistoryEntryDto MapHistory(Assessment a) =>
         new(
             a.Outcome,
+            (int)Math.Round(a.Evaluations.Sum(e => e.Weight) * 100),
             new DeciderDto(a.Decider.Kind, a.Decider.ReviewerId),
-            a.CreatedAt);
+            a.CreatedAt,
+            a.Evaluations.Select(MapRule).ToList());
 }

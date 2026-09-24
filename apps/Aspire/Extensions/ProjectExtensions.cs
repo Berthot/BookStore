@@ -53,6 +53,7 @@ public static class ProjectExtensions
             .WaitFor(postgres)
             .WaitFor(rabbitmq)
             .WaitFor(fraudApi)
+            .WithEnvironment("Demo__FraudProcessingDelaySeconds", "30")
             .WithEnvironment("PROMETHEUS_OTLP_ENDPOINT", prometheus.GetEndpoint("ui"));
     }
 }

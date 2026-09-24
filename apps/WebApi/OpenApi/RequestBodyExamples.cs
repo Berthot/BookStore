@@ -114,8 +114,7 @@ internal static class RequestBodyExamples
                     Value = JsonNode.Parse("""
                         {
                           "outcome": "APPROVED",
-                          "justification": "Cliente confirmou a compra via telefone. Pedido bulk legítimo para distribuição interna.",
-                          "reviewerId": "analyst_01"
+                          "justification": "Cliente confirmou a compra via telefone. Pedido bulk legítimo para distribuição interna."
                         }
                         """)
                 },
@@ -125,8 +124,7 @@ internal static class RequestBodyExamples
                     Value = JsonNode.Parse("""
                         {
                           "outcome": "REJECTED",
-                          "justification": "Padrão de estruturação confirmado. Transações deliberadamente abaixo do limite de reporte.",
-                          "reviewerId": "analyst_01"
+                          "justification": "Padrão de estruturação confirmado. Transações deliberadamente abaixo do limite de reporte."
                         }
                         """)
                 }

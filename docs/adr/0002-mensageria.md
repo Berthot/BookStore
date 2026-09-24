@@ -58,6 +58,11 @@ A versão é fixada em `8.*`.
   fim de 2026. É adequada ao escopo deste desafio. Em produção, a escolha seria reavaliada entre a
   licença da v9, Wolverine, Rebus ou uma outbox própria — o código de domínio não muda, porque só a
   extension de mensageria conhece o MassTransit.
+- **Bug de race condition (resolvido).** MassTransit 8.5.x tem um bug ao registrar dois
+  `AddEntityFrameworkOutbox` com `UseBusOutbox()` no mesmo bus. A solução foi dividir o monólito em
+  três processos (ADR-0010): cada processo tem exatamente um `DbContext` e uma outbox, tornando
+  `UseBusOutbox()` seguro. O monólito original (`AddInfrastructure`) mantém os dois outboxes sem
+  `UseBusOutbox()` para compatibilidade com testes de integração.
 - **Entrega pelo menos uma vez.** A outbox pode entregar a mesma mensagem mais de uma vez.
   Mitigação: inbox no consumidor e checagem de estado antes de agir (ADR-0004).
 - **Sem replay de histórico.** O RabbitMQ não guarda mensagens já consumidas. Mitigação: o histórico

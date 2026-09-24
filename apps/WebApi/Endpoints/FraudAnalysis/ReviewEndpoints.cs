@@ -11,6 +11,10 @@ public static class ReviewEndpoints
     {
         api.MapGroup("/transactions").WithTags("Transactions")
             .MapPost("/{id:guid}/review", ReviewAsync)
+            .Produces(200)
+            .ProducesProblem(400)
+            .ProducesProblem(404)
+            .ProducesProblem(409)
             .WithReviewExamples()
             .WithName("ReviewTransaction");
 
@@ -23,10 +27,10 @@ public static class ReviewEndpoints
         IMediator mediator,
         CancellationToken cancellationToken)
     {
-        var command = new ReviewTransactionRequest(id, body.Outcome, body.Justification, body.ReviewerId);
+        var command = new ReviewTransactionRequest(id, body.Outcome, body.Justification, null);
         var result = await mediator.SendCommandAsync(command, cancellationToken);
         return result.ToHttpResult();
     }
 }
 
-public sealed record ReviewHttpRequest(string Outcome, string Justification, string? ReviewerId);
+public sealed record ReviewHttpRequest(string Outcome, string Justification);

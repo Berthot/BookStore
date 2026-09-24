@@ -40,7 +40,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/health",
+              "raw": "{{bookstoreUrl}}/health",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -57,7 +57,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/books",
+              "raw": "{{bookstoreUrl}}/api/v1/books",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -117,7 +117,7 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s1_established\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s1_physical_low\",\n    \"last4\": \"1234\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -163,7 +163,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases/{{s1PurchaseId}}",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases/{{s1PurchaseId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -224,7 +224,7 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_PRAGMATIC}}\",\n  \"quantity\": 2,\n  \"customerId\": \"{{s2CustId}}\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s2CardFp}}\",\n    \"last4\": \"9999\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -270,7 +270,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases/{{s2PurchaseId}}",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases/{{s2PurchaseId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -330,7 +330,7 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 10,\n  \"customerId\": \"cus_s3_bulk\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s3CardFp}}\",\n    \"last4\": \"5678\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -378,7 +378,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases/{{s3PurchaseId}}",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases/{{s3PurchaseId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -416,7 +416,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/transactions/{{s3TransactionId}}",
+              "raw": "{{fraudUrl}}/api/v1/transactions/{{s3TransactionId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -458,7 +458,7 @@
               "raw": "{\n  \"outcome\": \"APPROVED\",\n  \"reviewerId\": \"revisor_01\",\n  \"justification\": \"Cliente confirmou a compra via telefone. Pedido bulk legítimo para distribuição interna.\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/transactions/{{s3TransactionId}}/review",
+              "raw": "{{fraudUrl}}/api/v1/transactions/{{s3TransactionId}}/review",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -504,7 +504,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases/{{s3PurchaseId}}",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases/{{s3PurchaseId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -563,7 +563,7 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -606,7 +606,7 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -649,7 +649,7 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -692,7 +692,7 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -735,7 +735,7 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -780,7 +780,7 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -826,7 +826,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases/{{s5LastPurchaseId}}",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases/{{s5LastPurchaseId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -879,7 +879,7 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s1_established\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s1_physical_low\",\n    \"last4\": \"1234\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -927,7 +927,7 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_DDD}}\",\n  \"quantity\": 2,\n  \"customerId\": \"cus_diferente\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_diferente\",\n    \"last4\": \"0001\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -971,7 +971,7 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s8\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s8\",\n    \"last4\": \"1111\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1030,7 +1030,7 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"{{s10CustId}}\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s10CardFp}}\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1073,7 +1073,7 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"{{s10CustId}}\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s10CardFp}}\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1116,7 +1116,7 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"{{s10CustId}}\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s10CardFp}}\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1161,7 +1161,7 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_DDD}}\",\n  \"quantity\": 1,\n  \"customerId\": \"{{s10CustId}}\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s10CardFp}}\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1210,7 +1210,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases/{{s10PurchaseId}}",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases/{{s10PurchaseId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1270,7 +1270,7 @@
               "raw": "{\n  \"externalReference\": \"s11-structuring-1\",\n  \"customerId\": \"{{s11CustId}}\",\n  \"amount\": { \"value\": 475.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"{{s11CardFp}}\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/transactions",
+              "raw": "{{fraudUrl}}/api/v1/transactions",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1313,7 +1313,7 @@
               "raw": "{\n  \"externalReference\": \"s11-structuring-2\",\n  \"customerId\": \"{{s11CustId}}\",\n  \"amount\": { \"value\": 480.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"{{s11CardFp}}\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/transactions",
+              "raw": "{{fraudUrl}}/api/v1/transactions",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1358,7 +1358,7 @@
               "raw": "{\n  \"externalReference\": \"s11-structuring-3\",\n  \"customerId\": \"{{s11CustId}}\",\n  \"amount\": { \"value\": 490.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"{{s11CardFp}}\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/transactions",
+              "raw": "{{fraudUrl}}/api/v1/transactions",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1404,7 +1404,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/transactions/{{s11TransactionId}}",
+              "raw": "{{fraudUrl}}/api/v1/transactions/{{s11TransactionId}}",
               "host": [
                 "{{baseUrl}}"
               ],

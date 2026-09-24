@@ -10,6 +10,7 @@ public static class BookEndpoints
     {
         api.MapGroup("/books").WithTags("Books")
             .MapGet("/", ListAsync)
+            .Produces<ListBooksResponse>(200)
             .WithName("ListBooks");
 
         return api;

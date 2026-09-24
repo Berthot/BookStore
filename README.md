@@ -49,7 +49,8 @@ Aspire · Docker
 
 **Além do pedido:** diagramas de [entidades](docs/diagramas/03-entidades.md) e de
 [estados](docs/diagramas/04-estados.md), ADRs de [processamento assíncrono](docs/adr/0001-processamento-assincrono.md),
-[versionamento](docs/adr/0006-versionamento-da-api.md) e [regras antifraude](docs/adr/0008-regras-antifraude.md),
+[versionamento](docs/adr/0006-versionamento-da-api.md), [regras antifraude](docs/adr/0008-regras-antifraude.md) e
+[arquitetura três processos](docs/adr/0010-arquitetura-dois-servicos.md),
 marketplace consumidor do antifraude, revisão humana, reconciliação, testes e execução com um comando.
 
 ---
@@ -59,7 +60,7 @@ marketplace consumidor do antifraude, revisão humana, reconciliação, testes e
 ### 📋 Pré-requisitos
 
 - **Docker Desktop 24+** com `docker compose` v2 (incluso)
-- Portas livres: `5432` (PostgreSQL), `5672` / `15672` (RabbitMQ), `8080` (WebApi), `18888` / `18889` (Aspire Dashboard)
+- Portas livres: `5432` (PostgreSQL), `5672` / `15672` (RabbitMQ), `8080` (BookStore.Api), `8081` (Fraud.Api), `18888` / `18889` (Aspire Dashboard)
 
 ### ▶️ Subindo o ambiente
 
@@ -71,20 +72,31 @@ cp deploy/.env.example deploy/.env
 docker compose -f deploy/docker-compose.yml up -d --wait
 ```
 
-Na primeira execução o WebApi aplica as migrations e popula o catálogo automaticamente (`Database__ApplyMigrationsOnStartup=true`, `Seeding__Enabled=true`).
+Na primeira execução `BookStore.Api` aplica as migrations do schema `bookstore` e popula o catálogo (`Database__ApplyMigrationsOnStartup=true`, `Seeding__Enabled=true`); `Fraud.Api` aplica as migrations do schema `fraud`.
 
 ### 🔗 Endereços
 
 | Serviço | URL |
 | :--- | :--- |
-| 📘 Swagger UI | http://localhost:8080/swagger |
+| 📘 Swagger UI — Marketplace | http://localhost:8080/swagger |
+| 📘 Swagger UI — Antifraude | http://localhost:8081/swagger |
 | 🔭 Aspire Dashboard | http://localhost:18888 |
 | 🐇 RabbitMQ Management | http://localhost:15672 (guest / guest) |
+
+### ▶️ Subindo com Aspire (desenvolvimento)
+
+```bash
+dotnet run --project apps/Aspire
+```
+
+O Aspire Dashboard abre automaticamente. As portas dos serviços são atribuídas dinamicamente — consulte o painel para os URLs exatos.
 
 ### 📮 Postman
 
 1. Importe `docs/postman/BookStore.postman_collection.json`
 2. Importe `docs/postman/local.postman_environment.json` e selecione o ambiente **BookStore — Local**
+   - `bookstoreUrl = http://localhost:8080` (books, purchases)
+   - `fraudUrl = http://localhost:8081` (transactions, review)
 3. Execute os cenários na ordem abaixo
 
 ### 🎬 Roteiro de cenários
@@ -99,7 +111,7 @@ Na primeira execução o WebApi aplica as migrations e popula o catálogo automa
 | S6 | reenvio com a mesma `Idempotency-Key` | 🔁 mesma resposta, nenhuma compra nova | Execute **S6** (usa a chave salva de S1) |
 | S7 | mesma chave, corpo diferente | ⚠️ `422` | Execute **S7** (mesma chave de S1, body diferente) |
 | S8 | sem `Idempotency-Key` | ⚠️ `400` | Execute **S8** |
-| S9 | parar o Worker, comprar, religar | 🛟 compra conclui sozinha ao religar | `docker compose -f deploy/docker-compose.yml stop worker` → faça uma compra → `docker compose -f deploy/docker-compose.yml start worker` → aguarde → compra finaliza |
+| S9 | parar o Fraud.Worker, comprar, religar | 🛟 compra conclui sozinha ao religar | `docker compose -f deploy/docker-compose.yml stop fraud-worker` → faça uma compra → `docker compose -f deploy/docker-compose.yml start fraud-worker` → aguarde → compra finaliza |
 | S10 | valor muito acima da média do cliente | 🔍 `REVIEW` | Execute **S10.1–S10.3** (histórico) → aguarde → **S10.4** → **S10.5** |
 | S11 | três compras logo abaixo de um limite | 🔍 `REVIEW` | Execute **S11.1–S11.3** (R$ 475, R$ 480, R$ 490) → aguarde → **S11.4** |
 
@@ -107,50 +119,60 @@ Na primeira execução o WebApi aplica as migrations e popula o catálogo automa
 
 ## 🏗️ Visão geral
 
-**Monólito modular** com dois serviços lógicos — o **marketplace** (catálogo e vendas) e o
-**antifraude** — compartilhando o mesmo código-fonte (`src/`) e implantados como dois processos:
+**Três processos independentes** compartilhando o mesmo código-fonte (`src/`), com dois bounded
+contexts — **BookStore** (catálogo + compras) e **Fraud** (análise antifraude):
 
-- **WebApi** — só HTTP: recebe, valida, garante a idempotência, grava e responde `202`.
-- **Worker** — só assíncrono: avalia transações, atualiza compras, reconcilia pendências.
+- **BookStore.Api** — marketplace: livros, compras, reconciliação. Chama Fraud.Api via HTTP.
+- **Fraud.Api** — antifraude: recebe transações, expõe revisão manual.
+- **Fraud.Worker** — avaliação assíncrona: regras, decisão, atualiza compras via mensagem.
 
-Cada serviço é dono do seu schema no PostgreSQL (`bookstore` e `fraud`). A comunicação entre eles é
-sempre uma mensagem no RabbitMQ, via outbox transacional. O marketplace nunca referencia o antifraude
-diretamente: depende de uma porta própria (`IFraudCheckGateway`) — separá-los fisicamente no futuro é
-trocar um adaptador.
+Cada processo é dono exclusivo do seu `DbContext` e do seu schema no PostgreSQL (`bookstore` ou
+`fraud`). A divisão resolve o bug de race condition do MassTransit 8.5.x com dois outboxes no mesmo
+bus (ver [ADR-0010](docs/adr/0010-arquitetura-dois-servicos.md)).
 
 <!-- sincronizado de docs/diagramas/01-componentes.md -->
 ```mermaid
 flowchart TB
   client([Cliente / Avaliador])
 
-  subgraph host["Monólito modular — src/ compartilhado"]
+  subgraph bs["BookStore.Api — porta 8080"]
     direction TB
-    api["WebApi<br/>Catalog · Sales · FraudAnalysis<br/>/api/v1/*"]
-    worker["Worker<br/>submissão ao antifraude · AssessTransaction<br/>atualização de Purchase · reconciliação"]
+    bsep["/books · /purchases<br/>consumers: PurchasePlaced · TransactionDecided<br/>ReconciliationJob"]
+  end
+
+  subgraph fa["Fraud.Api — porta 8081"]
+    direction TB
+    faep["/transactions · /transactions/{id}/review"]
+  end
+
+  subgraph fw["Fraud.Worker"]
+    direction TB
+    fwc["consumers: TransactionSubmitted · Fault&lt;TransactionSubmitted&gt;<br/>IdempotencyPurgeJob"]
   end
 
   subgraph pg["PostgreSQL"]
     direction TB
-    sbs[("schema bookstore<br/>Book · Purchase<br/>inbox/outbox")]
-    sfr[("schema fraud<br/>Transaction · Assessment<br/>inbox/outbox")]
+    sbs[("schema bookstore<br/>Book · Purchase · idempotency_keys<br/>outbox · inbox")]
+    sfr[("schema fraud<br/>Transaction · Assessment · idempotency_keys<br/>outbox · inbox")]
   end
 
   mq{{"RabbitMQ<br/>purchase-placed<br/>transaction-submitted<br/>transaction-decided"}}
   err[["filas _error (DLQ)"]]
   dash["Aspire Dashboard<br/>traces · métricas · logs"]
-  ext["Serviço externo de risco<br/>(ponto de extensão)"]
 
-  client -->|"HTTP · Idempotency-Key · X-Correlation-Id"| api
-  api -->|"estado + outbox<br/>mesma transação"| sbs
-  api -->|"estado + outbox<br/>mesma transação"| sfr
-  api -->|"entrega da outbox"| mq
-  worker -->|"Assessment + outbox · inbox"| sfr
-  worker -->|"Purchase · inbox"| sbs
-  mq <-->|"consome as três filas<br/>publica decided via outbox"| worker
+  client -->|"HTTP · Idempotency-Key · X-Correlation-Id"| bs
+  client -->|"HTTP · Idempotency-Key · X-Correlation-Id"| fa
+  bs -->|"HTTP + Idempotency-Key: purchaseId"| fa
+  bs -->|"estado + outbox · mesma transação"| sbs
+  bs <-->|"purchase-placed (outbox) · transaction-decided (inbox)"| mq
+  fa -->|"estado + outbox · mesma transação"| sfr
+  fa <-->|"transaction-submitted (outbox)"| mq
+  fw -->|"Assessment + outbox · inbox"| sfr
+  fw <-->|"transaction-submitted (inbox) · transaction-decided (outbox)"| mq
   mq -.->|"esgotou retries"| err
-  api -.->|OTLP| dash
-  worker -.->|OTLP| dash
-  worker -.->|"opcional · timeout + circuit breaker"| ext
+  bs -.->|OTLP| dash
+  fa -.->|OTLP| dash
+  fw -.->|OTLP| dash
 ```
 
 📄 Detalhes e justificativas: [diagrama de componentes](docs/diagramas/01-componentes.md) ·
@@ -160,71 +182,70 @@ flowchart TB
 
 ## 🔄 Fluxo de ponta a ponta
 
-1. O cliente envia `POST /api/v1/transactions` com `Idempotency-Key`.
-2. A API grava **na mesma transação de banco** a chave, a transação (`Received`) e a mensagem de saída,
-   e responde `202 Accepted` + `Location`.
-3. A outbox entrega `transaction-submitted` ao RabbitMQ.
-4. O Worker consome (a inbox descarta reentregas), marca `Processing`, monta o contexto com os sinais
-   históricos e executa as regras.
-5. A política converte a pontuação em decisão; o Worker grava a avaliação e publica
-   `transaction-decided` — de novo, na mesma transação.
-6. O cliente consulta `GET /api/v1/transactions/{id}`; o marketplace reage ao evento e confirma,
-   cancela ou envia a compra para revisão.
+1. O comprador envia `POST /api/v1/purchases` com `Idempotency-Key` ao **BookStore.Api**.
+2. O BookStore.Api grava **na mesma transação** a chave, a compra (`PendingFraudCheck`) e a mensagem
+   de saída, e responde `202 Accepted` + `Location`.
+3. A outbox entrega `purchase-placed`; o `PurchasePlacedConsumer` chama `POST /api/v1/transactions`
+   na **Fraud.Api** com `Idempotency-Key: {purchaseId}`.
+4. A Fraud.Api grava a transação (`Received`) + outbox e responde `202`. A outbox entrega
+   `transaction-submitted` ao RabbitMQ.
+5. O **Fraud.Worker** consome, avalia com as regras antifraude e publica `transaction-decided`.
+6. O BookStore.Api consome `transaction-decided` e confirma, cancela ou coloca a compra em revisão.
 
 <!-- sincronizado de docs/diagramas/02-sequencia.md (fluxo 1) -->
 ```mermaid
 sequenceDiagram
   autonumber
   actor C as Cliente
-  participant API as WebApi
+  participant FA as Fraud.Api
   participant DB as PostgreSQL (schema fraud)
   participant OB as Entrega da outbox
   participant MQ as RabbitMQ
-  participant W as Worker
+  participant FW as Fraud.Worker
 
-  C->>API: POST /api/v1/transactions<br/>Idempotency-Key · X-Correlation-Id
+  C->>FA: POST /api/v1/transactions<br/>Idempotency-Key · X-Correlation-Id
   alt sem Idempotency-Key
-    API-->>C: 400 Bad Request
+    FA-->>C: 400 Bad Request
   else chave presente
-    API->>API: SHA-256 do corpo normalizado
-    API->>DB: BEGIN · INSERT chave + hash (índice único)
+    FA->>FA: SHA-256 do corpo normalizado
+    FA->>DB: BEGIN · INSERT chave + hash (índice único)
     alt chave nova
-      API->>DB: INSERT Transaction (Received) + OutboxMessage (transaction-submitted) · COMMIT
-      API-->>C: 202 Accepted · Location /api/v1/transactions/{id}
+      FA->>DB: INSERT Transaction (Received) + OutboxMessage (transaction-submitted) · COMMIT
+      FA-->>C: 202 Accepted · Location /api/v1/transactions/{id}
     else mesma chave, mesmo hash
-      API-->>C: 202 com a resposta original (replay)
+      FA-->>C: 202 · Idempotent-Replayed: true · Location original (replay)
     else mesma chave, hash diferente
-      API-->>C: 422 Unprocessable Entity
+      FA-->>C: 422 Unprocessable Entity
     else original ainda em processamento
-      API-->>C: 409 Conflict
+      FA-->>C: 409 Conflict
     end
   end
 
   OB->>DB: lê OutboxMessage pendente
   OB->>MQ: publica transaction-submitted
-  MQ->>W: entrega a mensagem
-  W->>DB: InboxState — MessageId já processado?
+  MQ->>FW: entrega a mensagem
+  FW->>DB: InboxState — MessageId já processado?
   alt reentrega
-    W-->>MQ: ack (descarta, sem efeito)
+    FW-->>MQ: ack (descarta, sem efeito)
   else primeira vez
-    W->>DB: Transaction → Processing · COMMIT
-    W->>DB: sinais: transações recentes do cartão, cliente novo
-    W->>W: FraudRuleSet.Evaluate(FraudContext) → DecisionPolicy
-    W->>DB: Assessment + Transaction → Decided + OutboxMessage (transaction-decided) · COMMIT
-    W-->>MQ: ack
+    FW->>DB: Transaction → Processing · COMMIT
+    FW->>DB: sinais: transações recentes do cartão, cliente novo
+    FW->>FW: FraudRuleSet.Evaluate(FraudContext) → DecisionPolicy
+    FW->>DB: Assessment + Transaction → Decided + OutboxMessage (transaction-decided) · COMMIT
+    FW-->>MQ: ack
   end
 
   opt avaliação falha
-    MQ->>W: retry com backoff
+    MQ->>FW: retry com backoff
     MQ->>MQ: esgotou tentativas → fila _error
-    W->>DB: fail-safe: Assessment Review (DecidedBy = System) + transaction-decided
+    FW->>DB: fail-safe: Assessment Review (DecidedBy = System) + transaction-decided
   end
 
-  C->>API: GET /api/v1/transactions/{id}
-  API-->>C: 200 · status + outcome + regras avaliadas
+  C->>FA: GET /api/v1/transactions/{id}
+  FA-->>C: 200 · status + outcome + score + regras avaliadas
 ```
 
-📄 A compra de ponta a ponta (marketplace → antifraude → marketplace) está no
+📄 O fluxo completo BookStore.Api → Fraud.Api → Fraud.Worker → BookStore.Api está no
 [fluxo 2](docs/diagramas/02-sequencia.md#2-compra-de-livro-de-ponta-a-ponta).
 
 ---
@@ -333,6 +354,7 @@ Base path `/api/v1`. Erros em *Problem Details* (RFC 9457).
 | [0006](docs/adr/0006-versionamento-da-api.md) | Versionamento por URL |
 | [0007](docs/adr/0007-deploy.md) | Containers + compose; Kubernetes em produção *(extra)* |
 | [0008](docs/adr/0008-regras-antifraude.md) | Regras antifraude |
+| [0010](docs/adr/0010-arquitetura-dois-servicos.md) | Três processos independentes (resolve bug MassTransit dual-outbox) |
 
 ---
 
@@ -341,12 +363,13 @@ Base path `/api/v1`. Erros em *Problem Details* (RFC 9457).
 ```text
 apps/
   Aspire/           orquestração de desenvolvimento (Aspire AppHost)
-  WebApi/           HTTP — marketplace e antifraude
-  Worker/           consumidores, reconciliação, limpeza
+  BookStore.Api/    HTTP — marketplace: livros, compras, reconciliação (porta 8080)
+  Fraud.Api/        HTTP — antifraude: transações, revisão (porta 8081)
+  Fraud.Worker/     consumidores de fraude + limpeza de chaves de idempotência
 src/
   Domain/           entidades e regras, por contexto (Catalog, Sales, FraudAnalysis)
   Application/      casos de uso: UseCases/<Contexto>/<CasoDeUso>/
-  Infrastructure/   Persistence/<DbContext>/ · Extensions/
+  Infrastructure/   Persistence/<DbContext>/ · Extensions/ · Options/ · Adapters/
 tests/              Tests.Shared · Tests.Domain · Tests.Application · Tests.WebApi ·
                     Tests.Worker · Tests.Infrastructure
 deploy/             docker-compose.yml · .env.example

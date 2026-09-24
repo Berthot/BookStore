@@ -1,99 +1,91 @@
 # Diagrama de componentes
 
-Monólito modular: uma API HTTP e um Worker compartilham o mesmo código de domínio e aplicação
-(`src/`), com três contextos delimitados — **Catalog**, **Sales** e **FraudAnalysis**. Toda comunicação
-assíncrona passa pelo RabbitMQ via MassTransit, com outbox e inbox transacionais no PostgreSQL.
+Três processos independentes compartilham o mesmo código de domínio e aplicação (`src/`), com dois
+bounded contexts — **BookStore** (catálogo + compras) e **Fraud** (análise antifraude). Comunicação
+assíncrona via RabbitMQ (MassTransit outbox/inbox) e comunicação síncrona via HTTP entre
+`BookStore.Api` → `Fraud.Api`. Veja ADR-0010 para a motivação da divisão.
 
 ```mermaid
 flowchart TB
   client([Cliente / Avaliador])
 
-  subgraph host["Monólito modular — src/ compartilhado"]
+  subgraph bs["BookStore.Api — porta 8080"]
     direction TB
-    api["WebApi<br/>Catalog · Sales · FraudAnalysis<br/>/api/v1/*"]
-    worker["Worker<br/>submissão ao antifraude · AssessTransaction<br/>atualização de Purchase · reconciliação"]
+    bsep["/books · /purchases<br/>consumers: PurchasePlaced · TransactionDecided<br/>ReconciliationJob"]
+  end
+
+  subgraph fa["Fraud.Api — porta 8081"]
+    direction TB
+    faep["/transactions · /transactions/{id}/review"]
+  end
+
+  subgraph fw["Fraud.Worker"]
+    direction TB
+    fwc["consumers: TransactionSubmitted · Fault&lt;TransactionSubmitted&gt;<br/>IdempotencyPurgeJob"]
   end
 
   subgraph pg["PostgreSQL"]
     direction TB
-    sbs[("schema bookstore<br/>Book · Purchase<br/>inbox/outbox")]
-    sfr[("schema fraud<br/>Transaction · Assessment<br/>inbox/outbox")]
+    sbs[("schema bookstore<br/>Book · Purchase · idempotency_keys<br/>outbox · inbox")]
+    sfr[("schema fraud<br/>Transaction · Assessment · idempotency_keys<br/>outbox · inbox")]
   end
 
   mq{{"RabbitMQ<br/>purchase-placed<br/>transaction-submitted<br/>transaction-decided"}}
   err[["filas _error (DLQ)"]]
   dash["Aspire Dashboard<br/>traces · métricas · logs"]
-  ext["Serviço externo de risco<br/>(ponto de extensão)"]
 
-  client -->|"HTTP · Idempotency-Key · X-Correlation-Id"| api
-  api -->|"estado + outbox<br/>mesma transação"| sbs
-  api -->|"estado + outbox<br/>mesma transação"| sfr
-  api -->|"entrega da outbox"| mq
-  worker -->|"Assessment + outbox · inbox"| sfr
-  worker -->|"Purchase · inbox"| sbs
-  mq <-->|"consome as três filas<br/>publica decided via outbox"| worker
+  client -->|"HTTP · Idempotency-Key · X-Correlation-Id"| bs
+  client -->|"HTTP · Idempotency-Key · X-Correlation-Id"| fa
+  bs -->|"HTTP + Idempotency-Key: purchaseId"| fa
+  bs -->|"estado + outbox · mesma transação"| sbs
+  bs <-->|"purchase-placed (outbox) · transaction-decided (inbox)"| mq
+  fa -->|"estado + outbox · mesma transação"| sfr
+  fa <-->|"transaction-submitted (outbox)"| mq
+  fw -->|"Assessment + outbox · inbox"| sfr
+  fw <-->|"transaction-submitted (inbox) · transaction-decided (outbox)"| mq
   mq -.->|"esgotou retries"| err
-  api -.->|OTLP| dash
-  worker -.->|OTLP| dash
-  worker -.->|"opcional · timeout + circuit breaker"| ext
+  bs -.->|OTLP| dash
+  fa -.->|OTLP| dash
+  fw -.->|OTLP| dash
 ```
 
 ## Componentes
 
 | Componente | Responsabilidade |
 | :--- | :--- |
-| **WebApi** | Só HTTP. Recebe a requisição, valida, aplica a idempotência, grava estado + outbox e responde. Não executa regra antifraude. |
-| **Worker** | Só assíncrono. Consome `purchase-placed` (submete ao antifraude), `transaction-submitted` (avalia a transação) e `transaction-decided` (atualiza a `Purchase`); roda a reconciliação e a limpeza de chaves de idempotência. |
-| **PostgreSQL** | Um banco, dois schemas — um por contexto com dados. Cada schema tem suas próprias tabelas de inbox/outbox e seu histórico de migrations. |
-| **RabbitMQ** | Transporte das mensagens. Filas `_error` recebem o que esgotou as tentativas. |
-| **Aspire Dashboard** | Recebe OpenTelemetry (OTLP) da API e do Worker. Mostra o trace de uma compra de ponta a ponta. |
-| **Serviço externo de risco** | Ponto de extensão, não implementado: bureau, lista de cartões bloqueados, geolocalização de IP. |
+| **BookStore.Api** | Catálogo de livros e marketplace de compras. Recebe `POST /purchases`, aplica idempotência, grava estado + outbox (BookStoreDbContext) e responde `202 Accepted`. Consome `PurchasePlaced` (chama Fraud.Api via HTTP) e `TransactionDecided` (atualiza `Purchase`). Roda a reconciliação. |
+| **Fraud.Api** | Recebe `POST /transactions`, aplica idempotência, grava estado + outbox (FraudDbContext) e responde `202 Accepted`. Recebe `POST /transactions/{id}/review` para revisão manual. |
+| **Fraud.Worker** | Consome `TransactionSubmitted` (avalia a transação com as regras antifraude) e `Fault<TransactionSubmitted>` (fail-safe → REVIEW). Roda a limpeza de chaves de idempotência. |
+| **PostgreSQL** | Um banco, dois schemas — um por contexto. Cada schema tem inbox/outbox e migrations independentes. |
+| **RabbitMQ** | Transporte das mensagens. Filas `_error` recebem o que esgotou as tentativas. Dados persistidos em volume `rabbitmq-data`. |
+| **Aspire Dashboard** | Recebe OpenTelemetry (OTLP) dos três processos. Mostra o trace de uma compra de ponta a ponta, incluindo o salto HTTP entre BookStore.Api e Fraud.Api. |
 
 ## Por que é assim
 
-### Monólito modular, não microsserviços
+### Dois APIs + um Worker, um repositório
 
-É um único código-fonte com fronteiras de contexto explícitas. O Sales não referencia o FraudAnalysis:
-depende de uma porta própria (`IFraudCheckGateway`) cujo adaptador chama o caso de uso em processo.
-Se o antifraude precisar virar um serviço, troca-se o adaptador por um cliente HTTP — nenhum outro
-código muda. Dois deploys independentes agora seriam custo sem necessidade medida.
+A divisão em três processos resolve o bug de race condition do MassTransit 8.5.x ao registrar dois
+outboxes no mesmo bus (ver ADR-0010). Cada processo tem exatamente um `DbContext` e um
+`AddEntityFrameworkOutbox`, tornando `UseBusOutbox()` seguro.
 
-### API e Worker separados
+É um único código-fonte com fronteiras de contexto explícitas. O `BookStore.Api` não conhece o
+`FraudDbContext` nem o contrário. Se um contexto precisar de um banco separado em produção, é apenas
+uma troca de connection string.
 
-A API responde rápido (`202 Accepted`) e não depende da latência das regras. O Worker escala de
-forma independente conforme o volume da fila. Uma falha no processamento não derruba a recepção de
-novas transações.
+### Comunicação síncrona via HTTP (BookStore.Api → Fraud.Api)
 
-### Outbox transacional
+O `PurchasePlacedConsumer` chama `POST /api/v1/transactions` na Fraud.Api com
+`Idempotency-Key: {purchaseId}`. A resilience handler (`AddStandardResilienceHandler`) adiciona retry,
+circuit breaker e timeout. O trace atravessa HTTP via `traceparent`, mantendo visibilidade ponta a ponta.
 
-A mudança de estado e a mensagem a publicar são gravadas **na mesma transação do PostgreSQL**. Isso
-elimina a escrita dupla: não existe transação gravada sem mensagem, nem mensagem sem transação. Um
-serviço de entrega do MassTransit lê a outbox e publica no RabbitMQ; se o broker estiver fora, a
-mensagem espera na tabela.
+### Outbox transacional e inbox no consumidor
 
-### Inbox no consumidor
-
-A outbox garante entrega **pelo menos uma vez** — uma mensagem pode chegar duas vezes. A inbox trava
-cada `MessageId` recebido e descarta reentregas. É a segunda camada de deduplicação, complementar à
-`Idempotency-Key` da API.
-
-### Um banco, dois schemas
-
-Isola os contextos (cada `DbContext` só enxerga o seu schema) sem o custo de dois servidores.
-Em produção, cada contexto teria seu próprio banco; a separação por schema torna essa migração uma
-troca de connection string.
+Cada outbox garante entrega **pelo menos uma vez** dentro do seu processo. A inbox do MassTransit
+descarta reentregas por `MessageId`. As duas camadas juntas garantem exatamente uma execução efectiva
+para cada mensagem.
 
 ### Observabilidade por padrão aberto
 
-API e Worker emitem OpenTelemetry. O contexto de trace (`traceparent`) atravessa HTTP e RabbitMQ, e o
-`CorrelationId` segue nas mensagens e nos logs. O Aspire Dashboard é só o visualizador desta
-demonstração; trocar por Jaeger, Grafana ou outro backend é mudar um endereço de configuração.
-
-### Integrações externas como ponto de extensão
-
-Um antifraude real costuma consultar provedores externos (bureau de crédito, lista de cartões
-bloqueados, geolocalização de IP). A consulta **não** acontece dentro de uma regra — as regras são
-puras. Ela acontece no caso de uso que monta o `FraudContext`, como mais um sinal, protegida por
-**timeout** e **circuit breaker**. Se o provedor estiver fora, o sinal chega como "indisponível", a regra
-que depende dele registra que não pôde avaliar, e a avaliação segue com as demais regras — a falha de
-um fornecedor nunca derruba o antifraude.
+Todos os três processos emitem OpenTelemetry. O `X-Correlation-Id` segue nos headers HTTP e nas
+mensagens de broker. O Aspire Dashboard mostra o trace de uma compra desde o `POST /purchases` até a
+atualização do status final em `BookStore.Api`.

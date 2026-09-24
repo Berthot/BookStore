@@ -45,15 +45,17 @@ Segue o draft IETF `draft-ietf-httpapi-idempotency-key-header-07` e a prática d
 | :--- | :--- |
 | header ausente | `400 Bad Request` |
 | chave nova | processa e responde normalmente (`202 Accepted` + `Location`) |
-| chave repetida, mesmo corpo | **replay**: devolve a resposta original, sem reprocessar |
+| chave repetida, mesmo corpo | **replay**: devolve o status code original, header `Location` original e `Idempotent-Replayed: true` |
 | chave repetida, corpo diferente | `422 Unprocessable Entity` |
 | original ainda em execução | `409 Conflict` — o cliente pode tentar de novo |
 
 ### Como funciona
 
 - **Tabela `idempotency_keys` em cada schema** (`bookstore` e `fraud`): cada chave mora junto do dado
-  que protege. Campos: chave, hash SHA-256 do corpo normalizado, status HTTP e corpo da resposta, id do
-  recurso criado, data de criação.
+  que protege. Campos: chave, hash SHA-256 do corpo normalizado, **status HTTP** (`status_code`),
+  **header Location** (`location_header`), corpo da resposta, id do recurso criado, data de criação.
+  O replay devolve exatamente o mesmo status code + Location da resposta original, além de
+  `Idempotent-Replayed: true` para que o cliente saiba que não houve novo processamento.
 - **Atomicidade:** chave, entidade e mensagem da outbox entram no mesmo `SaveChanges`. Ou tudo, ou nada.
 - **Concorrência:** duas requisições com a mesma chave disputam o índice único. A segunda espera o fim da
   primeira com um `lock_timeout` curto: se a primeira confirmou, a segunda recebe o **replay**; se o
