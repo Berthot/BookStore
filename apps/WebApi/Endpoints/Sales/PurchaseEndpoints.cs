@@ -21,6 +21,7 @@ public static class PurchaseEndpoints
         group.MapPost("/", PurchaseAsync)
             .AddEndpointFilter<IdempotencyFilter<IBookStoreIdempotencyStore>>()
             .RequireIdempotencyKey()
+            .WithPurchaseExamples()
             .WithName("PurchaseBook");
 
         group.MapGet("/{id:guid}", GetAsync)

@@ -21,6 +21,7 @@ public static class TransactionEndpoints
         group.MapPost("/", SubmitAsync)
             .AddEndpointFilter<IdempotencyFilter<IFraudIdempotencyStore>>()
             .RequireIdempotencyKey()
+            .WithTransactionExamples()
             .WithName("SubmitTransaction");
 
         group.MapGet("/{id:guid}", GetAsync)

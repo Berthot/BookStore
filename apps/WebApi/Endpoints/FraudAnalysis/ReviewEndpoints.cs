@@ -1,6 +1,7 @@
 using Application.UseCases.FraudAnalysis.ReviewTransaction;
 using Cortex.Mediator;
 using WebApi.Extensions;
+using WebApi.OpenApi;
 
 namespace WebApi.Endpoints.FraudAnalysis;
 
@@ -10,6 +11,7 @@ public static class ReviewEndpoints
     {
         api.MapGroup("/transactions").WithTags("Transactions")
             .MapPost("/{id:guid}/review", ReviewAsync)
+            .WithReviewExamples()
             .WithName("ReviewTransaction");
 
         return api;
