@@ -17,6 +17,8 @@ public static class ProjectExtensions
             .WaitFor(postgres)
             .WaitFor(rabbitmq)
             .WaitFor(fraudApi)
+            .WithEnvironment("Database__ApplyMigrationsOnStartup", "true")
+            .WithEnvironment("Seeding__Enabled", "true")
             .WithEnvironment("Reconciliation__IntervalSeconds", "30")
             .WithEnvironment("Reconciliation__StalenessThresholdSeconds", "60")
             .WithEnvironment("PROMETHEUS_OTLP_ENDPOINT", prometheus.GetEndpoint("ui"))
@@ -35,6 +37,7 @@ public static class ProjectExtensions
             .WithReference(rabbitmq)
             .WaitFor(postgres)
             .WaitFor(rabbitmq)
+            .WithEnvironment("Database__ApplyMigrationsOnStartup", "true")
             .WithEnvironment("PROMETHEUS_OTLP_ENDPOINT", prometheus.GetEndpoint("ui"))
             .WithHttpHealthCheck("/health");
     }
