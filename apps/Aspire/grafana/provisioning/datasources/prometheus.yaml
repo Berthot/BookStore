@@ -10,3 +10,4 @@ datasources:
     jsonData:
       httpMethod: POST
       prometheusType: Prometheus
+      prometheusVersion: "2.55.0"
