@@ -140,8 +140,20 @@
                   "pm.test('200 OK', () => pm.response.to.have.status(200));",
                   "const body = pm.response.json();",
                   "pm.test('status CONFIRMED ou PENDING_FRAUD_CHECK', () => {",
-                  "  pm.expect(['CONFIRMED', 'PENDING_FRAUD_CHECK', 'UNDER_REVIEW']).to.include(body.status);",
-                  "});"
+                  "  pm.expect(['CONFIRMED', 'CANCELLED', 'PENDING_FRAUD_CHECK', 'UNDER_REVIEW']).to.include(body.status);",
+                  "});",
+                  "if (body.status === 'PENDING_FRAUD_CHECK') {",
+                  "  const retries = parseInt(pm.environment.get('_s1Retries') || '0');",
+                  "  if (retries < 8) {",
+                  "    pm.environment.set('_s1Retries', retries + 1);",
+                  "    pm.execution.setNextRequest('S1.2 — GET /purchases/:id (aguardar CONFIRMED)');",
+                  "  } else { pm.environment.unset('_s1Retries'); }",
+                  "} else {",
+                  "  pm.environment.unset('_s1Retries');",
+                  "  const fd = body.fraudDetails;",
+                  "  if (fd) console.log('[S1] status: ' + body.status + ' | outcome: ' + fd.outcome + ' | score: ' + fd.score + ' | rules: ' + JSON.stringify(fd.triggeredRules));",
+                  "  else console.log('[S1] status: ' + body.status);",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
@@ -226,7 +238,19 @@
                   "const body = pm.response.json();",
                   "pm.test('status CANCELLED ou PENDING_FRAUD_CHECK', () => {",
                   "  pm.expect(['CANCELLED', 'PENDING_FRAUD_CHECK']).to.include(body.status);",
-                  "});"
+                  "});",
+                  "if (body.status === 'PENDING_FRAUD_CHECK') {",
+                  "  const retries = parseInt(pm.environment.get('_s2Retries') || '0');",
+                  "  if (retries < 8) {",
+                  "    pm.environment.set('_s2Retries', retries + 1);",
+                  "    pm.execution.setNextRequest('S2.2 — GET /purchases/:id (aguardar CANCELLED)');",
+                  "  } else { pm.environment.unset('_s2Retries'); }",
+                  "} else {",
+                  "  pm.environment.unset('_s2Retries');",
+                  "  const fd = body.fraudDetails;",
+                  "  if (fd) console.log('[S2] status: ' + body.status + ' | outcome: ' + fd.outcome + ' | score: ' + fd.score + ' | rules: ' + JSON.stringify(fd.triggeredRules));",
+                  "  else console.log('[S2] status: ' + body.status);",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
@@ -318,6 +342,7 @@
                   "  pm.test('fraudDetails.outcome presente', () => pm.expect(body.fraudDetails.outcome).to.be.a('string'));",
                   "  pm.test('fraudDetails.score presente', () => pm.expect(body.fraudDetails.score).to.be.a('number'));",
                   "  pm.test('fraudDetails.triggeredRules presente', () => pm.expect(body.fraudDetails.triggeredRules).to.be.an('array'));",
+                  "  console.log('[S3] status: ' + body.status + ' | outcome: ' + body.fraudDetails.outcome + ' | score: ' + body.fraudDetails.score + ' | rules: ' + JSON.stringify(body.fraudDetails.triggeredRules));",
                   "} else if (body.status === 'PENDING_FRAUD_CHECK') {",
                   "  const retries = parseInt(pm.environment.get('_s3Retries') || '0');",
                   "  if (retries < 8) {",
@@ -449,6 +474,7 @@
                   "  }",
                   "} else {",
                   "  pm.environment.unset('_s4Retries');",
+                  "  console.log('[S4] status: ' + body.status + ' (revisão humana → APPROVED)');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -750,7 +776,19 @@
                   "const body = pm.response.json();",
                   "pm.test('status CANCELLED ou PENDING_FRAUD_CHECK', () => {",
                   "  pm.expect(['CANCELLED', 'PENDING_FRAUD_CHECK']).to.include(body.status);",
-                  "});"
+                  "});",
+                  "if (body.status === 'PENDING_FRAUD_CHECK') {",
+                  "  const retries = parseInt(pm.environment.get('_s5Retries') || '0');",
+                  "  if (retries < 8) {",
+                  "    pm.environment.set('_s5Retries', retries + 1);",
+                  "    pm.execution.setNextRequest('S5.7 — GET /purchases/:id (aguardar CANCELLED)');",
+                  "  } else { pm.environment.unset('_s5Retries'); }",
+                  "} else {",
+                  "  pm.environment.unset('_s5Retries');",
+                  "  const fd = body.fraudDetails;",
+                  "  if (fd) console.log('[S5] status: ' + body.status + ' | outcome: ' + fd.outcome + ' | score: ' + fd.score + ' | rules: ' + JSON.stringify(fd.triggeredRules));",
+                  "  else console.log('[S5] status: ' + body.status);",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
@@ -1115,6 +1153,7 @@
                   "  pm.test('fraudDetails.outcome presente', () => pm.expect(body.fraudDetails.outcome).to.be.a('string'));",
                   "  pm.test('fraudDetails.score presente', () => pm.expect(body.fraudDetails.score).to.be.a('number'));",
                   "  pm.test('fraudDetails.triggeredRules presente', () => pm.expect(body.fraudDetails.triggeredRules).to.be.an('array'));",
+                  "  console.log('[S10] status: ' + body.status + ' | outcome: ' + body.fraudDetails.outcome + ' | score: ' + body.fraudDetails.score + ' | rules: ' + JSON.stringify(body.fraudDetails.triggeredRules));",
                   "} else if (body.status === 'PENDING_FRAUD_CHECK') {",
                   "  const retries = parseInt(pm.environment.get('_s10Retries') || '0');",
                   "  if (retries < 8) {",
@@ -1295,7 +1334,19 @@
                   "const body = pm.response.json();",
                   "pm.test('status DECIDED ou PROCESSING', () => {",
                   "  pm.expect(['DECIDED', 'PROCESSING', 'RECEIVED']).to.include(body.status);",
-                  "});"
+                  "});",
+                  "if (body.status !== 'DECIDED') {",
+                  "  const retries = parseInt(pm.environment.get('_s11Retries') || '0');",
+                  "  if (retries < 8) {",
+                  "    pm.environment.set('_s11Retries', retries + 1);",
+                  "    pm.execution.setNextRequest('S11.4 — GET /transactions/:id (aguardar REVIEW)');",
+                  "  } else { pm.environment.unset('_s11Retries'); }",
+                  "} else {",
+                  "  pm.environment.unset('_s11Retries');",
+                  "  const d = body.decision;",
+                  "  if (d) console.log('[S11] status: ' + body.status + ' | outcome: ' + d.outcome + ' | score: ' + d.score + ' | rules: ' + JSON.stringify(d.triggeredRules));",
+                  "  else console.log('[S11] status: ' + body.status);",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
