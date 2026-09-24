@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Tests.Shared.Attributes;
 using Tests.Shared.Base;
-using WebApi.Filters.Idempotency;
+using BookStore.Api.Filters.Idempotency;
 
 namespace Tests.WebApi.Integration;
 

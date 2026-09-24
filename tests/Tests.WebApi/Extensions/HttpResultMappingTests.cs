@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Tests.Shared.Attributes;
 using Tests.Shared.Base;
-using WebApi.Extensions;
+using BookStore.Api.Extensions;
 
 namespace Tests.WebApi.Extensions;
 

@@ -52,6 +52,34 @@
           "response": []
         },
         {
+          "name": "GET /health (Fraud.Api)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK — Fraud.Api healthy', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{fraudUrl}}/health",
+              "host": [
+                "{{fraudUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "GET /books",
           "request": {
             "method": "GET",

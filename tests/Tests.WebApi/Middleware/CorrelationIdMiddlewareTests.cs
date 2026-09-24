@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using Tests.Shared.Attributes;
 using Tests.Shared.Base;
-using WebApi.Middleware;
+using BookStore.Api.Middleware;
 
 namespace Tests.WebApi.Middleware;
 
