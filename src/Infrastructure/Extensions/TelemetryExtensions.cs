@@ -45,9 +45,11 @@ public static class TelemetryExtensions
                 if (!string.IsNullOrEmpty(prometheusBase))
                     metrics.AddOtlpExporter((o, reader) =>
                     {
-                        // OTel SDK appends /v1/metrics to the base path automatically (http/protobuf)
-                        o.Endpoint = new Uri(prometheusBase.TrimEnd('/') + "/api/v1/otlp");
+                        // Full path required: AppendSignalPathToEndpoint uses Uri combining which
+                        // replaces the path when the signal suffix starts with '/'.
+                        o.Endpoint = new Uri(prometheusBase.TrimEnd('/') + "/api/v1/otlp/v1/metrics");
                         o.Protocol = OtlpExportProtocol.HttpProtobuf;
+                        o.AppendSignalPathToEndpoint = false;
                         // 15s for responsive Grafana during demos (default is 60s)
                         reader.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 15_000;
                     });
