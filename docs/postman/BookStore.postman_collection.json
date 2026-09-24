@@ -186,6 +186,16 @@
           "name": "S2.1 — POST /purchases (Pragmatic Programmer ×2, cliente novo)",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set('s2CustId', 'cus_s2_new_' + pm.variables.replaceIn('{{$guid}}').substring(0, 8));",
+                  "pm.environment.set('s2CardFp', 'fp_s2_ebook_' + pm.variables.replaceIn('{{$guid}}').substring(0, 8));"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "exec": [
@@ -211,7 +221,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bookId\": \"{{BOOK_PRAGMATIC}}\",\n  \"quantity\": 2,\n  \"customerId\": \"cus_s2_new\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s2_ebook_expensive\",\n    \"last4\": \"9999\"\n  },\n  \"channel\": \"WEB\"\n}"
+              "raw": "{\n  \"bookId\": \"{{BOOK_PRAGMATIC}}\",\n  \"quantity\": 2,\n  \"customerId\": \"{{s2CustId}}\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s2CardFp}}\",\n    \"last4\": \"9999\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/purchases",
@@ -283,6 +293,15 @@
           "name": "S3.1 — POST /purchases (Clean Code ×10)",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set('s3CardFp', 'fp_s3_bulk_' + pm.variables.replaceIn('{{$guid}}').substring(0, 8));"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "exec": [
@@ -308,7 +327,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 10,\n  \"customerId\": \"cus_s3_bulk\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s3_bulk\",\n    \"last4\": \"5678\"\n  },\n  \"channel\": \"WEB\"\n}"
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 10,\n  \"customerId\": \"cus_s3_bulk\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s3CardFp}}\",\n    \"last4\": \"5678\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/purchases",
@@ -466,16 +485,16 @@
                   "pm.test('status CONFIRMED ou UNDER_REVIEW', () => {",
                   "  pm.expect(['CONFIRMED', 'UNDER_REVIEW']).to.include(body.status);",
                   "});",
-                  "if (body.status !== 'CONFIRMED') {",
+                  "if (body.status === 'CONFIRMED') {",
+                  "  pm.environment.unset('_s4Retries');",
+                  "  console.log('[S4] status: ' + body.status + ' (revisão humana → APPROVED)');",
+                  "} else if (body.status !== 'CANCELLED' && body.status !== 'UNDER_REVIEW') {",
                   "  const retries = parseInt(pm.environment.get('_s4Retries') || '0');",
                   "  if (retries < 8) {",
                   "    pm.environment.set('_s4Retries', retries + 1);",
                   "    pm.execution.setNextRequest('S4.3 — GET /purchases/:id (aguardar CONFIRMED)');",
-                  "  }",
-                  "} else {",
-                  "  pm.environment.unset('_s4Retries');",
-                  "  console.log('[S4] status: ' + body.status + ' (revisão humana → APPROVED)');",
-                  "}"
+                  "  } else { pm.environment.unset('_s4Retries'); }",
+                  "} else { pm.environment.unset('_s4Retries'); }"
                 ],
                 "type": "text/javascript"
               }
@@ -509,6 +528,15 @@
           "name": "S5.1 — Compra 1 (mesmo cartão)",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set('s5CardFp', 'fp_s5_card_' + pm.variables.replaceIn('{{$guid}}').substring(0, 8));"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "exec": [
@@ -532,7 +560,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/purchases",
@@ -575,7 +603,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/purchases",
@@ -618,7 +646,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/purchases",
@@ -661,7 +689,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/purchases",
@@ -704,7 +732,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/purchases",
@@ -749,7 +777,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s5_stolen_card\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/purchases",
@@ -966,6 +994,16 @@
           "name": "S10.1 — Compra 1 histórico (R$ 49,90)",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set('s10CustId', 'cus_s10_dev_' + pm.variables.replaceIn('{{$guid}}').substring(0, 8));",
+                  "pm.environment.set('s10CardFp', 'fp_s10_hist_' + pm.variables.replaceIn('{{$guid}}').substring(0, 8));"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "exec": [
@@ -989,7 +1027,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s10_deviation\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s10_history\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"{{s10CustId}}\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s10CardFp}}\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/purchases",
@@ -1032,7 +1070,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s10_deviation\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s10_history\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"{{s10CustId}}\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s10CardFp}}\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/purchases",
@@ -1075,7 +1113,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s10_deviation\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s10_history\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"{{s10CustId}}\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s10CardFp}}\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/purchases",
@@ -1120,7 +1158,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bookId\": \"{{BOOK_DDD}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s10_deviation\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s10_history\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
+              "raw": "{\n  \"bookId\": \"{{BOOK_DDD}}\",\n  \"quantity\": 1,\n  \"customerId\": \"{{s10CustId}}\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s10CardFp}}\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/purchases",
@@ -1196,6 +1234,16 @@
           "name": "S11.1 — Transação R$ 475 (abaixo de R$ 500)",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.environment.set('s11CustId', 'cus_s11_struct_' + pm.variables.replaceIn('{{$guid}}').substring(0, 8));",
+                  "pm.environment.set('s11CardFp', 'fp_s11_struct_' + pm.variables.replaceIn('{{$guid}}').substring(0, 8));"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "exec": [
@@ -1219,7 +1267,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"externalReference\": \"s11-structuring-1\",\n  \"customerId\": \"cus_s11_structuring\",\n  \"amount\": { \"value\": 475.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"fp_s11_struct\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
+              "raw": "{\n  \"externalReference\": \"s11-structuring-1\",\n  \"customerId\": \"{{s11CustId}}\",\n  \"amount\": { \"value\": 475.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"{{s11CardFp}}\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/transactions",
@@ -1262,7 +1310,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"externalReference\": \"s11-structuring-2\",\n  \"customerId\": \"cus_s11_structuring\",\n  \"amount\": { \"value\": 480.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"fp_s11_struct\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
+              "raw": "{\n  \"externalReference\": \"s11-structuring-2\",\n  \"customerId\": \"{{s11CustId}}\",\n  \"amount\": { \"value\": 480.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"{{s11CardFp}}\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/transactions",
@@ -1307,7 +1355,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"externalReference\": \"s11-structuring-3\",\n  \"customerId\": \"cus_s11_structuring\",\n  \"amount\": { \"value\": 490.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"fp_s11_struct\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
+              "raw": "{\n  \"externalReference\": \"s11-structuring-3\",\n  \"customerId\": \"{{s11CustId}}\",\n  \"amount\": { \"value\": 490.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"{{s11CardFp}}\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/transactions",
