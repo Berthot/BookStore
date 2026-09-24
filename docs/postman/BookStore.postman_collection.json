@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "BookStore — Antifraude",
-    "description": "Cobre os 11 cenários do desafio técnico (S1–S11). Execute com o ambiente 'BookStore — Local'.\n\nAjuste a variável baseUrl conforme o stack:\n- Aspire HTTP:   http://localhost:5085  ← padrão do ambiente\n- Aspire HTTPS:  https://localhost:7270  (desative SSL verification no Postman para cert de dev)\n- Docker Compose: http://localhost:8080\n\nBook IDs fixos (seed):\n- 11111111-0000-0000-0000-000000000001 → Clean Code (Paperback, R$ 49,90)\n- 11111111-0000-0000-0000-000000000002 → The Pragmatic Programmer (Ebook, R$ 349,90)\n- 11111111-0000-0000-0000-000000000003 → Domain-Driven Design (Hardcover, R$ 149,90)",
+    "description": "Cobre os 11 cenários do desafio técnico (S1–S11).\n\nImporte o ambiente correspondente ao stack:\n- Docker Compose: 'BookStore — Local (Docker)'   → bookstoreUrl=:8080 · fraudUrl=:8081\n- Aspire:         'BookStore — Local (Aspire)'    → bookstoreUrl=:5085 · fraudUrl=:5086 (portas dinâmicas — ajuste conforme o painel Aspire)\n\nBook IDs fixos (seed):\n- 11111111-0000-0000-0000-000000000001 → Clean Code (Paperback, R$ 49,90)\n- 11111111-0000-0000-0000-000000000002 → The Pragmatic Programmer (Ebook, R$ 349,90)\n- 11111111-0000-0000-0000-000000000003 → Domain-Driven Design (Hardcover, R$ 149,90)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

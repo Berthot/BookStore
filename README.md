@@ -94,9 +94,11 @@ O Aspire Dashboard abre automaticamente. As portas dos serviços são atribuída
 ### 📮 Postman
 
 1. Importe `docs/postman/BookStore.postman_collection.json`
-2. Importe `docs/postman/local.postman_environment.json` e selecione o ambiente **BookStore — Local**
-   - `bookstoreUrl = http://localhost:8080` (books, purchases)
-   - `fraudUrl = http://localhost:8081` (transactions, review)
+2. Importe e selecione o ambiente correspondente ao stack:
+   - `docs/postman/local.postman_environment.json` — **BookStore — Local (Docker)**
+     (`bookstoreUrl = http://localhost:8080` · `fraudUrl = http://localhost:8081`)
+   - `docs/postman/local-aspire.postman_environment.json` — **BookStore — Local (Aspire)**
+     (portas dinâmicas — ajuste conforme o painel Aspire)
 3. Execute os cenários na ordem abaixo
 
 ### 🎬 Roteiro de cenários
