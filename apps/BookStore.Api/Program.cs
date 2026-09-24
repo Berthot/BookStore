@@ -17,7 +17,7 @@ using Microsoft.Extensions.ServiceDiscovery;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-    .AddApplication()
+    .AddBookStoreApplication()
     .AddBookStoreInfrastructure(builder.Configuration);
 
 builder.Services.AddServiceDiscovery();
@@ -37,6 +37,7 @@ builder.Services.AddHealthChecks();
 builder.Services.AddOpenApi();
 
 builder.Services.AddHostedService<ReconciliationJob>();
+builder.Services.AddHostedService<IdempotencyPurgeJob>();
 
 var app = builder.Build();
 
