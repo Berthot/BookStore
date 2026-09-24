@@ -21,7 +21,7 @@ public static class InfrastructureExtensions
         // MassTransitExtensions.cs (case-sensitive key).
         // 4-management-alpine already includes the management plugin.
         var rabbitmqUser = builder.AddParameter("rabbitmq-user");
-        var rabbitmqPassword = builder.AddParameter("rabbitmq-password", secret: true);
+        var rabbitmqPassword = builder.AddParameter("rabbitmq-password");
         var rabbitmq = builder.AddRabbitMQ("RabbitMQ", userName: rabbitmqUser, password: rabbitmqPassword)
             .WithImage("rabbitmq", "4-management-alpine")
             .WithHttpEndpoint(port: 15672, targetPort: 15672, name: "management");
