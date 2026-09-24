@@ -1,4 +1,4 @@
-namespace Fraud.Api.Middleware;
+namespace Fraud.Api.Infrastructure.Middleware;
 
 public sealed class CorrelationIdMiddleware(RequestDelegate next)
 {

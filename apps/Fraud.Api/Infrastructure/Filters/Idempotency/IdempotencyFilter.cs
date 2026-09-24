@@ -3,7 +3,7 @@ using System.Text.Json;
 using Application.Abstractions.Idempotency;
 using Application.Diagnostics;
 
-namespace BookStore.Api.Filters.Idempotency;
+namespace Fraud.Api.Infrastructure.Filters.Idempotency;
 
 public sealed class IdempotencyFilter<TStore>(TStore store) : IEndpointFilter
     where TStore : IIdempotencyStore

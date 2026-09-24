@@ -1,11 +1,11 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Application;
-using BookStore.Api.ErrorHandling;
+using BookStore.Api.Infrastructure.ErrorHandling;
 using BookStore.Api.Endpoints.Catalog;
 using BookStore.Api.Endpoints.Sales;
 using BookStore.Api.Jobs;
-using BookStore.Api.Middleware;
+using BookStore.Api.Infrastructure.Middleware;
 using Infrastructure;
 using Infrastructure.Options;
 using Infrastructure.Persistence.BookStore;

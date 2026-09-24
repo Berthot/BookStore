@@ -2,7 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Fraud.Api.ErrorHandling;
+namespace Fraud.Api.Infrastructure.ErrorHandling;
 
 public sealed class GlobalExceptionHandler(
     ILogger<GlobalExceptionHandler> logger,

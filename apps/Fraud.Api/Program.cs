@@ -1,9 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Application;
-using Fraud.Api.ErrorHandling;
+using Fraud.Api.Infrastructure.ErrorHandling;
 using Fraud.Api.Endpoints.FraudAnalysis;
-using Fraud.Api.Middleware;
+using Fraud.Api.Infrastructure.Middleware;
 using Infrastructure;
 using Infrastructure.Options;
 using Infrastructure.Persistence.Fraud;

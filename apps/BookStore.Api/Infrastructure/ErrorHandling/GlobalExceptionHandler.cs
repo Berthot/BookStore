@@ -2,7 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BookStore.Api.ErrorHandling;
+namespace BookStore.Api.Infrastructure.ErrorHandling;
 
 public sealed class GlobalExceptionHandler(
     ILogger<GlobalExceptionHandler> logger,

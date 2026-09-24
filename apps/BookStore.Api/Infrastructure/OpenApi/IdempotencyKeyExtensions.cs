@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
 using Microsoft.OpenApi;
 
-namespace BookStore.Api.OpenApi;
+namespace BookStore.Api.Infrastructure.OpenApi;
 
 public static class IdempotencyKeyExtensions
 {

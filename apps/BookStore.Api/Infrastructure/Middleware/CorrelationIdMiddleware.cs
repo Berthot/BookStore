@@ -1,4 +1,4 @@
-namespace BookStore.Api.Middleware;
+namespace BookStore.Api.Infrastructure.Middleware;
 
 public sealed class CorrelationIdMiddleware(RequestDelegate next)
 {

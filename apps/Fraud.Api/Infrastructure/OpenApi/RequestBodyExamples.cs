@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
 using Microsoft.OpenApi;
 
-namespace Fraud.Api.OpenApi;
+namespace Fraud.Api.Infrastructure.OpenApi;
 
 internal static class RequestBodyExamples
 {

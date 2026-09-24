@@ -1,6 +1,6 @@
 using Application.Commons;
 
-namespace Fraud.Api.Extensions;
+namespace Fraud.Api.Infrastructure.Extensions;
 
 public static class OperationResultExtensions
 {

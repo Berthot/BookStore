@@ -1,6 +1,6 @@
 using Application.Commons;
 
-namespace BookStore.Api.Extensions;
+namespace BookStore.Api.Infrastructure.Extensions;
 
 public static class OperationResultExtensions
 {
