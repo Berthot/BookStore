@@ -15,13 +15,15 @@ public sealed class GlobalExceptionHandler(
     {
         logger.LogError(exception, "Unhandled exception: {Message}", exception.Message);
 
+        var isDev = env.IsDevelopment() || env.IsEnvironment("Development")
+            || string.Equals(Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT"),
+                "Development", StringComparison.OrdinalIgnoreCase);
+
         var problem = new ProblemDetails
         {
             Status = StatusCodes.Status500InternalServerError,
             Title = "Internal",
-            Detail = env.IsDevelopment()
-                ? exception.ToString()
-                : "An unexpected error occurred."
+            Detail = isDev ? exception.ToString() : "An unexpected error occurred."
         };
 
         problem.Extensions["traceId"] = Activity.Current?.Id ?? httpContext.TraceIdentifier;
