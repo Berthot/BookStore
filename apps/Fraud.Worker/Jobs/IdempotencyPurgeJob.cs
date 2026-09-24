@@ -1,4 +1,4 @@
-using Application.UseCases.Idempotency.PurgeExpiredKeys;
+using Application.UseCases.Idempotency.PurgeFraudExpiredKeys;
 using Cortex.Mediator;
 
 namespace Fraud.Worker.Jobs;
@@ -22,7 +22,7 @@ public sealed class IdempotencyPurgeJob(
                 var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
                 await mediator.SendCommandAsync(
-                    new PurgeExpiredKeysRequest(DateTime.UtcNow - ExpiryAge),
+                    new PurgeFraudExpiredKeysRequest(DateTime.UtcNow - ExpiryAge),
                     stoppingToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)

@@ -5,7 +5,7 @@ using Infrastructure;
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services
-    .AddApplication()
+    .AddFraudApplication()
     .AddFraudInfrastructure(builder.Configuration);
 
 builder.Services.AddHostedService<IdempotencyPurgeJob>();

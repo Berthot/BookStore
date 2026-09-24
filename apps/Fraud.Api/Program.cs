@@ -13,7 +13,7 @@ using Microsoft.Extensions.Options;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-    .AddApplication()
+    .AddFraudApplication()
     .AddFraudInfrastructure(builder.Configuration);
 
 builder.Services.ConfigureHttpJsonOptions(options =>
