@@ -46,6 +46,7 @@ services:
     ports:
       - "8081:8081"
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8081
       ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-bookstore};Username=${POSTGRES_USER:-bookstore};Password=${POSTGRES_PASSWORD:-bookstore}"
       ConnectionStrings__RabbitMQ: "amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672/"
@@ -71,6 +72,7 @@ services:
     environment:
       ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-bookstore};Username=${POSTGRES_USER:-bookstore};Password=${POSTGRES_PASSWORD:-bookstore}"
       ConnectionStrings__RabbitMQ: "amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672/"
+      Demo__FraudProcessingDelaySeconds: "5"
       OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
       OTEL_SERVICE_NAME: fraud-worker
       OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
@@ -89,6 +91,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-bookstore};Username=${POSTGRES_USER:-bookstore};Password=${POSTGRES_PASSWORD:-bookstore}"
       ConnectionStrings__RabbitMQ: "amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672/"
