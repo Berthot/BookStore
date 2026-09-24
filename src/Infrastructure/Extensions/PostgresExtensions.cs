@@ -17,8 +17,51 @@ namespace Infrastructure.Extensions;
 
 public static class PostgresExtensions
 {
-    /// <summary>Registers PostgreSQL DbContexts, repositories, unit-of-work, idempotency stores and startup options for both bounded contexts.</summary>
-    public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
+    /// <summary>Registers BookStoreDbContext, book/purchase repositories, unit-of-work, idempotency store, startup options and catalog seeder.</summary>
+    public static IServiceCollection AddBookStorePersistence(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<DatabaseOptions>()
+            .Bind(configuration.GetSection(DatabaseOptions.Section))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<SeedingOptions>()
+            .Bind(configuration.GetSection(SeedingOptions.Section))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddPostgresDbContext<BookStoreDbContext>(configuration, "bookstore",
+            opts => opts.UseAsyncSeeding(async (ctx, _, ct) =>
+                await new CatalogDataSeeder((BookStoreDbContext)ctx).SeedAsync(ct)));
+
+        services.AddScoped<ICatalogSeeder, CatalogDataSeeder>();
+        services.AddScoped<IBookRepository, BookRepository>();
+        services.AddScoped<IPurchaseRepository, PurchaseRepository>();
+        services.AddScoped<IBookStoreUnitOfWork, BookStoreUnitOfWork>();
+        services.AddScoped<IBookStoreIdempotencyStore, BookStoreIdempotencyStore>();
+
+        return services;
+    }
+
+    /// <summary>Registers FraudDbContext, transaction repository, unit-of-work, idempotency store and startup options.</summary>
+    public static IServiceCollection AddFraudPersistence(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<DatabaseOptions>()
+            .Bind(configuration.GetSection(DatabaseOptions.Section))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddPostgresDbContext<FraudDbContext>(configuration, "fraud");
+
+        services.AddScoped<ITransactionRepository, TransactionRepository>();
+        services.AddScoped<IFraudUnitOfWork, FraudUnitOfWork>();
+        services.AddScoped<IFraudIdempotencyStore, FraudIdempotencyStore>();
+
+        return services;
+    }
+
+    /// <summary>Registers both contexts — kept for tests/scenarios that host both bounded contexts in one process.</summary>
+    internal static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<DatabaseOptions>()
             .Bind(configuration.GetSection(DatabaseOptions.Section))
@@ -40,10 +83,8 @@ public static class PostgresExtensions
         services.AddScoped<IBookRepository, BookRepository>();
         services.AddScoped<IPurchaseRepository, PurchaseRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
-
         services.AddScoped<IBookStoreUnitOfWork, BookStoreUnitOfWork>();
         services.AddScoped<IFraudUnitOfWork, FraudUnitOfWork>();
-
         services.AddScoped<IBookStoreIdempotencyStore, BookStoreIdempotencyStore>();
         services.AddScoped<IFraudIdempotencyStore, FraudIdempotencyStore>();
 
