@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Infrastructure.Options;
 
 /// <summary>Controls database startup behaviour.</summary>

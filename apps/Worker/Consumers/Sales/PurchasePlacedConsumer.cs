@@ -3,7 +3,6 @@ using Application.Messages;
 using Application.UseCases.Sales.SubmitPurchaseToFraud;
 using Cortex.Mediator;
 using MassTransit;
-using Microsoft.Extensions.Logging;
 
 namespace Worker.Consumers.Sales;
 

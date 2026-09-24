@@ -1,5 +1,3 @@
-using Aspire.Hosting.ApplicationModel;
-
 namespace BookStore.Aspire.Extensions;
 
 public static class InfrastructureExtensions

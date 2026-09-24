@@ -1,0 +1,14 @@
+# Sync rules — vault Ianderu <-> repo BookStore (teste técnico .NET)
+# Escopo: SÓ a pasta de épicos do BookStore dentro da zona de trabalho do Bertho.
+# Nunca aponte para 01-epics/ inteiro — isso traria os épicos do SDK para este repositório.
+#
+# `sync push bookstore`   (vault -> repo, semeia)
+# `sync mirror bookstore` (bidirecional: o agente marca status no repo e o vault recebe)
+# Rode SEMPRE em dry-run antes; feche o Obsidian antes de aplicar mirror.
+version: 1
+rules:
+  - id: trabalho
+    description: "Épico, stories e tasks do BookStore para o agente executor"
+    source_rel: 04-trabalho/01-entidades/05-bertho/03-trabalho/01-epics/bookstore
+    dest_path: contexto/trabalho/epics
+    direction: mirror

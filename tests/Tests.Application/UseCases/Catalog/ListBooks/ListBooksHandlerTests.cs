@@ -1,4 +1,3 @@
-using Application.Commons;
 using Application.UseCases.Catalog.ListBooks;
 using Domain.Repositories;
 using NSubstitute;

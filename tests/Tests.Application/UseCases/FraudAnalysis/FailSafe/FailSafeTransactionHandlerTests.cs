@@ -1,8 +1,6 @@
 using Application.Abstractions.Messaging;
-using Application.Commons;
 using Application.Messages;
 using Application.UseCases.FraudAnalysis.FailSafe;
-using Domain.Entities.FraudAnalysis;
 using Domain.Enums;
 using Domain.Repositories;
 using NSubstitute;

@@ -1,8 +1,5 @@
 using Application.UseCases.Sales.ReconcilePendingPurchases;
 using Cortex.Mediator;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace Worker.Jobs;
 
