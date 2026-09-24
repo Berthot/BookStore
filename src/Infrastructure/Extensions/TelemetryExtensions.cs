@@ -2,6 +2,7 @@ using Application.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using OpenTelemetry;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -49,13 +50,13 @@ public static class TelemetryExtensions
                         reader.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 15_000;
                     });
             })
-            .WithLogging(logging =>
-            {
-                // Logs share the same resource as tracing + metrics (from ConfigureResource above).
-                logging.IncludeScopes = true;
-                logging.IncludeFormattedMessage = true;
-                logging.AddOtlpExporter();
-            });
+            .WithLogging(
+                logging => logging.AddOtlpExporter(),
+                options =>
+                {
+                    options.IncludeScopes = true;
+                    options.IncludeFormattedMessage = true;
+                });
 
         return services;
     }
