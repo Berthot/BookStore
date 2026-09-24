@@ -16,12 +16,7 @@ public static class ProjectExtensions
             .WithReference(rabbitmq)
             .WaitFor(postgres)
             .WaitFor(rabbitmq)
-            .WithEnvironment("OTEL_SERVICE_NAME", "bookstore-webapi")
-            .WithEnvironment("Database__ApplyMigrationsOnStartup", "true")
-            .WithEnvironment("Seeding__Enabled", "true")
-            .WithEnvironment("Logging__LogLevel__Microsoft.EntityFrameworkCore", "Warning")
-            .WithEnvironment("Logging__LogLevel__Npgsql", "Warning")
-            // Aspire injects the Prometheus base URL; TelemetryExtensions appends /api/v1/otlp
+            // Dynamic URL resolved by Aspire from the prometheus container endpoint
             .WithEnvironment("PROMETHEUS_OTLP_ENDPOINT", prometheus.GetEndpoint("ui"))
             .WithHttpHealthCheck("/health");
     }
@@ -40,12 +35,7 @@ public static class ProjectExtensions
             .WaitFor(postgres)
             .WaitFor(rabbitmq)
             .WaitFor(webapi)
-            .WithEnvironment("OTEL_SERVICE_NAME", "bookstore-worker")
-            .WithEnvironment("Logging__LogLevel__MassTransit", "Information")
-            .WithEnvironment("Logging__LogLevel__Worker.Consumers", "Information")
-            .WithEnvironment("Logging__LogLevel__Microsoft.EntityFrameworkCore", "Warning")
-            .WithEnvironment("Logging__LogLevel__Npgsql", "Warning")
-            // Aspire injects the Prometheus base URL; TelemetryExtensions appends /api/v1/otlp
+            // Dynamic URL resolved by Aspire from the prometheus container endpoint
             .WithEnvironment("PROMETHEUS_OTLP_ENDPOINT", prometheus.GetEndpoint("ui"));
     }
 }
