@@ -33,6 +33,7 @@ internal sealed class AssessmentConfiguration : IEntityTypeConfiguration<Assessm
             eval.Property(e => e.Hit).IsRequired();
             eval.Property(e => e.Weight).HasColumnType("numeric(5,4)").IsRequired();
             eval.Property(e => e.Reason).HasMaxLength(500).IsRequired();
+            eval.Property(e => e.Position).IsRequired().HasDefaultValue(0);
         });
     }
 }

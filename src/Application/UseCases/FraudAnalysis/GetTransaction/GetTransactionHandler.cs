@@ -41,7 +41,7 @@ public sealed class GetTransactionHandler(ITransactionRepository repository)
             new DeciderDto(a.Decider.Kind, a.Decider.ReviewerId),
             a.CreatedAt,
             a.Justification,
-            a.Evaluations.Select(MapRule).ToList());
+            a.Evaluations.OrderBy(e => e.Position).Select(MapRule).ToList());
 
     private static RuleDto MapRule(RuleEvaluation e) =>
         new(
@@ -57,5 +57,5 @@ public sealed class GetTransactionHandler(ITransactionRepository repository)
             (int)Math.Round(a.Evaluations.Sum(e => e.Weight) * 100),
             new DeciderDto(a.Decider.Kind, a.Decider.ReviewerId),
             a.CreatedAt,
-            a.Evaluations.Select(MapRule).ToList());
+            a.Evaluations.OrderBy(e => e.Position).Select(MapRule).ToList());
 }
