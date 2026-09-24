@@ -43,13 +43,11 @@ public static class TelemetryExtensions
                 // Second exporter → Prometheus OTLP push (only when running under Aspire)
                 var prometheusBase = configuration["PROMETHEUS_OTLP_ENDPOINT"];
                 if (!string.IsNullOrEmpty(prometheusBase))
-                    metrics.AddOtlpExporter(o =>
+                    metrics.AddOtlpExporter((o, reader) =>
                     {
                         // OTel SDK appends /v1/metrics to the base path automatically (http/protobuf)
                         o.Endpoint = new Uri(prometheusBase.TrimEnd('/') + "/api/v1/otlp");
                         o.Protocol = OtlpExportProtocol.HttpProtobuf;
-                    }, reader =>
-                    {
                         // 15s for responsive Grafana during demos (default is 60s)
                         reader.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 15_000;
                     });
