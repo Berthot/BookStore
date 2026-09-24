@@ -25,9 +25,9 @@ public static class InfrastructureExtensions
         var rabbitmq = builder.AddRabbitMQ("RabbitMQ")
             .WithImage("rabbitmq", "4-management-alpine");
 
-        // Prometheus: OTLP push receiver (--web.enable-otlp-receiver) on port 9090
+        // Prometheus: OTLP write receiver is a feature flag in 2.x (--web.enable-otlp-receiver is 3.x only)
         var prometheus = builder.AddContainer("prometheus", "prom/prometheus", "v2.55.0")
-            .WithArgs("--config.file=/etc/prometheus/prometheus.yml", "--web.enable-otlp-receiver")
+            .WithArgs("--config.file=/etc/prometheus/prometheus.yml", "--enable-feature=otlp-write-receiver")
             .WithBindMount("./prometheus.yml", "/etc/prometheus/prometheus.yml")
             .WithHttpEndpoint(port: 9090, targetPort: 9090, name: "ui");
 
