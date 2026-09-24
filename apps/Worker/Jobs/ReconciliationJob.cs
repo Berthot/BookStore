@@ -1,21 +1,22 @@
 using Application.UseCases.Sales.ReconcilePendingPurchases;
 using Cortex.Mediator;
+using Infrastructure.Options;
+using Microsoft.Extensions.Options;
 
 namespace Worker.Jobs;
 
 public sealed class ReconciliationJob(
     IServiceScopeFactory scopeFactory,
+    IOptions<ReconciliationOptions> options,
     ILogger<ReconciliationJob> logger) : BackgroundService
 {
-    /// <summary>How often to scan for stale purchases.</summary>
-    private static readonly TimeSpan Interval = TimeSpan.FromMinutes(5);
-
-    /// <summary>Purchases stuck in PendingFraudCheck beyond this age are re-submitted.</summary>
-    private static readonly TimeSpan StalenessThreshold = TimeSpan.FromMinutes(10);
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var timer = new PeriodicTimer(Interval);
+        var opts = options.Value;
+        var interval = TimeSpan.FromSeconds(opts.IntervalSeconds);
+        var stalenessThreshold = TimeSpan.FromSeconds(opts.StalenessThresholdSeconds);
+
+        using var timer = new PeriodicTimer(interval);
 
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
@@ -25,7 +26,7 @@ public sealed class ReconciliationJob(
                 var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
                 await mediator.SendCommandAsync(
-                    new ReconcilePendingPurchasesRequest(DateTime.UtcNow - StalenessThreshold),
+                    new ReconcilePendingPurchasesRequest(DateTime.UtcNow - stalenessThreshold),
                     stoppingToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)

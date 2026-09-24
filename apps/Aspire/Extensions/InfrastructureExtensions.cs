@@ -24,6 +24,7 @@ public static class InfrastructureExtensions
         var rabbitmqPassword = builder.AddParameter("rabbitmq-password");
         var rabbitmq = builder.AddRabbitMQ("RabbitMQ", userName: rabbitmqUser, password: rabbitmqPassword)
             .WithImage("rabbitmq", "4-management-alpine")
+            .WithDataVolume("rabbitmq-data")
             .WithHttpEndpoint(port: 15672, targetPort: 15672, name: "management");
 
         // Prometheus: OTLP write receiver is a feature flag in 2.x (--web.enable-otlp-receiver is 3.x only)

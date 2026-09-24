@@ -64,7 +64,7 @@ public static class TransactionEndpoints
         if (httpContext.Items[IdempotencyFilter<IFraudIdempotencyStore>.HttpContextEntryKey] is IdempotencyEntry entry)
         {
             var responseJson = JsonSerializer.Serialize(result.Data, jsonOptions.Value.SerializerOptions);
-            entry.Complete(responseJson, result.Data!.TransactionId);
+            entry.Complete(responseJson, 202, $"/api/v1/transactions/{result.Data!.TransactionId}", result.Data!.TransactionId);
             await unitOfWork.CommitAsync(cancellationToken);
         }
 

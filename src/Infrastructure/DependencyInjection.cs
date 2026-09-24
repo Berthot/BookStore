@@ -3,6 +3,7 @@ using Application.UseCases.Sales.Ports;
 using Infrastructure.Adapters;
 using Infrastructure.Extensions;
 using Infrastructure.Messaging;
+using Infrastructure.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,6 +20,11 @@ public static class DependencyInjection
             .AddTelemetry(configuration);
 
         services.AddScoped<IEventPublisher, EventPublisher>();
+
+        services.AddOptions<ReconciliationOptions>()
+            .BindConfiguration(ReconciliationOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
         // HttpFraudCheckGateway: typed client with resilience; base address is resolved via
         // Aspire service discovery (http+https://fraud-api/) or the Services__ env vars in compose.

@@ -12,18 +12,26 @@ public sealed class IdempotencyEntry : Entity
     public string BodyHash { get; init; } = string.Empty;
     public string Status { get; private set; } = IdempotencyStatus.Processing;
     public string? ResponseBody { get; private set; }
+    public int StatusCode { get; private set; }
+    public string? LocationHeader { get; private set; }
     public Guid? ResourceId { get; private set; }
 
     public static IdempotencyEntry Create(string key, string bodyHash, DateTime now) =>
         new() { Id = Guid.NewGuid(), Key = key, BodyHash = bodyHash, CreatedAt = now };
 
-    public void Complete(string responseBody, Guid? resourceId = null)
+    public void Complete(string responseBody, int statusCode, string? locationHeader, Guid? resourceId = null)
     {
         Status = IdempotencyStatus.Completed;
         ResponseBody = responseBody;
+        StatusCode = statusCode;
+        LocationHeader = locationHeader;
         ResourceId = resourceId;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    // Backward-compatible overload used by tests that do not care about status/location.
+    public void Complete(string responseBody, Guid? resourceId = null) =>
+        Complete(responseBody, 200, null, resourceId);
 }
 
 public static class IdempotencyStatus

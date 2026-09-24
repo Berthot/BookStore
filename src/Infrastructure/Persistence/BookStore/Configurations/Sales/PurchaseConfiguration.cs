@@ -29,5 +29,9 @@ internal sealed class PurchaseConfiguration : IEntityTypeConfiguration<Purchase>
         });
 
         builder.HasIndex(p => p.CorrelationId).IsUnique();
+
+        // xmin is a PostgreSQL system column that increments on every row update;
+        // used as an optimistic concurrency token so concurrent consumer retries do not silently overwrite each other.
+        builder.Property<uint>("xmin").HasColumnType("xid").ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
     }
 }

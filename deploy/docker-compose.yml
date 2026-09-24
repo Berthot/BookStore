@@ -23,6 +23,8 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/mnesia
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
@@ -30,17 +32,60 @@ services:
       retries: 10
 
   aspire-dashboard:
-    image: mcr.microsoft.com/dotnet/aspire-dashboard:latest
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:9.3.0
     ports:
       - "18888:18888"
       - "18889:18889"
     environment:
       ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
 
-  webapi:
+  fraud-api:
     build:
       context: ..
-      dockerfile: apps/WebApi/Dockerfile
+      dockerfile: apps/Fraud.Api/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      ASPNETCORE_URLS: http://+:8081
+      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-bookstore};Username=${POSTGRES_USER:-bookstore};Password=${POSTGRES_PASSWORD:-bookstore}"
+      ConnectionStrings__RabbitMQ: "amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672/"
+      Database__ApplyMigrationsOnStartup: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
+      OTEL_SERVICE_NAME: fraud-api
+      OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8081/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  fraud-worker:
+    build:
+      context: ..
+      dockerfile: apps/Fraud.Worker/Dockerfile
+    environment:
+      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-bookstore};Username=${POSTGRES_USER:-bookstore};Password=${POSTGRES_PASSWORD:-bookstore}"
+      ConnectionStrings__RabbitMQ: "amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672/"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
+      OTEL_SERVICE_NAME: fraud-worker
+      OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      fraud-api:
+        condition: service_healthy
+
+  bookstore-api:
+    build:
+      context: ..
+      dockerfile: apps/BookStore.Api/Dockerfile
     ports:
       - "8080:8080"
     environment:
@@ -49,30 +94,20 @@ services:
       ConnectionStrings__RabbitMQ: "amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672/"
       Database__ApplyMigrationsOnStartup: "true"
       Seeding__Enabled: "true"
+      Services__fraud-api__http__0: "http://fraud-api:8081"
+      Reconciliation__IntervalSeconds: "30"
+      Reconciliation__StalenessThresholdSeconds: "60"
       OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
-      OTEL_SERVICE_NAME: bookstore-webapi
+      OTEL_SERVICE_NAME: bookstore-api
       OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-
-  worker:
-    build:
-      context: ..
-      dockerfile: apps/Worker/Dockerfile
-    environment:
-      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-bookstore};Username=${POSTGRES_USER:-bookstore};Password=${POSTGRES_PASSWORD:-bookstore}"
-      ConnectionStrings__RabbitMQ: "amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672/"
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
-      OTEL_SERVICE_NAME: bookstore-worker
-      OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
+      fraud-api:
         condition: service_healthy
 
 volumes:
   pg_data:
+  rabbitmq_data:

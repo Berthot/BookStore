@@ -64,7 +64,7 @@ public sealed class IdempotencyFilter<TStore>(TStore store) : IEndpointFilter
                     detail: "A request with the same Idempotency-Key was submitted with a different body.");
 
             BookStoreTelemetry.IdempotencyReplays.Add(1);
-            return Results.Content(existing.ResponseBody!, "application/json");
+            return ReplayResult(context.HttpContext, existing);
         }
 
         var entry = IdempotencyEntry.Create(key, hash, DateTime.UtcNow);
@@ -84,7 +84,7 @@ public sealed class IdempotencyFilter<TStore>(TStore store) : IEndpointFilter
             if (committed is { Status: IdempotencyStatus.Completed })
             {
                 BookStoreTelemetry.IdempotencyReplays.Add(1);
-                return Results.Content(committed.ResponseBody!, "application/json");
+                return ReplayResult(context.HttpContext, committed);
             }
             return Results.Problem(statusCode: 409, title: "Conflict",
                 detail: "A request with the same Idempotency-Key is currently being processed.");
@@ -96,5 +96,14 @@ public sealed class IdempotencyFilter<TStore>(TStore store) : IEndpointFilter
             return Results.Problem(statusCode: 409, title: "Conflict",
                 detail: "A request with the same Idempotency-Key is currently being processed. Retry later.");
         }
+    }
+
+    private static IResult ReplayResult(HttpContext httpContext, IdempotencyEntry entry)
+    {
+        httpContext.Response.Headers["Idempotent-Replayed"] = "true";
+        if (!string.IsNullOrEmpty(entry.LocationHeader))
+            httpContext.Response.Headers.Location = entry.LocationHeader;
+        var statusCode = entry.StatusCode > 0 ? entry.StatusCode : 200;
+        return Results.Content(entry.ResponseBody!, "application/json", statusCode: statusCode);
     }
 }

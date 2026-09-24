@@ -58,7 +58,7 @@ public static class PurchaseEndpoints
         if (httpContext.Items[IdempotencyFilter<IBookStoreIdempotencyStore>.HttpContextEntryKey] is IdempotencyEntry entry)
         {
             var responseJson = JsonSerializer.Serialize(result.Data, jsonOptions.Value.SerializerOptions);
-            entry.Complete(responseJson, result.Data!.PurchaseId);
+            entry.Complete(responseJson, 202, $"/api/v1/purchases/{result.Data!.PurchaseId}", result.Data!.PurchaseId);
             await unitOfWork.CommitAsync(cancellationToken);
         }
 
