@@ -1,4 +1,5 @@
 using Domain.Entities.FraudAnalysis;
+using Domain.Enums;
 using Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -45,4 +46,11 @@ internal sealed class TransactionRepository(FraudDbContext context) : ITransacti
                      && t.OccurredAt >= since
                      && t.Id != excludeId)
             .CountAsync(cancellationToken);
+
+    public async Task<long> CountPendingReviewAsync(CancellationToken cancellationToken = default) =>
+        await context.Assessments
+            .Where(a => a.Outcome == Outcome.Review
+                     && !context.Assessments.Any(a2 => a2.TransactionId == a.TransactionId
+                                                     && a2.CreatedAt > a.CreatedAt))
+            .LongCountAsync(cancellationToken);
 }

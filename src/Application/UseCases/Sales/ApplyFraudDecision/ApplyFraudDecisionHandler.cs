@@ -37,7 +37,8 @@ public sealed class ApplyFraudDecisionHandler(
 
         await unitOfWork.CommitAsync(cancellationToken);
 
-        BookStoreTelemetry.Purchases.Add(1);
+        BookStoreTelemetry.Purchases.Add(1,
+            new System.Collections.Generic.KeyValuePair<string, object?>("status", purchase.Status.ToString()));
 
         return OperationResult<ApplyFraudDecisionResponse>.SuccessResult(
             new ApplyFraudDecisionResponse(purchase.Id, purchase.Status));

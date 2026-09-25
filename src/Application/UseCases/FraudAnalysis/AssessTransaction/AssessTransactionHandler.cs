@@ -138,7 +138,8 @@ public sealed class AssessTransactionHandler(
         }
 
         FraudTelemetry.Decisions.Add(1,
-            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", assessment.Outcome));
+            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", assessment.Outcome),
+            new System.Collections.Generic.KeyValuePair<string, object?>("decider", "ENGINE"));
         FraudTelemetry.DecisionDuration.Record(
             (now - transaction.CreatedAt).TotalSeconds,
             new System.Collections.Generic.KeyValuePair<string, object?>("outcome", assessment.Outcome));

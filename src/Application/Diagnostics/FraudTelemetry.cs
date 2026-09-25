@@ -17,7 +17,7 @@ public static class FraudTelemetry
     public static readonly Counter<long> TransactionsReceived =
         Meter.CreateCounter<long>("fraud.transactions.received");
 
-    /// <summary>Number of fraud decisions issued, tagged by outcome (APPROVED, REJECTED, REVIEW).</summary>
+    /// <summary>Number of fraud decisions issued, tagged by outcome (Approved|Rejected|Review) and decider (ENGINE|SYSTEM|REVIEWER).</summary>
     public static readonly Counter<long> Decisions =
         Meter.CreateCounter<long>("fraud.decisions");
 
@@ -25,8 +25,33 @@ public static class FraudTelemetry
     public static readonly Counter<long> RuleHits =
         Meter.CreateCounter<long>("fraud.rule.hits");
 
-    /// <summary>Duration in seconds from transaction received to decision recorded. Seconds follow OTel semantic conventions.</summary>
+    /// <summary>Duration in seconds from transaction received to decision recorded.</summary>
     public static readonly Histogram<double> DecisionDuration =
         Meter.CreateHistogram<double>("fraud.decision.duration", "s",
             "Time in seconds from transaction creation to fraud decision.");
+
+    /// <summary>Idempotency requests tagged by result (new|replay).</summary>
+    public static readonly Counter<long> IdempotencyRequests =
+        Meter.CreateCounter<long>("fraud.idempotency.requests");
+
+    // --- Gauges (updated by FraudMetricsJob every 30 s) ---
+
+    private static long _reviewsPending;
+    private static long _outboxPending;
+
+    /// <summary>Transactions currently awaiting human review (engine decided Review, no reviewer decision yet).</summary>
+    public static readonly ObservableGauge<long> ReviewsPending =
+        Meter.CreateObservableGauge("fraud.reviews.pending",
+            () => Volatile.Read(ref _reviewsPending),
+            "reviews", "Transactions currently awaiting human review.");
+
+    /// <summary>Undelivered messages in the fraud outbox.</summary>
+    public static readonly ObservableGauge<long> OutboxPending =
+        Meter.CreateObservableGauge("messaging.outbox.pending",
+            () => new Measurement<long>(Volatile.Read(ref _outboxPending),
+                new KeyValuePair<string, object?>("context", "fraud")),
+            "messages", "Undelivered messages in the outbox.");
+
+    public static void SetReviewsPending(long value) => Volatile.Write(ref _reviewsPending, value);
+    public static void SetOutboxPending(long value) => Volatile.Write(ref _outboxPending, value);
 }

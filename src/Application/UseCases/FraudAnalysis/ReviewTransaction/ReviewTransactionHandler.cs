@@ -7,6 +7,7 @@ using Domain.Entities.FraudAnalysis;
 using Domain.Entities.Sales;
 using Domain.Enums;
 using Domain.Repositories;
+using Application.Diagnostics;
 using Domain.ValueObjects;
 
 namespace Application.UseCases.FraudAnalysis.ReviewTransaction;
@@ -84,6 +85,10 @@ public sealed class ReviewTransactionHandler(
                 DecidedBy: "REVIEWER",
                 TriggeredRules: engineRules),
             cancellationToken);
+
+        FraudTelemetry.Decisions.Add(1,
+            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", outcome),
+            new System.Collections.Generic.KeyValuePair<string, object?>("decider", "REVIEWER"));
 
         return OperationResult<GetTransactionResponse>.SuccessResult(
             GetTransactionHandler.MapToResponse(transaction));

@@ -1,5 +1,6 @@
 using Application.Abstractions.Messaging;
 using Application.Commons;
+using Application.Diagnostics;
 using Application.Messages;
 using Cortex.Mediator.Commands;
 using Domain.Enums;
@@ -52,6 +53,10 @@ public sealed class FailSafeTransactionHandler(
                 DecidedBy: "SYSTEM",
                 TriggeredRules: []),
             cancellationToken);
+
+        FraudTelemetry.Decisions.Add(1,
+            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", transaction.CurrentAssessment()!.Outcome),
+            new System.Collections.Generic.KeyValuePair<string, object?>("decider", "SYSTEM"));
 
         return OperationResult<FailSafeTransactionResponse>.SuccessResult(
             new FailSafeTransactionResponse(

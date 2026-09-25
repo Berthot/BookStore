@@ -55,13 +55,14 @@ public sealed class IdempotencyFilter<TStore>(TStore store) : IEndpointFilter
                 return Results.Problem(statusCode: 422, title: "Unprocessable Entity",
                     detail: "A request with the same Idempotency-Key was submitted with a different body.");
 
-            BookStoreTelemetry.IdempotencyReplays.Add(1);
+            FraudTelemetry.IdempotencyRequests.Add(1, new System.Collections.Generic.KeyValuePair<string, object?>("result", "replay"));
             return ReplayResult(context.HttpContext, existing);
         }
 
         var entry = IdempotencyEntry.Create(key, hash, DateTime.UtcNow);
         store.Add(entry);
         context.HttpContext.Items[HttpContextEntryKey] = entry;
+        FraudTelemetry.IdempotencyRequests.Add(1, new System.Collections.Generic.KeyValuePair<string, object?>("result", "new"));
 
         try
         {
@@ -72,7 +73,7 @@ public sealed class IdempotencyFilter<TStore>(TStore store) : IEndpointFilter
             var committed = await store.FindAsync(key, context.HttpContext.RequestAborted);
             if (committed is { Status: IdempotencyStatus.Completed })
             {
-                BookStoreTelemetry.IdempotencyReplays.Add(1);
+                FraudTelemetry.IdempotencyRequests.Add(1, new System.Collections.Generic.KeyValuePair<string, object?>("result", "replay"));
                 return ReplayResult(context.HttpContext, committed);
             }
             return Results.Problem(statusCode: 409, title: "Conflict",

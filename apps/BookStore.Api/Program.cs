@@ -38,6 +38,7 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddHostedService<ReconciliationJob>();
 builder.Services.AddHostedService<IdempotencyPurgeJob>();
+builder.Services.AddHostedService<BookStoreMetricsJob>();
 
 var app = builder.Build();
 

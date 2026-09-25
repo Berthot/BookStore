@@ -4,6 +4,7 @@ using Application;
 using Fraud.Api.Infrastructure.ErrorHandling;
 using Fraud.Api.Endpoints.FraudAnalysis;
 using Fraud.Api.Infrastructure.Middleware;
+using Fraud.Api.Jobs;
 using Infrastructure;
 using Infrastructure.Options;
 using Infrastructure.Persistence.Fraud;
@@ -26,6 +27,8 @@ builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddHealthChecks();
+
+builder.Services.AddHostedService<FraudMetricsJob>();
 
 builder.Services.AddOpenApi();
 
