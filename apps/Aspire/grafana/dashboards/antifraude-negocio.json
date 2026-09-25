@@ -61,7 +61,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus-bookstore" },
-          "expr": "sum(increase(fraud_decisions_total{outcome=\"Approved\"}[5m]))",
+          "expr": "sum(increase(fraud_decisions_total{outcome=\"APPROVED\"}[5m]))",
           "instant": true, "legendFormat": "Aprovações", "refId": "A"
         }
       ]
@@ -96,7 +96,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus-bookstore" },
-          "expr": "sum(increase(fraud_decisions_total{outcome=\"Rejected\"}[5m]))",
+          "expr": "sum(increase(fraud_decisions_total{outcome=\"REJECTED\"}[5m]))",
           "instant": true, "legendFormat": "Rejeições", "refId": "A"
         }
       ]
@@ -276,7 +276,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus-bookstore" },
-          "expr": "100 * sum(rate(fraud_decisions_total{outcome=\"Approved\"}[1m])) / sum(rate(fraud_decisions_total[1m]))",
+          "expr": "100 * sum(rate(fraud_decisions_total{outcome=\"APPROVED\"}[1m])) / sum(rate(fraud_decisions_total[1m]))",
           "legendFormat": "Aprovação %", "refId": "A"
         }
       ]

@@ -138,12 +138,13 @@ public sealed class AssessTransactionHandler(
             await unitOfWork.CommitAsync(cancellationToken);
         }
 
+        var outcomeTag = assessment.Outcome.ToString().ToUpperInvariant();
         FraudTelemetry.Decisions.Add(1,
-            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", assessment.Outcome),
+            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", outcomeTag),
             new System.Collections.Generic.KeyValuePair<string, object?>("decider", "ENGINE"));
         FraudTelemetry.DecisionDuration.Record(
             (now - transaction.CreatedAt).TotalSeconds,
-            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", assessment.Outcome));
+            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", outcomeTag));
 
         return OperationResult<AssessTransactionResponse>.SuccessResult(
             new AssessTransactionResponse(transaction.Id, assessment.Outcome));

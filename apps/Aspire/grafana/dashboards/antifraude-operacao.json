@@ -41,7 +41,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus-bookstore" },
-          "expr": "messaging_outbox_pending{context=\"fraud\"}",
+          "expr": "sum by (context)(messaging_outbox_pending_messages{context=\"fraud\"})",
           "instant": true, "legendFormat": "Fraud", "refId": "A"
         }
       ]
@@ -76,7 +76,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus-bookstore" },
-          "expr": "messaging_outbox_pending{context=\"bookstore\"}",
+          "expr": "sum by (context)(messaging_outbox_pending_messages{context=\"bookstore\"})",
           "instant": true, "legendFormat": "BookStore", "refId": "A"
         }
       ]
@@ -244,7 +244,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus-bookstore" },
-          "expr": "messaging_outbox_pending",
+          "expr": "sum by (context)(messaging_outbox_pending_messages)",
           "legendFormat": "{{context}}", "refId": "A"
         }
       ]
@@ -275,7 +275,38 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus-bookstore" },
-          "expr": "rabbitmq_queue_messages_ready",
+          "expr": "sum by (queue)(rabbitmq_queue_messages_ready)",
+          "legendFormat": "{{queue}}", "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "RabbitMQ — DLQ (filas _error)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "prometheus-bookstore" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "fixedColor": "red", "mode": "fixed" },
+          "custom": {
+            "drawStyle": "line", "fillOpacity": 20, "lineInterpolation": "smooth",
+            "lineWidth": 2, "pointSize": 5, "showPoints": "never", "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [], "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "calcs": ["lastNotNull"], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus-bookstore" },
+          "expr": "sum by (queue)(rabbitmq_queue_messages_ready{queue=~\".*_error\"})",
           "legendFormat": "{{queue}}", "refId": "A"
         }
       ]
@@ -284,7 +315,7 @@
       "id": 9,
       "type": "timeseries",
       "title": "Idempotency Requests (new vs replay)",
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 28 },
       "datasource": { "type": "prometheus", "uid": "prometheus-bookstore" },
       "fieldConfig": {
         "defaults": {

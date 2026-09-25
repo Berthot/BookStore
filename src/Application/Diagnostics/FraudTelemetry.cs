@@ -34,24 +34,16 @@ public static class FraudTelemetry
     public static readonly Counter<long> IdempotencyRequests =
         Meter.CreateCounter<long>("fraud.idempotency.requests");
 
-    // --- Gauges (updated by FraudMetricsJob every 30 s) ---
+    // --- Gauge (updated by FraudMetricsJob every 30 s) ---
 
-    private static long _reviewsPending;
     private static long _outboxPending;
-
-    /// <summary>Transactions currently awaiting human review (engine decided Review, no reviewer decision yet).</summary>
-    public static readonly ObservableGauge<long> ReviewsPending =
-        Meter.CreateObservableGauge("fraud.reviews.pending",
-            () => Volatile.Read(ref _reviewsPending),
-            "reviews", "Transactions currently awaiting human review.");
 
     /// <summary>Undelivered messages in the fraud outbox.</summary>
     public static readonly ObservableGauge<long> OutboxPending =
-        Meter.CreateObservableGauge("messaging.outbox.pending",
+        Meter.CreateObservableGauge("messaging.outbox.pending_messages",
             () => new Measurement<long>(Volatile.Read(ref _outboxPending),
                 new KeyValuePair<string, object?>("context", "fraud")),
             "messages", "Undelivered messages in the outbox.");
 
-    public static void SetReviewsPending(long value) => Volatile.Write(ref _reviewsPending, value);
     public static void SetOutboxPending(long value) => Volatile.Write(ref _outboxPending, value);
 }

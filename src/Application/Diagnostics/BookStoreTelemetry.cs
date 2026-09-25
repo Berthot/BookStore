@@ -27,7 +27,7 @@ public static class BookStoreTelemetry
 
     /// <summary>Undelivered messages in the bookstore outbox.</summary>
     public static readonly ObservableGauge<long> OutboxPending =
-        Meter.CreateObservableGauge("messaging.outbox.pending",
+        Meter.CreateObservableGauge("messaging.outbox.pending_messages",
             () => new Measurement<long>(Volatile.Read(ref _outboxPending),
                 new KeyValuePair<string, object?>("context", "bookstore")),
             "messages", "Undelivered messages in the outbox.");
