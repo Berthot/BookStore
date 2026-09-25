@@ -1,7 +1,6 @@
 using Application.Abstractions.Idempotency;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using Tests.Infrastructure.Fixtures;
 using Tests.Shared.Attributes;
 
 namespace Tests.Infrastructure.Persistence;
@@ -24,7 +23,7 @@ public sealed class IdempotencyIntegrationTests
     public void SetUp()
     {
         if (string.IsNullOrEmpty(PostgresContainerFixture.ConnectionString))
-            Assert.Ignore("Docker not available — skipping integration test");
+            Assert.Ignore($"Docker not available — {PostgresContainerFixture.StartupException?.GetType().Name}: {PostgresContainerFixture.StartupException?.Message ?? "no details"}");
 
         _cs = PostgresContainerFixture.ConnectionString;
     }

@@ -3,7 +3,7 @@ using Infrastructure.Persistence.Fraud;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 
-namespace Tests.Infrastructure.Fixtures;
+namespace Tests.Infrastructure;
 
 /// <summary>Shared PostgreSQL container that starts once per test session, applies both EF migrations, and exposes the connection string.</summary>
 [SetUpFixture]
@@ -12,6 +12,7 @@ public sealed class PostgresContainerFixture
     private static PostgreSqlContainer _container = null!;
 
     public static string ConnectionString { get; private set; } = "";
+    public static Exception? StartupException { get; private set; }
 
     [OneTimeSetUp]
     public async Task StartContainerAndMigrateAsync()
@@ -37,7 +38,7 @@ public sealed class PostgresContainerFixture
         catch (Exception ex) when (ex is DotNet.Testcontainers.Builders.DockerUnavailableException
                                       or System.AggregateException { InnerException: DotNet.Testcontainers.Builders.DockerUnavailableException })
         {
-            // Docker not available in this environment — integration tests will be ignored, unit tests unaffected
+            StartupException = ex;
         }
     }
 

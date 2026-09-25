@@ -11,7 +11,6 @@ using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
-using Tests.Infrastructure.Fixtures;
 using Tests.Shared.Attributes;
 
 namespace Tests.Infrastructure.Persistence;
@@ -34,7 +33,7 @@ public sealed class OutboxIntegrationTests
     public void SetUp()
     {
         if (string.IsNullOrEmpty(PostgresContainerFixture.ConnectionString))
-            Assert.Ignore("Docker not available — skipping integration test");
+            Assert.Ignore($"Docker not available — {PostgresContainerFixture.StartupException?.GetType().Name}: {PostgresContainerFixture.StartupException?.Message ?? "no details"}");
 
         _connStr = PostgresContainerFixture.ConnectionString;
     }

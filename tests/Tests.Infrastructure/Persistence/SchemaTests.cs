@@ -1,5 +1,4 @@
 using Npgsql;
-using Tests.Infrastructure.Fixtures;
 using Tests.Shared.Attributes;
 
 namespace Tests.Infrastructure.Persistence;
@@ -13,7 +12,7 @@ public sealed class SchemaTests
     public async Task SetUpAsync()
     {
         if (string.IsNullOrEmpty(PostgresContainerFixture.ConnectionString))
-            Assert.Ignore("Docker not available — skipping integration test");
+            Assert.Ignore($"Docker not available — {PostgresContainerFixture.StartupException?.GetType().Name}: {PostgresContainerFixture.StartupException?.Message ?? "no details"}");
 
         _connection = new NpgsqlConnection(PostgresContainerFixture.ConnectionString);
         await _connection.OpenAsync();
