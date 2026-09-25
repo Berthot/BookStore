@@ -21,6 +21,7 @@ public static class TelemetryExtensions
             .WithTracing(tracing =>
             {
                 tracing
+                    .SetSampler(new RootDbSpanSuppressor(new AlwaysOnSampler()))
                     .AddAspNetCoreInstrumentation(o => o.Filter = ctx => !ctx.Request.Path.StartsWithSegments("/health"))
                     .AddHttpClientInstrumentation()
                     .AddSource(FraudTelemetry.ActivitySourceName)
