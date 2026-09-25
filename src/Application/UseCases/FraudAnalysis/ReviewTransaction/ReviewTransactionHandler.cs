@@ -18,6 +18,7 @@ public sealed class ReviewTransactionHandler(
     IEventPublisher publisher)
     : ICommandHandler<ReviewTransactionRequest, OperationResult<GetTransactionResponse>>
 {
+    // In production this would come from the authentication token; a single default reviewer is assumed here.
     private const string DefaultReviewerId = "reviewer-default";
 
     public async Task<OperationResult<GetTransactionResponse>> Handle(

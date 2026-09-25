@@ -13,7 +13,6 @@ using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Tests.Shared.Attributes;
 using Tests.Shared.Mothers.FraudAnalysis;
-using Tests.Infrastructure.Fixtures;
 
 namespace Tests.Infrastructure.UseCases;
 
@@ -32,7 +31,7 @@ public sealed class ReviewDecisionIntegrationTests
     public void SetUp()
     {
         if (string.IsNullOrEmpty(PostgresContainerFixture.ConnectionString))
-            Assert.Ignore("Docker not available — skipping integration test");
+            Assert.Ignore($"Docker not available — {PostgresContainerFixture.StartupException?.GetType().Name}: {PostgresContainerFixture.StartupException?.Message ?? "no details"}");
 
         var connStr = PostgresContainerFixture.ConnectionString;
 

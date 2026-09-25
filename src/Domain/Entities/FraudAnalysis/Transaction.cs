@@ -59,6 +59,7 @@ public sealed class Transaction : Entity
         }, null);
     }
 
+    // I-02: valid transition is Received → Processing only; Decided is a terminal status.
     public DomainError? StartProcessing()
     {
         if (Status == TransactionStatus.Processing)
