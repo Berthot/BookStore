@@ -11,3 +11,8 @@ scrape_configs:
     static_configs:
       - targets: ['host.docker.internal:15692']
     metrics_path: /metrics
+
+  - job_name: rabbitmq-per-object
+    static_configs:
+      - targets: ['host.docker.internal:15692']
+    metrics_path: /metrics/per-object
