@@ -88,7 +88,7 @@ public sealed class ReviewTransactionHandler(
         await unitOfWork.CommitAsync(cancellationToken);
 
         FraudTelemetry.Decisions.Add(1,
-            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", outcome),
+            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", outcome.ToString().ToUpperInvariant()),
             new System.Collections.Generic.KeyValuePair<string, object?>("decider", "REVIEWER"));
 
         return OperationResult<GetTransactionResponse>.SuccessResult(
