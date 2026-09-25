@@ -55,14 +55,14 @@ public sealed class TransactionTests
 
     [Test]
     [Description("I-02")]
-    public void StartProcessing_WhenDecided_ReturnsToProcessing()
+    public void StartProcessing_WhenDecided_ReturnsDomainError()
     {
         var tx = TransactionMother.DecidedApproved();
 
         var error = tx.StartProcessing();
 
-        error.Should().BeNull();
-        tx.Status.Should().Be(TransactionStatus.Processing);
+        error.Should().NotBeNull();
+        error!.Code.Should().Be("TRANSACTION_ALREADY_DECIDED");
     }
 
     [Test]
