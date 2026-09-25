@@ -101,7 +101,8 @@ public static class PostgresExtensions
     {
         var connectionString = configuration.GetConnectionString(typeof(TContext).Name.Replace("DbContext", string.Empty))
             ?? configuration.GetConnectionString("Default")
-            ?? "Host=localhost;Database=bookstore;Username=postgres;Password=postgres";
+            ?? throw new InvalidOperationException(
+                $"No connection string found for {typeof(TContext).Name}. Add 'ConnectionStrings__Default' or 'ConnectionStrings__{typeof(TContext).Name.Replace("DbContext", string.Empty)}' to configuration.");
 
         services.AddDbContext<TContext>(opts =>
         {

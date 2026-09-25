@@ -30,7 +30,8 @@ public static class MassTransitExtensions
 
             bus.UsingRabbitMq((context, cfg) =>
             {
-                cfg.Host(configuration.GetConnectionString("RabbitMQ") ?? "amqp://guest:guest@localhost:5672/");
+                cfg.Host(configuration.GetConnectionString("RabbitMQ")
+                    ?? throw new InvalidOperationException("ConnectionStrings__RabbitMQ is required."));
                 cfg.UseMessageRetry(r => r.Intervals(RetryIntervalsMs));
                 cfg.UseConsumeFilter(typeof(LoggingScopeConsumeFilter<>), context);
                 // UseEntityFrameworkOutbox is applied to every receive endpoint automatically
@@ -59,7 +60,8 @@ public static class MassTransitExtensions
 
             bus.UsingRabbitMq((context, cfg) =>
             {
-                cfg.Host(configuration.GetConnectionString("RabbitMQ") ?? "amqp://guest:guest@localhost:5672/");
+                cfg.Host(configuration.GetConnectionString("RabbitMQ")
+                    ?? throw new InvalidOperationException("ConnectionStrings__RabbitMQ is required."));
                 cfg.UseMessageRetry(r => r.Intervals(RetryIntervalsMs));
                 cfg.UseConsumeFilter(typeof(LoggingScopeConsumeFilter<>), context);
                 cfg.ConfigureEndpoints(context);
@@ -86,7 +88,8 @@ public static class MassTransitExtensions
 
             bus.UsingRabbitMq((context, cfg) =>
             {
-                cfg.Host(configuration.GetConnectionString("RabbitMQ") ?? "amqp://guest:guest@localhost:5672/");
+                cfg.Host(configuration.GetConnectionString("RabbitMQ")
+                    ?? throw new InvalidOperationException("ConnectionStrings__RabbitMQ is required."));
                 cfg.UseMessageRetry(r => r.Intervals(RetryIntervalsMs));
                 cfg.UseConsumeFilter(typeof(LoggingScopeConsumeFilter<>), context);
                 cfg.ConfigureEndpoints(context);
