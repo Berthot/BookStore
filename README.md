@@ -105,7 +105,7 @@ O Aspire Dashboard abre automaticamente. As portas dos serviços são atribuída
 
 | # | Cenário | Resultado esperado | Como executar |
 | :---: | :--- | :--- | :--- |
-| S1 | livro físico, valor baixo, cliente com histórico | ✅ `APPROVED` → compra `CONFIRMED` | Execute **S1.1** → aguarde ~2 s → execute **S1.2** |
+| S1 | livro físico, valor baixo, cliente com histórico | ✅ `APPROVED` → compra `CONFIRMED` | Execute **S1.1** → aguarde ~7 s → execute **S1.2** |
 | S2 | e-book caro, cliente novo | ❌ `REJECTED` → compra `CANCELLED` | Execute **S2.1** (Pragmatic ×2, cliente novo) → aguarde → **S2.2** |
 | S3 | 10 unidades do mesmo livro | 🔍 `REVIEW` → compra `UNDER_REVIEW` | Execute **S3.1** (Clean Code ×10) → aguarde → **S3.2** |
 | S4 | revisor aprova o S3 | ✅ compra `CONFIRMED` | Execute **S4.1** → **S4.2** (outcome APPROVED) → **S4.3** |
@@ -402,7 +402,28 @@ Cobertura por camada: **Domain** (invariantes de entidades, regras de fraude), *
 
 ## 🤖 Uso de IA no processo
 
-> ⏳ **A preencher.**
+O enunciado permite IA. Usei como **ferramenta de execução sob o meu comando**, não como autora das decisões.
+
+**Divisão de papéis**
+- **Eu:** decidi a arquitetura, criei a estrutura inicial da solução, escrevi os requisitos, os ADRs, os
+  diagramas e o contrato de API *antes* do código, e defini o plano de testes.
+- **IA:** organizou os requisitos comigo numa âncora de decisões e executou o plano como agente, task a task.
+
+**Como foi orquestrado**
+- Requisitos e decisões num vault (Obsidian), convertidos em épicos → stories → tasks com critério de aceite.
+- O agente (Claude) executou seguindo o prompt e as tasks em [`contexto/`](contexto/README.md), com a documentação
+  como fonte da verdade.
+- A sincronização vault ⇄ repositório foi feita pelo **Karawara**, uma ferramenta própria (CLI/MCP em .NET).
+
+**Como validei**
+- Testes unitários e de integração (Postgres real via Testcontainers) e um plano de testes manual definido na fase
+  de documentação.
+- A revisão manual encontrou defeitos que o agente havia marcado como concluídos — o outbox desligado (um teste com
+  o RabbitMQ fora mostrou a perda de mensagem), consumers que engoliam falhas e, depois da separação em serviços,
+  eventos publicados após o commit (a revisão manual não chegava à compra). Cada achado virou correção e foi
+  revalidado com os mesmos testes.
+
+**Ferramentas:** Claude · Obsidian · Rider · Karawara.
 
 ---
 
