@@ -71,7 +71,7 @@ public sealed class AssessTransactionHandlerTests : UnitTestsBase
     }
 
     [Test]
-    public async Task Handle_commit_occurs_before_publish()
+    public async Task Handle_publish_occurs_before_second_commit_for_outbox_atomicity()
     {
         var transaction = TransactionMother.Received();
         _repo.GetByIdAsync(transaction.Id, Arg.Any<CancellationToken>()).Returns(transaction);
@@ -84,8 +84,8 @@ public sealed class AssessTransactionHandlerTests : UnitTestsBase
 
         await _handler.Handle(new AssessTransactionRequest(transaction.Id), CancellationToken.None);
 
-        // commit(processing), commit(decided), publish(decided)
-        order.Should().ContainInOrder("commit", "commit", "publish");
+        // commit(processing), publish(stages outbox), commit(decided + outbox flushed together)
+        order.Should().ContainInOrder("commit", "publish", "commit");
         order.Should().HaveCount(3);
     }
 

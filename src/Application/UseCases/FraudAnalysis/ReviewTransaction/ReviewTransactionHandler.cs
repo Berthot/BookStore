@@ -61,8 +61,6 @@ public sealed class ReviewTransactionHandler(
 
         repository.AddAssessment(assessment);
 
-        await unitOfWork.CommitAsync(cancellationToken);
-
         // Carry over score and triggered rules from the original engine assessment
         var engineAssessment = transaction.Assessments
             .FirstOrDefault(a => a.Decider.Kind == DeciderKind.Engine);
@@ -75,6 +73,7 @@ public sealed class ReviewTransactionHandler(
             .Select(e => new FraudTriggeredRule(e.RuleCode, e.Reason))
             .ToList() ?? [];
 
+        // Stage outbox message BEFORE commit so both are flushed atomically by SaveChangesAsync.
         await publisher.PublishAsync(
             new TransactionDecided(
                 transaction.Id,
@@ -85,6 +84,8 @@ public sealed class ReviewTransactionHandler(
                 DecidedBy: "REVIEWER",
                 TriggeredRules: engineRules),
             cancellationToken);
+
+        await unitOfWork.CommitAsync(cancellationToken);
 
         FraudTelemetry.Decisions.Add(1,
             new System.Collections.Generic.KeyValuePair<string, object?>("outcome", outcome),

@@ -41,8 +41,7 @@ public sealed class FailSafeTransactionHandler(
 
         repository.AddAssessment(transaction.CurrentAssessment()!);
 
-        await unitOfWork.CommitAsync(cancellationToken);
-
+        // Stage outbox message BEFORE commit so both are flushed atomically by SaveChangesAsync.
         await publisher.PublishAsync(
             new TransactionDecided(
                 transaction.Id,
@@ -53,6 +52,8 @@ public sealed class FailSafeTransactionHandler(
                 DecidedBy: "SYSTEM",
                 TriggeredRules: []),
             cancellationToken);
+
+        await unitOfWork.CommitAsync(cancellationToken);
 
         FraudTelemetry.Decisions.Add(1,
             new System.Collections.Generic.KeyValuePair<string, object?>("outcome", transaction.CurrentAssessment()!.Outcome),

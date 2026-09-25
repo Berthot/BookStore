@@ -110,22 +110,21 @@ Status e decisão da transação, com a avaliação vigente e o histórico.
 Revisão humana de uma transação em `REVIEW`. Gera uma nova avaliação e publica a decisão.
 
 ```json
-{ "outcome": "APPROVED", "reviewerId": "", "justification": "Cliente confirmou a compra por telefone." }
+{ "outcome": "APPROVED", "justification": "Cliente confirmou a compra por telefone." }
 ```
 
 | Campo | Regra |
 | :--- | :--- |
 | `outcome` | `APPROVED` ou `REJECTED` |
 | `justification` | obrigatório |
-| `reviewerId` | opcional — sem autenticação no desafio; a avaliação registra um revisor genérico |
 
 **`200 OK`** — mesmo corpo do `GET /api/v1/transactions/{id}`, já com a nova decisão.
 
 | Erro | Quando |
 | :--- | :--- |
+| `400 Bad Request` | `justification` vazia ou `outcome` inválido (validação de entrada) |
 | `404 Not Found` | transação inexistente |
 | `409 Conflict` | a decisão vigente não é `REVIEW` (inclusive numa segunda revisão da mesma transação) |
-| `422 Unprocessable Entity` | `justification` vazia ou `outcome` inválido |
 
 Não usa `Idempotency-Key`: uma segunda revisão encontra a transação já decidida e recebe `409` — a
 própria regra de estado a torna idempotente.

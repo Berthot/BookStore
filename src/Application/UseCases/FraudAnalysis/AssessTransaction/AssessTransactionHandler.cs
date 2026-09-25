@@ -116,8 +116,6 @@ public sealed class AssessTransactionHandler(
 
             repository.AddAssessment(assessment);
 
-            await unitOfWork.CommitAsync(cancellationToken);
-
             var score = (int)Math.Round(assessment.Evaluations.Sum(e => e.Weight) * 100);
             var triggeredRules = assessment.Evaluations
                 .OrderBy(e => e.Position)
@@ -125,6 +123,7 @@ public sealed class AssessTransactionHandler(
                 .Select(e => new FraudTriggeredRule(e.RuleCode, e.Reason))
                 .ToList();
 
+            // Stage outbox message BEFORE commit so both are flushed atomically by SaveChangesAsync.
             await publisher.PublishAsync(
                 new TransactionDecided(
                     transaction.Id,
@@ -135,6 +134,8 @@ public sealed class AssessTransactionHandler(
                     "ENGINE",
                     triggeredRules),
                 cancellationToken);
+
+            await unitOfWork.CommitAsync(cancellationToken);
         }
 
         FraudTelemetry.Decisions.Add(1,

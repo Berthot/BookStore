@@ -39,8 +39,7 @@ public sealed class PurchaseBookHandler(
 
         purchaseRepository.Add(purchase);
 
-        await unitOfWork.CommitAsync(cancellationToken);
-
+        // Stage outbox message BEFORE commit so both are flushed atomically by SaveChangesAsync.
         await publisher.PublishAsync(new PurchasePlaced(
             purchase.Id,
             book.Id,
@@ -54,6 +53,8 @@ public sealed class PurchaseBookHandler(
             command.CustomerId,
             command.CorrelationId,
             purchase.CreatedAt), cancellationToken);
+
+        await unitOfWork.CommitAsync(cancellationToken);
 
         return OperationResult<PurchaseBookResponse>.SuccessResult(
             new PurchaseBookResponse(purchase.Id, purchase.Status));
