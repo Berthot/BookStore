@@ -2,8 +2,10 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Application;
 using Fraud.Api.Endpoints.FraudAnalysis;
-using Fraud.Api.Infrastructure.ErrorHandling;
-using Fraud.Api.Infrastructure.Middleware;
+using Fraud.Api.Infrastructure.Filters.Idempotency;
+using Web.ErrorHandling;
+using Web.Filters.Idempotency;
+using Web.Middleware;
 using Fraud.Api.Jobs;
 using Infrastructure;
 using Infrastructure.Options;
@@ -25,6 +27,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddSingleton<IIdempotencyTelemetry, FraudIdempotencyTelemetry>();
 
 builder.Services.AddHealthChecks();
 

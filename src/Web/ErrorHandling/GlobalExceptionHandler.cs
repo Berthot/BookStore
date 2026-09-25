@@ -2,7 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Fraud.Api.Infrastructure.ErrorHandling;
+namespace Web.ErrorHandling;
 
 public sealed class GlobalExceptionHandler(
     ILogger<GlobalExceptionHandler> logger,
@@ -15,6 +15,8 @@ public sealed class GlobalExceptionHandler(
     {
         logger.LogError(exception, "Unhandled exception: {Message}", exception.Message);
 
+        // IsDevelopment() checks ASPNETCORE_ENVIRONMENT; Aspire injects DOTNET_ENVIRONMENT.
+        // Check both so stack traces are visible in any non-Production run.
         var isDev = env.IsDevelopment() || env.IsEnvironment("Development")
             || string.Equals(Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT"),
                 "Development", StringComparison.OrdinalIgnoreCase);

@@ -1,9 +1,10 @@
 using Application.Abstractions.Idempotency;
 using Application.UseCases.Sales.GetPurchase;
 using Application.UseCases.Sales.PurchaseBook;
-using BookStore.Api.Infrastructure.Extensions;
-using BookStore.Api.Infrastructure.Filters.Idempotency;
 using BookStore.Api.Infrastructure.OpenApi;
+using Web.Extensions;
+using Web.Filters.Idempotency;
+using Web.OpenApi;
 using Cortex.Mediator;
 using Domain.Repositories;
 using Microsoft.AspNetCore.Http.Json;

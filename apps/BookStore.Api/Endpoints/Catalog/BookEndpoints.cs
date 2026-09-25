@@ -1,5 +1,5 @@
 using Application.UseCases.Catalog.ListBooks;
-using BookStore.Api.Infrastructure.Extensions;
+using Web.Extensions;
 using Cortex.Mediator;
 
 namespace BookStore.Api.Endpoints.Catalog;

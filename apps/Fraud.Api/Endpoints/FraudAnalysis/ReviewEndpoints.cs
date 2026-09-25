@@ -1,7 +1,8 @@
 using Application.UseCases.FraudAnalysis.ReviewTransaction;
 using Cortex.Mediator;
-using Fraud.Api.Infrastructure.Extensions;
 using Fraud.Api.Infrastructure.OpenApi;
+using Web.Extensions;
+using Web.OpenApi;
 
 namespace Fraud.Api.Endpoints.FraudAnalysis;
 
