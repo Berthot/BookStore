@@ -47,7 +47,7 @@ public static class FraudTelemetry
 
     /// <summary>Undelivered messages in the fraud outbox.</summary>
     public static readonly ObservableGauge<long> OutboxPending =
-        Meter.CreateObservableGauge("messaging.outbox.pending",
+        Meter.CreateObservableGauge("messaging.outbox.pending_messages",
             () => new Measurement<long>(Volatile.Read(ref _outboxPending),
                 new KeyValuePair<string, object?>("context", "fraud")),
             "messages", "Undelivered messages in the outbox.");

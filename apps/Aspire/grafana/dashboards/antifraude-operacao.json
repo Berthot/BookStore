@@ -41,7 +41,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus-bookstore" },
-          "expr": "messaging_outbox_pending{context=\"fraud\"}",
+          "expr": "sum by (context)(messaging_outbox_pending_messages{context=\"fraud\"})",
           "instant": true, "legendFormat": "Fraud", "refId": "A"
         }
       ]
@@ -76,7 +76,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus-bookstore" },
-          "expr": "messaging_outbox_pending{context=\"bookstore\"}",
+          "expr": "sum by (context)(messaging_outbox_pending_messages{context=\"bookstore\"})",
           "instant": true, "legendFormat": "BookStore", "refId": "A"
         }
       ]
@@ -244,7 +244,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus-bookstore" },
-          "expr": "messaging_outbox_pending",
+          "expr": "sum by (context)(messaging_outbox_pending_messages)",
           "legendFormat": "{{context}}", "refId": "A"
         }
       ]
