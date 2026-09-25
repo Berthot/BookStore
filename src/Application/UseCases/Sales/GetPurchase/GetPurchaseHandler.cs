@@ -39,6 +39,14 @@ public sealed class GetPurchaseHandler(IPurchaseRepository repository)
                 purchase.FraudOutcome?.TriggeredRules
                     ?.Select(r => new TriggeredRuleSummary(r.Code, r.Reason))
                     .ToList()),
+            PurchaseStatus.UnderReview => new FraudDetailsResponse(
+                purchase.TransactionId,
+                Outcome.Review,
+                purchase.FraudOutcome?.Score,
+                purchase.FraudOutcome?.DecidedBy,
+                purchase.FraudOutcome?.TriggeredRules
+                    ?.Select(r => new TriggeredRuleSummary(r.Code, r.Reason))
+                    .ToList()),
             _ => null
         };
 

@@ -1,4 +1,4 @@
-namespace BookStore.Aspire.Extensions;
+namespace Aspire.Extensions;
 
 public static class ProjectExtensions
 {
@@ -56,7 +56,7 @@ public static class ProjectExtensions
             .WaitFor(postgres)
             .WaitFor(rabbitmq)
             .WaitFor(fraudApi)
-            .WithEnvironment("Demo__FraudProcessingDelaySeconds", "30")
+            .WithEnvironment("Demo__FraudProcessingDelaySeconds", "5")
             .WithEnvironment("PROMETHEUS_OTLP_ENDPOINT", prometheus.GetEndpoint("ui"));
     }
 }

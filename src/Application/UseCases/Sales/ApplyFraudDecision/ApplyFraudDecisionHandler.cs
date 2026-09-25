@@ -24,12 +24,10 @@ public sealed class ApplyFraudDecisionHandler(
             return OperationResult<ApplyFraudDecisionResponse>.SuccessResult(
                 new ApplyFraudDecisionResponse(purchase.Id, purchase.Status));
 
-        var fraudOutcome = command.Outcome == Outcome.Review
-            ? null
-            : new FraudOutcomeSnapshot(
-                command.Score,
-                command.DecidedBy,
-                command.TriggeredRules ?? []);
+        var fraudOutcome = new FraudOutcomeSnapshot(
+            command.Score,
+            command.DecidedBy,
+            command.TriggeredRules ?? []);
 
         var error = purchase.ApplyDecision(command.Outcome, fraudOutcome);
         if (error is not null)
