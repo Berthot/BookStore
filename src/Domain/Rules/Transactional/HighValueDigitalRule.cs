@@ -1,3 +1,4 @@
+using System.Globalization;
 using Domain.Entities.FraudAnalysis;
 using Domain.Enums;
 
@@ -18,7 +19,7 @@ public sealed class HighValueDigitalRule : IFraudRule
     {
         var hit = context.Delivery == DeliveryType.Digital && context.Amount.Value > AmountThreshold;
         return new RuleEvaluation(Code, Version, hit, hit ? Weight : 0m,
-            hit ? $"HIGH_VALUE_DIGITAL: digital delivery with amount {context.Amount.Value}."
+            hit ? FormattableString.Invariant($"HIGH_VALUE_DIGITAL: digital delivery with amount {context.Amount.Value}.")
                 : "HIGH_VALUE_DIGITAL: not triggered.");
     }
 }

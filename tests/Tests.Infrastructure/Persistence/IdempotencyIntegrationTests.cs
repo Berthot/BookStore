@@ -1,6 +1,7 @@
 using Application.Abstractions.Idempotency;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Tests.Infrastructure.Fixtures;
 using Tests.Shared.Attributes;
 
 namespace Tests.Infrastructure.Persistence;

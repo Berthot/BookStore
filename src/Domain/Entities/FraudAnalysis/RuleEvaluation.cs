@@ -5,4 +5,5 @@ public sealed record RuleEvaluation(
     string RuleVersion,
     bool Hit,
     decimal Weight,
-    string Reason);
+    string Reason,
+    int Position = 0);

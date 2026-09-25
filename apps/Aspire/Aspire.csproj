@@ -15,8 +15,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\WebApi\WebApi.csproj" IsAspireProjectResource="true" />
-        <ProjectReference Include="..\Worker\Worker.csproj" IsAspireProjectResource="true" />
+        <ProjectReference Include="..\BookStore.Api\BookStore.Api.csproj" IsAspireProjectResource="true" />
+        <ProjectReference Include="..\Fraud.Api\Fraud.Api.csproj" IsAspireProjectResource="true" />
+        <ProjectReference Include="..\Fraud.Worker\Fraud.Worker.csproj" IsAspireProjectResource="true" />
     </ItemGroup>
 
     <!-- Arquivos de configuração para bind mounts dos containers de observabilidade -->

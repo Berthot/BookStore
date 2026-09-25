@@ -23,6 +23,9 @@
     <PackageReference Include="MassTransit.RabbitMQ" />
     <PackageReference Include="MassTransit.EntityFrameworkCore" />
 
+    <!-- HTTP client resilience for HttpFraudCheckGateway -->
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+
     <!-- OpenTelemetry -->
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Domain.Entities.FraudAnalysis;
 
 namespace Domain.Rules.Discrepancy;
@@ -25,7 +26,7 @@ public sealed class AmountDeviationRule : IFraudRule
             && context.Amount.Value > context.CustomerAverageAmount * DeviationFactor;
 
         return new RuleEvaluation(Code, Version, hit, hit ? Weight : 0m,
-            hit ? $"AMOUNT_DEVIATION: {context.Amount.Value} exceeds {DeviationFactor}x average ({context.CustomerAverageAmount})."
+            hit ? FormattableString.Invariant($"AMOUNT_DEVIATION: {context.Amount.Value} exceeds {DeviationFactor}x average ({context.CustomerAverageAmount}).")
                 : "AMOUNT_DEVIATION: not triggered.");
     }
 }

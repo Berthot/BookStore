@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Tests.Shared.Attributes;
 using Tests.Shared.Base;
-using WebApi.Filters.Idempotency;
+using BookStore.Api.Infrastructure.Filters.Idempotency;
 
 namespace Tests.WebApi.Filters;
 

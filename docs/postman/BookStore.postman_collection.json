@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "BookStore — Antifraude",
-    "description": "Cobre os 11 cenários do desafio técnico (S1–S11). Execute com o ambiente 'BookStore — Local'.\n\nAjuste a variável baseUrl conforme o stack:\n- Aspire HTTP:   http://localhost:5085  ← padrão do ambiente\n- Aspire HTTPS:  https://localhost:7270  (desative SSL verification no Postman para cert de dev)\n- Docker Compose: http://localhost:8080\n\nBook IDs fixos (seed):\n- 11111111-0000-0000-0000-000000000001 → Clean Code (Paperback, R$ 49,90)\n- 11111111-0000-0000-0000-000000000002 → The Pragmatic Programmer (Ebook, R$ 349,90)\n- 11111111-0000-0000-0000-000000000003 → Domain-Driven Design (Hardcover, R$ 149,90)",
+    "description": "Cobre os 11 cenários do desafio técnico (01S–11S).\n\nImporte o ambiente correspondente ao stack:\n- Docker Compose: 'BookStore — Local (Docker)'   → bookstoreUrl=:8080 · fraudUrl=:8081\n- Aspire:         'BookStore — Local (Aspire)'    → bookstoreUrl=:5085 · fraudUrl=:5086 (portas dinâmicas — ajuste conforme o painel Aspire)\n\nBook IDs fixos (seed):\n- 11111111-0000-0000-0000-000000000001 → Clean Code (Paperback, R$ 49,90)\n- 11111111-0000-0000-0000-000000000002 → The Pragmatic Programmer (Ebook, R$ 349,90)\n- 11111111-0000-0000-0000-000000000003 → Domain-Driven Design (Hardcover, R$ 149,90)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -40,9 +40,37 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/health",
+              "raw": "{{bookstoreUrl}}/health",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /health (Fraud.Api)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK — Fraud.Api healthy', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{fraudUrl}}/health",
+              "host": [
+                "{{fraudUrl}}"
               ],
               "path": [
                 "health"
@@ -57,9 +85,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/books",
+              "raw": "{{bookstoreUrl}}/api/v1/books",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -73,10 +101,10 @@
       ]
     },
     {
-      "name": "S1 — Livro físico, cliente com histórico → APPROVED",
+      "name": "01S — Livro físico, cliente com histórico → APPROVED",
       "item": [
         {
-          "name": "S1.1 — POST /purchases (Clean Code ×1)",
+          "name": "01S.1 — POST /purchases (Clean Code ×1)",
           "event": [
             {
               "listen": "prerequest",
@@ -117,9 +145,9 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s1_established\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s1_physical_low\",\n    \"last4\": \"1234\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -131,7 +159,7 @@
           "response": []
         },
         {
-          "name": "S1.2 — GET /purchases/:id (aguardar CONFIRMED)",
+          "name": "01S.2 — GET /purchases/:id (aguardar CONFIRMED)",
           "event": [
             {
               "listen": "test",
@@ -146,13 +174,13 @@
                   "  const retries = parseInt(pm.environment.get('_s1Retries') || '0');",
                   "  if (retries < 8) {",
                   "    pm.environment.set('_s1Retries', retries + 1);",
-                  "    pm.execution.setNextRequest('S1.2 — GET /purchases/:id (aguardar CONFIRMED)');",
+                  "    pm.execution.setNextRequest('01S.2 — GET /purchases/:id (aguardar CONFIRMED)');",
                   "  } else { pm.environment.unset('_s1Retries'); }",
                   "} else {",
                   "  pm.environment.unset('_s1Retries');",
                   "  const fd = body.fraudDetails;",
-                  "  if (fd) console.log('[S1] status: ' + body.status + ' | outcome: ' + fd.outcome + ' | score: ' + fd.score + ' | rules: ' + JSON.stringify(fd.triggeredRules));",
-                  "  else console.log('[S1] status: ' + body.status);",
+                  "  if (fd) console.log('[01S] status: ' + body.status + ' | outcome: ' + fd.outcome + ' | score: ' + fd.score + ' | rules: ' + JSON.stringify(fd.triggeredRules));",
+                  "  else console.log('[01S] status: ' + body.status);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -163,9 +191,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases/{{s1PurchaseId}}",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases/{{s1PurchaseId}}",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -180,10 +208,10 @@
       ]
     },
     {
-      "name": "S2 — E-book caro, cliente novo → REJECTED",
+      "name": "02S — E-book caro, cliente novo → REJECTED",
       "item": [
         {
-          "name": "S2.1 — POST /purchases (Pragmatic Programmer ×2, cliente novo)",
+          "name": "02S.1 — POST /purchases (Pragmatic Programmer ×2, cliente novo)",
           "event": [
             {
               "listen": "prerequest",
@@ -224,9 +252,9 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_PRAGMATIC}}\",\n  \"quantity\": 2,\n  \"customerId\": \"{{s2CustId}}\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s2CardFp}}\",\n    \"last4\": \"9999\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -238,7 +266,7 @@
           "response": []
         },
         {
-          "name": "S2.2 — GET /purchases/:id (aguardar CANCELLED)",
+          "name": "02S.2 — GET /purchases/:id (aguardar CANCELLED)",
           "event": [
             {
               "listen": "test",
@@ -253,13 +281,13 @@
                   "  const retries = parseInt(pm.environment.get('_s2Retries') || '0');",
                   "  if (retries < 8) {",
                   "    pm.environment.set('_s2Retries', retries + 1);",
-                  "    pm.execution.setNextRequest('S2.2 — GET /purchases/:id (aguardar CANCELLED)');",
+                  "    pm.execution.setNextRequest('02S.2 — GET /purchases/:id (aguardar CANCELLED)');",
                   "  } else { pm.environment.unset('_s2Retries'); }",
                   "} else {",
                   "  pm.environment.unset('_s2Retries');",
                   "  const fd = body.fraudDetails;",
-                  "  if (fd) console.log('[S2] status: ' + body.status + ' | outcome: ' + fd.outcome + ' | score: ' + fd.score + ' | rules: ' + JSON.stringify(fd.triggeredRules));",
-                  "  else console.log('[S2] status: ' + body.status);",
+                  "  if (fd) console.log('[02S] status: ' + body.status + ' | outcome: ' + fd.outcome + ' | score: ' + fd.score + ' | rules: ' + JSON.stringify(fd.triggeredRules));",
+                  "  else console.log('[02S] status: ' + body.status);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -270,9 +298,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases/{{s2PurchaseId}}",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases/{{s2PurchaseId}}",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -287,10 +315,10 @@
       ]
     },
     {
-      "name": "S3 — 10 unidades → REVIEW",
+      "name": "03S — 10 unidades → REVIEW",
       "item": [
         {
-          "name": "S3.1 — POST /purchases (Clean Code ×10)",
+          "name": "03S.1 — POST /purchases (Clean Code ×10)",
           "event": [
             {
               "listen": "prerequest",
@@ -330,9 +358,9 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 10,\n  \"customerId\": \"cus_s3_bulk\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s3CardFp}}\",\n    \"last4\": \"5678\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -344,7 +372,7 @@
           "response": []
         },
         {
-          "name": "S3.2 — GET /purchases/:id (aguardar UNDER_REVIEW)",
+          "name": "03S.2 — GET /purchases/:id (aguardar UNDER_REVIEW)",
           "event": [
             {
               "listen": "test",
@@ -355,19 +383,19 @@
                   "pm.test('status UNDER_REVIEW ou PENDING_FRAUD_CHECK', () => {",
                   "  pm.expect(['UNDER_REVIEW', 'PENDING_FRAUD_CHECK']).to.include(body.status);",
                   "});",
-                  "if (body.fraudDetails && body.fraudDetails.transactionId) {",
+                  "if (body.status === 'UNDER_REVIEW' && body.fraudDetails && body.fraudDetails.transactionId) {",
                   "  pm.environment.set('s3TransactionId', body.fraudDetails.transactionId);",
                   "  pm.environment.unset('_s3Retries');",
-                  "  pm.test('fraudDetails.outcome presente', () => pm.expect(body.fraudDetails.outcome).to.be.a('string'));",
+                  "  pm.test('fraudDetails.outcome REVIEW', () => pm.expect(body.fraudDetails.outcome).to.eql('REVIEW'));",
                   "  pm.test('fraudDetails.score presente', () => pm.expect(body.fraudDetails.score).to.be.a('number'));",
                   "  pm.test('fraudDetails.triggeredRules presente', () => pm.expect(body.fraudDetails.triggeredRules).to.be.an('array'));",
-                  "  console.log('[S3] status: ' + body.status + ' | outcome: ' + body.fraudDetails.outcome + ' | score: ' + body.fraudDetails.score + ' | rules: ' + JSON.stringify(body.fraudDetails.triggeredRules));",
+                  "  console.log('[03S] status: ' + body.status + ' | outcome: ' + body.fraudDetails.outcome + ' | score: ' + body.fraudDetails.score + ' | rules: ' + JSON.stringify(body.fraudDetails.triggeredRules));",
                   "} else if (body.status === 'PENDING_FRAUD_CHECK') {",
                   "  const retries = parseInt(pm.environment.get('_s3Retries') || '0');",
                   "  if (retries < 8) {",
                   "    pm.environment.set('_s3Retries', retries + 1);",
-                  "    pm.execution.setNextRequest('S3.2 — GET /purchases/:id (aguardar UNDER_REVIEW)');",
-                  "  }",
+                  "    pm.execution.setNextRequest('03S.2 — GET /purchases/:id (aguardar UNDER_REVIEW)');",
+                  "  } else { pm.environment.unset('_s3Retries'); }",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -378,9 +406,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases/{{s3PurchaseId}}",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases/{{s3PurchaseId}}",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -395,10 +423,10 @@
       ]
     },
     {
-      "name": "S4 — Revisão humana aprova S3 → CONFIRMED",
+      "name": "04S — Revisão humana aprova 03S → CONFIRMED",
       "item": [
         {
-          "name": "S4.1 — GET /transactions/:id (verificar status REVIEW)",
+          "name": "04S.1 — GET /transactions/:id (verificar status REVIEW)",
           "event": [
             {
               "listen": "test",
@@ -416,9 +444,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/transactions/{{s3TransactionId}}",
+              "raw": "{{fraudUrl}}/api/v1/transactions/{{s3TransactionId}}",
               "host": [
-                "{{baseUrl}}"
+                "{{fraudUrl}}"
               ],
               "path": [
                 "api",
@@ -431,7 +459,7 @@
           "response": []
         },
         {
-          "name": "S4.2 — POST /transactions/:id/review (APPROVED)",
+          "name": "04S.2 — POST /transactions/:id/review (APPROVED)",
           "event": [
             {
               "listen": "test",
@@ -455,12 +483,12 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"outcome\": \"APPROVED\",\n  \"reviewerId\": \"revisor_01\",\n  \"justification\": \"Cliente confirmou a compra via telefone. Pedido bulk legítimo para distribuição interna.\"\n}"
+              "raw": "{\n  \"outcome\": \"APPROVED\",\n  \"justification\": \"Cliente confirmou a compra via telefone. Pedido bulk legítimo para distribuição interna.\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/transactions/{{s3TransactionId}}/review",
+              "raw": "{{fraudUrl}}/api/v1/transactions/{{s3TransactionId}}/review",
               "host": [
-                "{{baseUrl}}"
+                "{{fraudUrl}}"
               ],
               "path": [
                 "api",
@@ -474,7 +502,7 @@
           "response": []
         },
         {
-          "name": "S4.3 — GET /purchases/:id (aguardar CONFIRMED)",
+          "name": "04S.3 — GET /purchases/:id (aguardar CONFIRMED)",
           "event": [
             {
               "listen": "test",
@@ -487,12 +515,12 @@
                   "});",
                   "if (body.status === 'CONFIRMED') {",
                   "  pm.environment.unset('_s4Retries');",
-                  "  console.log('[S4] status: ' + body.status + ' (revisão humana → APPROVED)');",
+                  "  console.log('[04S] status: ' + body.status + ' (revisão humana → APPROVED)');",
                   "} else if (body.status !== 'CANCELLED' && body.status !== 'UNDER_REVIEW') {",
                   "  const retries = parseInt(pm.environment.get('_s4Retries') || '0');",
                   "  if (retries < 8) {",
                   "    pm.environment.set('_s4Retries', retries + 1);",
-                  "    pm.execution.setNextRequest('S4.3 — GET /purchases/:id (aguardar CONFIRMED)');",
+                  "    pm.execution.setNextRequest('04S.3 — GET /purchases/:id (aguardar CONFIRMED)');",
                   "  } else { pm.environment.unset('_s4Retries'); }",
                   "} else { pm.environment.unset('_s4Retries'); }"
                 ],
@@ -504,9 +532,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases/{{s3PurchaseId}}",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases/{{s3PurchaseId}}",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -521,11 +549,11 @@
       ]
     },
     {
-      "name": "S5 — Velocidade de cartão → REJECTED na 6ª compra",
+      "name": "05S — Velocidade de cartão → REJECTED na 6ª compra",
       "description": "Executa 5 compras com o mesmo fingerprint (APPROVED) e depois a 6ª que aciona CARD_VELOCITY.",
       "item": [
         {
-          "name": "S5.1 — Compra 1 (mesmo cartão)",
+          "name": "05S.1 — Compra 1 (mesmo cartão)",
           "event": [
             {
               "listen": "prerequest",
@@ -563,9 +591,9 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -577,7 +605,7 @@
           "response": []
         },
         {
-          "name": "S5.2 — Compra 2 (mesmo cartão)",
+          "name": "05S.2 — Compra 2 (mesmo cartão)",
           "event": [
             {
               "listen": "test",
@@ -606,9 +634,9 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -620,7 +648,7 @@
           "response": []
         },
         {
-          "name": "S5.3 — Compra 3 (mesmo cartão)",
+          "name": "05S.3 — Compra 3 (mesmo cartão)",
           "event": [
             {
               "listen": "test",
@@ -649,9 +677,9 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -663,7 +691,7 @@
           "response": []
         },
         {
-          "name": "S5.4 — Compra 4 (mesmo cartão)",
+          "name": "05S.4 — Compra 4 (mesmo cartão)",
           "event": [
             {
               "listen": "test",
@@ -692,9 +720,9 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -706,7 +734,7 @@
           "response": []
         },
         {
-          "name": "S5.5 — Compra 5 (mesmo cartão)",
+          "name": "05S.5 — Compra 5 (mesmo cartão)",
           "event": [
             {
               "listen": "test",
@@ -735,9 +763,9 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -749,7 +777,7 @@
           "response": []
         },
         {
-          "name": "S5.6 — Compra 6 → CARD_VELOCITY → REJECTED",
+          "name": "05S.6 — Compra 6 → CARD_VELOCITY → REJECTED",
           "event": [
             {
               "listen": "test",
@@ -780,9 +808,9 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s5_velocity\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s5CardFp}}\",\n    \"last4\": \"0000\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -794,7 +822,7 @@
           "response": []
         },
         {
-          "name": "S5.7 — GET /purchases/:id (aguardar CANCELLED)",
+          "name": "05S.7 — GET /purchases/:id (aguardar CANCELLED)",
           "event": [
             {
               "listen": "test",
@@ -809,13 +837,13 @@
                   "  const retries = parseInt(pm.environment.get('_s5Retries') || '0');",
                   "  if (retries < 8) {",
                   "    pm.environment.set('_s5Retries', retries + 1);",
-                  "    pm.execution.setNextRequest('S5.7 — GET /purchases/:id (aguardar CANCELLED)');",
+                  "    pm.execution.setNextRequest('05S.7 — GET /purchases/:id (aguardar CANCELLED)');",
                   "  } else { pm.environment.unset('_s5Retries'); }",
                   "} else {",
                   "  pm.environment.unset('_s5Retries');",
                   "  const fd = body.fraudDetails;",
-                  "  if (fd) console.log('[S5] status: ' + body.status + ' | outcome: ' + fd.outcome + ' | score: ' + fd.score + ' | rules: ' + JSON.stringify(fd.triggeredRules));",
-                  "  else console.log('[S5] status: ' + body.status);",
+                  "  if (fd) console.log('[05S] status: ' + body.status + ' | outcome: ' + fd.outcome + ' | score: ' + fd.score + ' | rules: ' + JSON.stringify(fd.triggeredRules));",
+                  "  else console.log('[05S] status: ' + body.status);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -826,9 +854,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases/{{s5LastPurchaseId}}",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases/{{s5LastPurchaseId}}",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -843,10 +871,10 @@
       ]
     },
     {
-      "name": "S6 — Replay: mesma Idempotency-Key → mesma resposta",
+      "name": "06S — Replay: mesma Idempotency-Key → mesma resposta",
       "item": [
         {
-          "name": "S6 — POST /purchases (replay de S1)",
+          "name": "06S — POST /purchases (replay de 01S)",
           "event": [
             {
               "listen": "test",
@@ -854,7 +882,7 @@
                 "exec": [
                   "pm.test('2xx (replay)', () => pm.expect(pm.response.code).to.be.oneOf([200, 202]));",
                   "const body = pm.response.json();",
-                  "pm.test('purchaseId igual ao de S1', () => {",
+                  "pm.test('purchaseId igual ao de 01S', () => {",
                   "  pm.expect(body.purchaseId).to.eql(pm.environment.get('s1PurchaseId'));",
                   "});"
                 ],
@@ -879,9 +907,9 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s1_established\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s1_physical_low\",\n    \"last4\": \"1234\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -895,10 +923,10 @@
       ]
     },
     {
-      "name": "S7 — Mesma chave, corpo diferente → 422",
+      "name": "07S — Mesma chave, corpo diferente → 422",
       "item": [
         {
-          "name": "S7 — POST /purchases (mesma key de S1, corpo diferente)",
+          "name": "07S — POST /purchases (mesma key de 01S, corpo diferente)",
           "event": [
             {
               "listen": "test",
@@ -927,9 +955,9 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_DDD}}\",\n  \"quantity\": 2,\n  \"customerId\": \"cus_diferente\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_diferente\",\n    \"last4\": \"0001\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -943,10 +971,10 @@
       ]
     },
     {
-      "name": "S8 — Sem Idempotency-Key → 400",
+      "name": "08S — Sem Idempotency-Key → 400",
       "item": [
         {
-          "name": "S8 — POST /purchases sem Idempotency-Key",
+          "name": "08S — POST /purchases sem Idempotency-Key",
           "event": [
             {
               "listen": "test",
@@ -971,9 +999,9 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"cus_s8\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"fp_s8\",\n    \"last4\": \"1111\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -987,11 +1015,11 @@
       ]
     },
     {
-      "name": "S10 — Valor acima da média → REVIEW",
+      "name": "10S — Valor acima da média → REVIEW",
       "description": "Realiza 3 compras baratas para estabelecer histórico, depois submete uma transação 3x acima da média.",
       "item": [
         {
-          "name": "S10.1 — Compra 1 histórico (R$ 49,90)",
+          "name": "10S.1 — Compra 1 histórico (R$ 49,90)",
           "event": [
             {
               "listen": "prerequest",
@@ -1030,9 +1058,9 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"{{s10CustId}}\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s10CardFp}}\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -1044,7 +1072,7 @@
           "response": []
         },
         {
-          "name": "S10.2 — Compra 2 histórico (R$ 49,90)",
+          "name": "10S.2 — Compra 2 histórico (R$ 49,90)",
           "event": [
             {
               "listen": "test",
@@ -1073,9 +1101,9 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"{{s10CustId}}\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s10CardFp}}\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -1087,7 +1115,7 @@
           "response": []
         },
         {
-          "name": "S10.3 — Compra 3 histórico (R$ 49,90)",
+          "name": "10S.3 — Compra 3 histórico (R$ 49,90)",
           "event": [
             {
               "listen": "test",
@@ -1116,9 +1144,9 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 1,\n  \"customerId\": \"{{s10CustId}}\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s10CardFp}}\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -1130,7 +1158,7 @@
           "response": []
         },
         {
-          "name": "S10.4 — Compra alta (DDD R$ 149,90 > 3×49,90=149,70) → REVIEW",
+          "name": "10S.4 — Compra alta (DDD R$ 149,90 > 3×49,90=149,70) → REVIEW",
           "event": [
             {
               "listen": "test",
@@ -1161,9 +1189,9 @@
               "raw": "{\n  \"bookId\": \"{{BOOK_DDD}}\",\n  \"quantity\": 1,\n  \"customerId\": \"{{s10CustId}}\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s10CardFp}}\",\n    \"last4\": \"2222\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -1175,7 +1203,7 @@
           "response": []
         },
         {
-          "name": "S10.5 — GET /purchases/:id (aguardar UNDER_REVIEW)",
+          "name": "10S.5 — GET /purchases/:id (aguardar UNDER_REVIEW)",
           "event": [
             {
               "listen": "test",
@@ -1188,15 +1216,15 @@
                   "});",
                   "if (body.status === 'UNDER_REVIEW' && body.fraudDetails) {",
                   "  pm.environment.unset('_s10Retries');",
-                  "  pm.test('fraudDetails.outcome presente', () => pm.expect(body.fraudDetails.outcome).to.be.a('string'));",
+                  "  pm.test('fraudDetails.outcome REVIEW', () => pm.expect(body.fraudDetails.outcome).to.eql('REVIEW'));",
                   "  pm.test('fraudDetails.score presente', () => pm.expect(body.fraudDetails.score).to.be.a('number'));",
                   "  pm.test('fraudDetails.triggeredRules presente', () => pm.expect(body.fraudDetails.triggeredRules).to.be.an('array'));",
-                  "  console.log('[S10] status: ' + body.status + ' | outcome: ' + body.fraudDetails.outcome + ' | score: ' + body.fraudDetails.score + ' | rules: ' + JSON.stringify(body.fraudDetails.triggeredRules));",
+                  "  console.log('[10S] status: ' + body.status + ' | outcome: ' + body.fraudDetails.outcome + ' | score: ' + body.fraudDetails.score + ' | rules: ' + JSON.stringify(body.fraudDetails.triggeredRules));",
                   "} else if (body.status === 'PENDING_FRAUD_CHECK') {",
                   "  const retries = parseInt(pm.environment.get('_s10Retries') || '0');",
                   "  if (retries < 8) {",
                   "    pm.environment.set('_s10Retries', retries + 1);",
-                  "    pm.execution.setNextRequest('S10.5 — GET /purchases/:id (aguardar UNDER_REVIEW)');",
+                  "    pm.execution.setNextRequest('10S.5 — GET /purchases/:id (aguardar UNDER_REVIEW)');",
                   "  } else {",
                   "    pm.environment.unset('_s10Retries');",
                   "  }",
@@ -1210,9 +1238,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/purchases/{{s10PurchaseId}}",
+              "raw": "{{bookstoreUrl}}/api/v1/purchases/{{s10PurchaseId}}",
               "host": [
-                "{{baseUrl}}"
+                "{{bookstoreUrl}}"
               ],
               "path": [
                 "api",
@@ -1227,11 +1255,11 @@
       ]
     },
     {
-      "name": "S11 — Estruturação (3 compras abaixo do limite) → REVIEW",
+      "name": "11S — Estruturação (3 compras abaixo do limite) → REVIEW",
       "description": "Três transações no intervalo [450, 500) acionam STRUCTURING. Usa o endpoint /transactions diretamente.",
       "item": [
         {
-          "name": "S11.1 — Transação R$ 475 (abaixo de R$ 500)",
+          "name": "11S.1 — Transação R$ 475 (abaixo de R$ 500)",
           "event": [
             {
               "listen": "prerequest",
@@ -1270,9 +1298,9 @@
               "raw": "{\n  \"externalReference\": \"s11-structuring-1\",\n  \"customerId\": \"{{s11CustId}}\",\n  \"amount\": { \"value\": 475.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"{{s11CardFp}}\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/transactions",
+              "raw": "{{fraudUrl}}/api/v1/transactions",
               "host": [
-                "{{baseUrl}}"
+                "{{fraudUrl}}"
               ],
               "path": [
                 "api",
@@ -1284,7 +1312,7 @@
           "response": []
         },
         {
-          "name": "S11.2 — Transação R$ 480 (abaixo de R$ 500)",
+          "name": "11S.2 — Transação R$ 480 (abaixo de R$ 500)",
           "event": [
             {
               "listen": "test",
@@ -1313,9 +1341,9 @@
               "raw": "{\n  \"externalReference\": \"s11-structuring-2\",\n  \"customerId\": \"{{s11CustId}}\",\n  \"amount\": { \"value\": 480.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"{{s11CardFp}}\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/transactions",
+              "raw": "{{fraudUrl}}/api/v1/transactions",
               "host": [
-                "{{baseUrl}}"
+                "{{fraudUrl}}"
               ],
               "path": [
                 "api",
@@ -1327,7 +1355,7 @@
           "response": []
         },
         {
-          "name": "S11.3 — Transação R$ 490 → STRUCTURING → REVIEW",
+          "name": "11S.3 — Transação R$ 490 → STRUCTURING → REVIEW",
           "event": [
             {
               "listen": "test",
@@ -1358,9 +1386,9 @@
               "raw": "{\n  \"externalReference\": \"s11-structuring-3\",\n  \"customerId\": \"{{s11CustId}}\",\n  \"amount\": { \"value\": 490.00, \"currency\": \"BRL\" },\n  \"payment\": { \"type\": \"CREDIT_CARD\", \"fingerprint\": \"{{s11CardFp}}\", \"last4\": \"3333\" },\n  \"channel\": \"WEB\",\n  \"delivery\": \"PHYSICAL\",\n  \"itemCount\": 1,\n  \"occurredAt\": \"{{$isoTimestamp}}\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/transactions",
+              "raw": "{{fraudUrl}}/api/v1/transactions",
               "host": [
-                "{{baseUrl}}"
+                "{{fraudUrl}}"
               ],
               "path": [
                 "api",
@@ -1372,7 +1400,7 @@
           "response": []
         },
         {
-          "name": "S11.4 — GET /transactions/:id (aguardar REVIEW)",
+          "name": "11S.4 — GET /transactions/:id (aguardar REVIEW)",
           "event": [
             {
               "listen": "test",
@@ -1387,13 +1415,13 @@
                   "  const retries = parseInt(pm.environment.get('_s11Retries') || '0');",
                   "  if (retries < 8) {",
                   "    pm.environment.set('_s11Retries', retries + 1);",
-                  "    pm.execution.setNextRequest('S11.4 — GET /transactions/:id (aguardar REVIEW)');",
+                  "    pm.execution.setNextRequest('11S.4 — GET /transactions/:id (aguardar REVIEW)');",
                   "  } else { pm.environment.unset('_s11Retries'); }",
                   "} else {",
                   "  pm.environment.unset('_s11Retries');",
                   "  const d = body.decision;",
-                  "  if (d) console.log('[S11] status: ' + body.status + ' | outcome: ' + d.outcome + ' | score: ' + d.score + ' | rules: ' + JSON.stringify(d.triggeredRules));",
-                  "  else console.log('[S11] status: ' + body.status);",
+                  "  if (d) console.log('[11S] status: ' + body.status + ' | outcome: ' + d.outcome + ' | score: ' + d.score + ' | rules: ' + JSON.stringify(d.triggeredRules));",
+                  "  else console.log('[11S] status: ' + body.status);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -1404,9 +1432,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/transactions/{{s11TransactionId}}",
+              "raw": "{{fraudUrl}}/api/v1/transactions/{{s11TransactionId}}",
               "host": [
-                "{{baseUrl}}"
+                "{{fraudUrl}}"
               ],
               "path": [
                 "api",

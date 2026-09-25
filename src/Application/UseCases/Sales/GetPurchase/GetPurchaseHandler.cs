@@ -1,14 +1,11 @@
 using Application.Commons;
 using Cortex.Mediator.Queries;
-using Domain.Entities.Sales;
 using Domain.Enums;
 using Domain.Repositories;
 
 namespace Application.UseCases.Sales.GetPurchase;
 
-public sealed class GetPurchaseHandler(
-    IPurchaseRepository repository,
-    ITransactionRepository transactionRepository)
+public sealed class GetPurchaseHandler(IPurchaseRepository repository)
     : IQueryHandler<GetPurchaseRequest, OperationResult<GetPurchaseResponse>>
 {
     private const string InAnalysisMessage = "Pagamento em análise.";
@@ -23,7 +20,35 @@ public sealed class GetPurchaseHandler(
         if (purchase is null)
             return OperationResult<GetPurchaseResponse>.Fail(ErrorCode.NotFound, "Purchase not found.");
 
-        var fraudDetails = await GetFraudDetailsAsync(purchase, cancellationToken);
+        // Only surface fraud details once the decision is final.
+        FraudDetailsResponse? fraudDetails = purchase.Status switch
+        {
+            PurchaseStatus.Confirmed => new FraudDetailsResponse(
+                purchase.TransactionId,
+                Outcome.Approved,
+                purchase.FraudOutcome?.Score,
+                purchase.FraudOutcome?.DecidedBy,
+                purchase.FraudOutcome?.TriggeredRules
+                    ?.Select(r => new TriggeredRuleSummary(r.Code, r.Reason))
+                    .ToList()),
+            PurchaseStatus.Cancelled => new FraudDetailsResponse(
+                purchase.TransactionId,
+                Outcome.Rejected,
+                purchase.FraudOutcome?.Score,
+                purchase.FraudOutcome?.DecidedBy,
+                purchase.FraudOutcome?.TriggeredRules
+                    ?.Select(r => new TriggeredRuleSummary(r.Code, r.Reason))
+                    .ToList()),
+            PurchaseStatus.UnderReview => new FraudDetailsResponse(
+                purchase.TransactionId,
+                Outcome.Review,
+                purchase.FraudOutcome?.Score,
+                purchase.FraudOutcome?.DecidedBy,
+                purchase.FraudOutcome?.TriggeredRules
+                    ?.Select(r => new TriggeredRuleSummary(r.Code, r.Reason))
+                    .ToList()),
+            _ => null
+        };
 
         return OperationResult<GetPurchaseResponse>.SuccessResult(new GetPurchaseResponse(
             purchase.Id,
@@ -41,40 +66,4 @@ public sealed class GetPurchaseHandler(
         PurchaseStatus.Cancelled => CancelledMessage,
         _ => InAnalysisMessage
     };
-
-    private async Task<FraudDetailsResponse?> GetFraudDetailsAsync(Purchase p, CancellationToken ct)
-    {
-        if (!p.TransactionId.HasValue)
-        {
-            // No transaction linked yet; infer outcome from final status for Confirmed/Cancelled
-            // purchases that somehow lost the transaction link (defensive fallback, D-40).
-            if (p.Status is PurchaseStatus.Confirmed)
-                return new FraudDetailsResponse(null, Outcome.Approved, null, null);
-            if (p.Status is PurchaseStatus.Cancelled)
-                return new FraudDetailsResponse(null, Outcome.Rejected, null, null);
-            return null;
-        }
-
-        var transaction = await transactionRepository.GetByIdAsync(p.TransactionId.Value, ct);
-        var assessment = transaction?.CurrentAssessment();
-
-        var outcome = assessment?.Outcome
-            ?? p.Status switch
-            {
-                PurchaseStatus.Confirmed => (Outcome?)Outcome.Approved,
-                PurchaseStatus.Cancelled => Outcome.Rejected,
-                _ => null
-            };
-
-        var score = assessment is not null
-            ? (int?)((int)Math.Round(assessment.Evaluations.Sum(e => e.Weight) * 100))
-            : null;
-
-        var triggered = assessment?.Evaluations
-            .Where(e => e.Hit)
-            .Select(e => new TriggeredRuleSummary(e.RuleCode, e.Reason))
-            .ToList();
-
-        return new FraudDetailsResponse(p.TransactionId, outcome, score, triggered);
-    }
 }

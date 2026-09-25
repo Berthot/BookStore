@@ -1,123 +1,123 @@
 # Diagramas de sequência
 
-Dois fluxos. O primeiro é o exigido pelo desafio: uma transação chegando pelo contrato
-`POST /api/v1/transactions` até a decisão. O segundo mostra o marketplace de livros consumindo o antifraude — como os
-contextos se conectam numa compra de ponta a ponta.
+Dois fluxos. O primeiro mostra uma transação chegando pelo `POST /api/v1/transactions` até a decisão.
+O segundo mostra o marketplace de livros consumindo o antifraude via HTTP — como os três processos
+cooperam numa compra de ponta a ponta.
 
-## 1. Processamento de uma transação
+## 1. Processamento de uma transação (Fraud.Api + Fraud.Worker)
 
 ```mermaid
 sequenceDiagram
   autonumber
   actor C as Cliente
-  participant API as WebApi
+  participant FA as Fraud.Api
   participant DB as PostgreSQL (schema fraud)
   participant OB as Entrega da outbox
   participant MQ as RabbitMQ
-  participant W as Worker
+  participant FW as Fraud.Worker
 
-  C->>API: POST /api/v1/transactions<br/>Idempotency-Key · X-Correlation-Id
+  C->>FA: POST /api/v1/transactions<br/>Idempotency-Key · X-Correlation-Id
   alt sem Idempotency-Key
-    API-->>C: 400 Bad Request
+    FA-->>C: 400 Bad Request
   else chave presente
-    API->>API: SHA-256 do corpo normalizado
-    API->>DB: BEGIN · INSERT chave + hash (índice único)
+    FA->>FA: SHA-256 do corpo normalizado
+    FA->>DB: BEGIN · INSERT chave + hash (índice único)
     alt chave nova
-      API->>DB: INSERT Transaction (Received) + OutboxMessage (transaction-submitted) · COMMIT
-      API-->>C: 202 Accepted · Location /api/v1/transactions/{id}
+      FA->>DB: INSERT Transaction (Received) + OutboxMessage (transaction-submitted) · COMMIT
+      FA-->>C: 202 Accepted · Location /api/v1/transactions/{id}
     else mesma chave, mesmo hash
-      API-->>C: 202 com a resposta original (replay)
+      FA-->>C: 202 · Idempotent-Replayed: true · Location original (replay)
     else mesma chave, hash diferente
-      API-->>C: 422 Unprocessable Entity
+      FA-->>C: 422 Unprocessable Entity
     else original ainda em processamento
-      API-->>C: 409 Conflict
+      FA-->>C: 409 Conflict
     end
   end
 
   OB->>DB: lê OutboxMessage pendente
   OB->>MQ: publica transaction-submitted
-  MQ->>W: entrega a mensagem
-  W->>DB: InboxState — MessageId já processado?
+  MQ->>FW: entrega a mensagem
+  FW->>DB: InboxState — MessageId já processado?
   alt reentrega
-    W-->>MQ: ack (descarta, sem efeito)
+    FW-->>MQ: ack (descarta, sem efeito)
   else primeira vez
-    W->>DB: Transaction → Processing · COMMIT
-    W->>DB: sinais: transações recentes do cartão, cliente novo
-    W->>W: FraudRuleSet.Evaluate(FraudContext) → DecisionPolicy
-    W->>DB: Assessment + Transaction → Decided + OutboxMessage (transaction-decided) · COMMIT
-    W-->>MQ: ack
+    FW->>DB: Transaction → Processing · COMMIT
+    FW->>DB: sinais: transações recentes do cartão, cliente novo
+    FW->>FW: FraudRuleSet.Evaluate(FraudContext) → DecisionPolicy
+    FW->>DB: Assessment + Transaction → Decided + OutboxMessage (transaction-decided) · COMMIT
+    FW-->>MQ: ack
   end
 
   opt avaliação falha
-    MQ->>W: retry com backoff
+    MQ->>FW: retry com backoff
     MQ->>MQ: esgotou tentativas → fila _error
-    W->>DB: fail-safe: Assessment Review (DecidedBy = System) + transaction-decided
+    FW->>DB: fail-safe: Assessment Review (DecidedBy = System) + transaction-decided
   end
 
-  C->>API: GET /api/v1/transactions/{id}
-  API-->>C: 200 · status + outcome + regras avaliadas
+  C->>FA: GET /api/v1/transactions/{id}
+  FA-->>C: 200 · status + outcome + score + regras avaliadas + histórico
 ```
 
 ### Pontos-chave
 
 - **Passos 4 e 5 são atômicos.** Chave de idempotência, transação e mensagem de saída entram na mesma
-  transação do banco — ou tudo, ou nada. Não existe transação sem mensagem nem mensagem sem transação.
-- **A API não avalia nada.** Ela aceita, garante a idempotência e responde `202`. A avaliação é
-  assíncrona, no Worker; o cliente acompanha pelo `GET` (passo 23).
-- **Duas camadas de deduplicação.** Na entrada, a `Idempotency-Key` barra reenvios do cliente. No
-  consumo, a inbox barra reentregas do broker — a outbox garante entrega *pelo menos uma vez*, então
-  a mesma mensagem pode chegar duas vezes.
-- **`Processing` é gravado antes de avaliar.** O `GET` mostra que a transação está em andamento, e uma
-  falha no meio da avaliação deixa rastro no estado.
-- **Fail-safe.** Se a avaliação esgota as tentativas, a transação não fica sem decisão nem é aprovada
-  às cegas: recebe `Review` com `DecidedBy = System` e vai para análise humana.
+  transação do banco — ou tudo, ou nada.
+- **Fraud.Api não avalia nada.** Ela aceita, garante a idempotência e responde `202`. A avaliação é
+  assíncrona no Fraud.Worker.
+- **Replay devolve o mesmo status + Location + `Idempotent-Replayed: true`.** O cliente que recebeu `202`
+  e reenvia obtém exatamente o mesmo resultado, sem reprocessar.
+- **Fail-safe.** Se a avaliação esgota as tentativas, a transação recebe `Review` com
+  `DecidedBy = System` e vai para análise humana.
 
-## 2. Compra de livro de ponta a ponta
+## 2. Compra de livro de ponta a ponta (BookStore.Api → Fraud.Api → Fraud.Worker)
 
 ```mermaid
 sequenceDiagram
   autonumber
   actor C as Comprador
-  participant API as WebApi
-  participant BS as PostgreSQL (schema bookstore)
+  participant BS as BookStore.Api
+  participant BDB as PostgreSQL (schema bookstore)
   participant MQ as RabbitMQ
-  participant W as Worker
-  participant FR as PostgreSQL (schema fraud)
+  participant FA as Fraud.Api
+  participant FDB as PostgreSQL (schema fraud)
+  participant FW as Fraud.Worker
 
-  C->>API: GET /api/v1/books
-  API-->>C: 200 · catálogo
-  C->>API: POST /api/v1/purchases · Idempotency-Key
-  API->>BS: Purchase (PendingFraudCheck) + OutboxMessage (purchase-placed) · COMMIT
-  API-->>C: 202 Accepted · Location /api/v1/purchases/{id}
+  C->>BS: GET /api/v1/books
+  BS-->>C: 200 · catálogo
+  C->>BS: POST /api/v1/purchases · Idempotency-Key
+  BS->>BDB: Purchase (PendingFraudCheck) + OutboxMessage (purchase-placed) · COMMIT
+  BS-->>C: 202 Accepted · Location /api/v1/purchases/{id}
 
-  MQ->>W: purchase-placed
-  W->>W: IFraudCheckGateway.Submit(Idempotency-Key = PurchaseId, Delivery, ItemCount)
-  W->>FR: SubmitTransaction — mesmo caso de uso do fluxo 1
-  Note over W,FR: avaliação idêntica ao fluxo 1 → transaction-decided
+  MQ->>BS: purchase-placed (consumer PurchasePlacedConsumer)
+  BS->>FA: POST /api/v1/transactions · Idempotency-Key: PurchaseId
+  FA->>FDB: Transaction (Received) + OutboxMessage (transaction-submitted) · COMMIT
+  FA-->>BS: 202 Accepted
 
-  MQ->>W: transaction-decided
+  Note over FA,FW: avaliação idêntica ao fluxo 1
+
+  MQ->>BS: transaction-decided (consumer TransactionDecidedConsumer)
   alt Approved
-    W->>BS: Purchase → Confirmed (a venda acontece)
+    BS->>BDB: Purchase → Confirmed
   else Rejected
-    W->>BS: Purchase → Cancelled
+    BS->>BDB: Purchase → Cancelled
   else Review
-    W->>BS: Purchase → UnderReview
+    BS->>BDB: Purchase → UnderReview
   end
 
-  C->>API: GET /api/v1/purchases/{id}
-  API-->>C: 200 · status + customerMessage + fraudDetails
+  C->>BS: GET /api/v1/purchases/{id}
+  BS-->>C: 200 · status + customerMessage + fraudDetails
 
-  Note over W,BS: Reconciliação: Purchase em PendingFraudCheck além do limite<br/>→ republica purchase-placed (seguro: chave = PurchaseId)
+  Note over BS,BDB: Reconciliação: Purchase em PendingFraudCheck além do limite<br/>→ republica purchase-placed (seguro: chave = PurchaseId)
 ```
 
 ### Pontos-chave
 
-- **Cada transação de banco toca um schema só.** A API grava apenas em `bookstore`; o Worker grava em
-  `fraud` ao submeter e em `bookstore` ao receber a decisão. A ponte entre os contextos é sempre uma
-  mensagem, nunca uma transação distribuída.
+- **Comunicação síncrona via HTTP entre BookStore.Api e Fraud.Api.** O `PurchasePlacedConsumer`
+  chama `POST /api/v1/transactions` com `Idempotency-Key: PurchaseId`. Se Fraud.Api estiver fora,
+  MassTransit retenta o consumer com backoff.
+- **Cada transação de banco toca um schema só.** A API grava apenas em `bookstore`; a decisão final
+  chega via mensagem `transaction-decided`, nunca via transação distribuída.
 - **O `PurchaseId` é a chave de idempotência da transação.** Por isso a reconciliação pode republicar
-  a compra quantas vezes for preciso: se a transação já existe, o antifraude devolve a mesma.
-- **Só existe venda com `Approved`.** `Confirmed` só é alcançado por um `transaction-decided` aprovado —
-  do motor ou de um revisor.
-- **Dois públicos, campos separados.** O comprador lê `customerMessage` (genérica); `fraudDetails`
-  mostra as regras e os motivos. Em produção, `fraudDetails` ficaria restrito a operadores de risco.
+  a compra quantas vezes for preciso sem criar transações duplicadas.
+- **Trace ponta a ponta.** `X-Correlation-Id` atravessa HTTP e mensagens; o Aspire Dashboard mostra
+  um único trace de `POST /purchases` até a atualização de `Purchase`.

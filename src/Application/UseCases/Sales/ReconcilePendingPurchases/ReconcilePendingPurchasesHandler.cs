@@ -1,5 +1,6 @@
 using Application.Abstractions.Messaging;
 using Application.Commons;
+using Application.Diagnostics;
 using Application.Messages;
 using Cortex.Mediator.Commands;
 using Domain.Repositories;
@@ -33,6 +34,8 @@ public sealed class ReconcilePendingPurchasesHandler(
                 purchase.CorrelationId,
                 purchase.CreatedAt), cancellationToken);
         }
+
+        BookStoreTelemetry.ReconciliationRepublished.Add(stalePurchases.Count);
 
         return OperationResult<ReconcilePendingPurchasesResponse>.SuccessResult(
             new ReconcilePendingPurchasesResponse(stalePurchases.Count));

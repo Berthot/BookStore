@@ -1,4 +1,4 @@
-namespace BookStore.Aspire.Extensions;
+namespace Aspire.Extensions;
 
 public static class InfrastructureExtensions
 {
@@ -24,7 +24,9 @@ public static class InfrastructureExtensions
         var rabbitmqPassword = builder.AddParameter("rabbitmq-password");
         var rabbitmq = builder.AddRabbitMQ("RabbitMQ", userName: rabbitmqUser, password: rabbitmqPassword)
             .WithImage("rabbitmq", "4-management-alpine")
-            .WithHttpEndpoint(port: 15672, targetPort: 15672, name: "management");
+            .WithDataVolume("rabbitmq-data")
+            .WithHttpEndpoint(port: 15672, targetPort: 15672, name: "management")
+            .WithHttpEndpoint(port: 15692, targetPort: 15692, name: "prometheus");
 
         // Prometheus: OTLP write receiver is a feature flag in 2.x (--web.enable-otlp-receiver is 3.x only)
         var prometheus = builder.AddContainer("prometheus", "prom/prometheus", "v2.55.0")

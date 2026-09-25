@@ -1,39 +1,62 @@
-namespace BookStore.Aspire.Extensions;
+namespace Aspire.Extensions;
 
 public static class ProjectExtensions
 {
-    public static IResourceBuilder<ProjectResource> AddWebApi(
+    public static IResourceBuilder<ProjectResource> AddBookStoreApi(
         this IDistributedApplicationBuilder builder,
         IResourceBuilder<PostgresDatabaseResource> db,
         IResourceBuilder<PostgresServerResource> postgres,
         IResourceBuilder<RabbitMQServerResource> rabbitmq,
+        IResourceBuilder<ProjectResource> fraudApi,
         IResourceBuilder<ContainerResource> prometheus)
     {
-        return builder.AddProject<Projects.WebApi>("webapi")
+        return builder.AddProject<Projects.BookStore_Api>("bookstore-api")
             .WithReference(db)
             .WithReference(rabbitmq)
+            .WithReference(fraudApi)
             .WaitFor(postgres)
             .WaitFor(rabbitmq)
-            // Dynamic URL resolved by Aspire from the prometheus container endpoint
+            .WaitFor(fraudApi)
+            .WithEnvironment("Database__ApplyMigrationsOnStartup", "true")
+            .WithEnvironment("Seeding__Enabled", "true")
+            .WithEnvironment("Reconciliation__IntervalSeconds", "30")
+            .WithEnvironment("Reconciliation__StalenessThresholdSeconds", "60")
             .WithEnvironment("PROMETHEUS_OTLP_ENDPOINT", prometheus.GetEndpoint("ui"))
             .WithHttpHealthCheck("/health");
     }
 
-    public static IResourceBuilder<ProjectResource> AddWorker(
+    public static IResourceBuilder<ProjectResource> AddFraudApi(
         this IDistributedApplicationBuilder builder,
         IResourceBuilder<PostgresDatabaseResource> db,
         IResourceBuilder<PostgresServerResource> postgres,
         IResourceBuilder<RabbitMQServerResource> rabbitmq,
-        IResourceBuilder<ProjectResource> webapi,
         IResourceBuilder<ContainerResource> prometheus)
     {
-        return builder.AddProject<Projects.Worker>("worker")
+        return builder.AddProject<Projects.Fraud_Api>("fraud-api")
             .WithReference(db)
             .WithReference(rabbitmq)
             .WaitFor(postgres)
             .WaitFor(rabbitmq)
-            .WaitFor(webapi)
-            // Dynamic URL resolved by Aspire from the prometheus container endpoint
+            .WithEnvironment("Database__ApplyMigrationsOnStartup", "true")
+            .WithEnvironment("PROMETHEUS_OTLP_ENDPOINT", prometheus.GetEndpoint("ui"))
+            .WithHttpHealthCheck("/health");
+    }
+
+    public static IResourceBuilder<ProjectResource> AddFraudWorker(
+        this IDistributedApplicationBuilder builder,
+        IResourceBuilder<PostgresDatabaseResource> db,
+        IResourceBuilder<PostgresServerResource> postgres,
+        IResourceBuilder<RabbitMQServerResource> rabbitmq,
+        IResourceBuilder<ProjectResource> fraudApi,
+        IResourceBuilder<ContainerResource> prometheus)
+    {
+        return builder.AddProject<Projects.Fraud_Worker>("fraud-worker")
+            .WithReference(db)
+            .WithReference(rabbitmq)
+            .WaitFor(postgres)
+            .WaitFor(rabbitmq)
+            .WaitFor(fraudApi)
+            .WithEnvironment("Demo__FraudProcessingDelaySeconds", "5")
             .WithEnvironment("PROMETHEUS_OTLP_ENDPOINT", prometheus.GetEndpoint("ui"));
     }
 }

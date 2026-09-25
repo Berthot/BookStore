@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Domain.Entities.Sales;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -28,6 +29,17 @@ internal sealed class PurchaseConfiguration : IEntityTypeConfiguration<Purchase>
             total.Property(t => t.Currency).HasColumnName("total_currency").HasMaxLength(3).IsRequired();
         });
 
+        builder.Property(p => p.FraudOutcome)
+            .HasColumnName("fraud_outcome")
+            .HasColumnType("jsonb")
+            .HasConversion(
+                fo => JsonSerializer.Serialize(fo, (JsonSerializerOptions?)null),
+                s => JsonSerializer.Deserialize<FraudOutcomeSnapshot>(s, (JsonSerializerOptions?)null));
+
         builder.HasIndex(p => p.CorrelationId).IsUnique();
+
+        // xmin is a PostgreSQL system column that increments on every row update;
+        // used as an optimistic concurrency token so concurrent consumer retries do not silently overwrite each other.
+        builder.Property<uint>("xmin").HasColumnType("xid").ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
     }
 }

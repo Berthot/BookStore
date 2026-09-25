@@ -1,3 +1,4 @@
+using System.Globalization;
 using Domain.Entities.FraudAnalysis;
 using Domain.Enums;
 
@@ -22,7 +23,7 @@ public sealed class NewCustomerHighAmountRule : IFraudRule
             && context.Delivery == DeliveryType.Digital
             && context.Amount.Value > AmountThreshold;
         return new RuleEvaluation(Code, Version, hit, hit ? Weight : 0m,
-            hit ? $"NEW_CUSTOMER_HIGH_AMOUNT: new customer with digital amount {context.Amount.Value}."
+            hit ? FormattableString.Invariant($"NEW_CUSTOMER_HIGH_AMOUNT: new customer with digital amount {context.Amount.Value}.")
                 : "NEW_CUSTOMER_HIGH_AMOUNT: not triggered.");
     }
 }

@@ -17,6 +17,9 @@ public interface ITransactionRepository : IRepository<Transaction>
     /// <summary>Returns the count of transactions for <paramref name="customerId"/> with amount in [<paramref name="lower"/>, <paramref name="upper"/>) occurring on or after <paramref name="since"/>, excluding <paramref name="excludeId"/>.</summary>
     Task<int> CountJustBelowThresholdAsync(string customerId, decimal lower, decimal upper, DateTime since, Guid excludeId, CancellationToken cancellationToken = default);
 
+    /// <summary>Returns the count of transactions where the latest assessment is an Engine Review (awaiting human decision).</summary>
+    Task<long> CountPendingReviewAsync(CancellationToken cancellationToken = default);
+
     /// <summary>Registers a newly created assessment so EF Core tracks it as Added (INSERT) rather than Modified (UPDATE).</summary>
     void AddAssessment(Assessment assessment);
 }

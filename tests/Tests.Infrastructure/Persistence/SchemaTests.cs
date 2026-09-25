@@ -1,4 +1,5 @@
 using Npgsql;
+using Tests.Infrastructure.Fixtures;
 using Tests.Shared.Attributes;
 
 namespace Tests.Infrastructure.Persistence;

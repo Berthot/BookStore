@@ -1,8 +1,9 @@
 <Solution>
   <Folder Name="/apps/">
     <Project Path="apps/Aspire/Aspire.csproj" />
-    <Project Path="apps/WebApi/WebApi.csproj" />
-    <Project Path="apps/Worker/Worker.csproj" />
+    <Project Path="apps/BookStore.Api/BookStore.Api.csproj" />
+    <Project Path="apps/Fraud.Api/Fraud.Api.csproj" />
+    <Project Path="apps/Fraud.Worker/Fraud.Worker.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Application/Application.csproj" />

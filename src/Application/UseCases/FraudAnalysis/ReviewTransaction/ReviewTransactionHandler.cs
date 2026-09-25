@@ -4,8 +4,11 @@ using Application.Messages;
 using Application.UseCases.FraudAnalysis.GetTransaction;
 using Cortex.Mediator.Commands;
 using Domain.Entities.FraudAnalysis;
+using Domain.Entities.Sales;
 using Domain.Enums;
 using Domain.Repositories;
+using Application.Diagnostics;
+using Domain.ValueObjects;
 
 namespace Application.UseCases.FraudAnalysis.ReviewTransaction;
 
@@ -60,13 +63,32 @@ public sealed class ReviewTransactionHandler(
 
         await unitOfWork.CommitAsync(cancellationToken);
 
+        // Carry over score and triggered rules from the original engine assessment
+        var engineAssessment = transaction.Assessments
+            .FirstOrDefault(a => a.Decider.Kind == DeciderKind.Engine);
+        var engineScore = engineAssessment is null
+            ? 0
+            : (int)Math.Round(engineAssessment.Evaluations.Sum(e => e.Weight) * 100);
+        var engineRules = engineAssessment?.Evaluations
+            .OrderBy(e => e.Position)
+            .Where(e => e.Hit)
+            .Select(e => new FraudTriggeredRule(e.RuleCode, e.Reason))
+            .ToList() ?? [];
+
         await publisher.PublishAsync(
             new TransactionDecided(
                 transaction.Id,
                 outcome,
                 transaction.CorrelationId,
-                now),
+                now,
+                Score: engineScore,
+                DecidedBy: "REVIEWER",
+                TriggeredRules: engineRules),
             cancellationToken);
+
+        FraudTelemetry.Decisions.Add(1,
+            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", outcome),
+            new System.Collections.Generic.KeyValuePair<string, object?>("decider", "REVIEWER"));
 
         return OperationResult<GetTransactionResponse>.SuccessResult(
             GetTransactionHandler.MapToResponse(transaction));

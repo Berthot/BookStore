@@ -7,6 +7,7 @@ public sealed record FraudDetailsResponse(
     Guid? TransactionId,
     Outcome? Outcome,
     int? Score,
+    string? DecidedBy,
     IReadOnlyList<TriggeredRuleSummary>? TriggeredRules);
 
 /// <summary>Rule that fired during fraud evaluation, shown for auditability (D-40).</summary>

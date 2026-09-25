@@ -49,5 +49,9 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
             .HasForeignKey(a => a.TransactionId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
+
+        // xmin is a PostgreSQL system column that increments on every row update;
+        // used as an optimistic concurrency token so concurrent consumer retries do not silently overwrite each other.
+        builder.Property<uint>("xmin").HasColumnType("xid").ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
     }
 }

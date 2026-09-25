@@ -25,4 +25,4 @@ public sealed record DeciderDto(DeciderKind Kind, string? ReviewerId);
 
 public sealed record RuleDto(string Code, int Version, bool Hit, int Weight, string Reason);
 
-public sealed record HistoryEntryDto(Outcome Outcome, DeciderDto DecidedBy, DateTime DecidedAt);
+public sealed record HistoryEntryDto(Outcome Outcome, int Score, DeciderDto DecidedBy, DateTime DecidedAt, IReadOnlyList<RuleDto> Rules);

@@ -3,6 +3,7 @@ using Application.Commons;
 using Application.Diagnostics;
 using Application.Messages;
 using Cortex.Mediator.Commands;
+using Domain.Entities.Sales;
 using Domain.Enums;
 using Domain.Repositories;
 using Domain.Rules;
@@ -49,6 +50,10 @@ public sealed class AssessTransactionHandler(
                 return OperationResult<AssessTransactionResponse>.Fail(ErrorCode.Unprocessable, processingError.Message);
 
             await unitOfWork.CommitAsync(cancellationToken);
+
+            // Demo delay: transaction is now visibly PROCESSING; sleep keeps it there so the dashboard shows the intermediate status
+            if (command.DelaySeconds > 0)
+                await Task.Delay(TimeSpan.FromSeconds(command.DelaySeconds), cancellationToken);
         }
 
         // Compute signals — all queries use the (payment_fingerprint, occurred_at) index
@@ -113,17 +118,28 @@ public sealed class AssessTransactionHandler(
 
             await unitOfWork.CommitAsync(cancellationToken);
 
+            var score = (int)Math.Round(assessment.Evaluations.Sum(e => e.Weight) * 100);
+            var triggeredRules = assessment.Evaluations
+                .OrderBy(e => e.Position)
+                .Where(e => e.Hit)
+                .Select(e => new FraudTriggeredRule(e.RuleCode, e.Reason))
+                .ToList();
+
             await publisher.PublishAsync(
                 new TransactionDecided(
                     transaction.Id,
                     assessment.Outcome,
                     transaction.CorrelationId,
-                    now),
+                    now,
+                    score,
+                    "ENGINE",
+                    triggeredRules),
                 cancellationToken);
         }
 
         FraudTelemetry.Decisions.Add(1,
-            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", assessment.Outcome));
+            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", assessment.Outcome),
+            new System.Collections.Generic.KeyValuePair<string, object?>("decider", "ENGINE"));
         FraudTelemetry.DecisionDuration.Record(
             (now - transaction.CreatedAt).TotalSeconds,
             new System.Collections.Generic.KeyValuePair<string, object?>("outcome", assessment.Outcome));

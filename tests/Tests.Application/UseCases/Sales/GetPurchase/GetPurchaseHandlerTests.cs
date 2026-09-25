@@ -5,7 +5,6 @@ using Domain.Repositories;
 using NSubstitute;
 using Tests.Shared.Attributes;
 using Tests.Shared.Base;
-using Tests.Shared.Mothers.FraudAnalysis;
 using Tests.Shared.Mothers.Sales;
 
 namespace Tests.Application.UseCases.Sales.GetPurchase;
@@ -14,15 +13,13 @@ namespace Tests.Application.UseCases.Sales.GetPurchase;
 public sealed class GetPurchaseHandlerTests : UnitTestsBase
 {
     private IPurchaseRepository _repo = null!;
-    private ITransactionRepository _txRepo = null!;
     private GetPurchaseHandler _handler = null!;
 
     [SetUp]
     public void SetUp()
     {
         _repo = Substitute.For<IPurchaseRepository>();
-        _txRepo = Substitute.For<ITransactionRepository>();
-        _handler = new GetPurchaseHandler(_repo, _txRepo);
+        _handler = new GetPurchaseHandler(_repo);
     }
 
     [Test]
@@ -51,18 +48,26 @@ public sealed class GetPurchaseHandlerTests : UnitTestsBase
     }
 
     [Test]
-    public async Task Handle_fraud_details_is_null_for_pending_and_under_review()
+    public async Task Handle_fraud_details_is_null_for_pending_status()
     {
         var pending = PurchaseMother.PendingFraudCheck();
-        var underReview = PurchaseMother.UnderReview();
         _repo.GetByIdAsync(pending.Id, Arg.Any<CancellationToken>()).Returns(pending);
-        _repo.GetByIdAsync(underReview.Id, Arg.Any<CancellationToken>()).Returns(underReview);
 
         var pendingResult = await _handler.Handle(new GetPurchaseRequest(pending.Id), CancellationToken.None);
-        var reviewResult = await _handler.Handle(new GetPurchaseRequest(underReview.Id), CancellationToken.None);
 
         pendingResult.Data!.FraudDetails.Should().BeNull();
-        reviewResult.Data!.FraudDetails.Should().BeNull();
+    }
+
+    [Test]
+    public async Task Handle_fraud_details_exposes_review_outcome_for_under_review()
+    {
+        var underReview = PurchaseMother.UnderReview();
+        _repo.GetByIdAsync(underReview.Id, Arg.Any<CancellationToken>()).Returns(underReview);
+
+        var reviewResult = await _handler.Handle(new GetPurchaseRequest(underReview.Id), CancellationToken.None);
+
+        reviewResult.Data!.FraudDetails.Should().NotBeNull();
+        reviewResult.Data.FraudDetails!.Outcome.Should().Be(Outcome.Review);
     }
 
     [Test]
@@ -90,23 +95,23 @@ public sealed class GetPurchaseHandlerTests : UnitTestsBase
     }
 
     [Test]
-    public async Task Handle_includes_score_and_triggered_rules_when_transaction_has_assessment()
+    public async Task Handle_returns_transaction_id_and_outcome_for_confirmed_purchase_with_transaction()
     {
         var transactionId = Guid.NewGuid();
         var purchase = new PurchaseBuilder().Build();
         purchase.LinkTransaction(transactionId);
         purchase.ApplyDecision(Outcome.Approved);
 
-        var transaction = TransactionMother.DecidedApproved();
         _repo.GetByIdAsync(purchase.Id, Arg.Any<CancellationToken>()).Returns(purchase);
-        _txRepo.GetByIdAsync(transactionId, Arg.Any<CancellationToken>()).Returns(transaction);
 
         var result = await _handler.Handle(new GetPurchaseRequest(purchase.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Data!.FraudDetails!.TransactionId.Should().Be(transactionId);
         result.Data.FraudDetails.Outcome.Should().Be(Outcome.Approved);
-        result.Data.FraudDetails.Score.Should().NotBeNull();
+        // No FraudOutcome snapshot stored when ApplyDecision is called without one
+        result.Data.FraudDetails.Score.Should().BeNull();
+        result.Data.FraudDetails.DecidedBy.Should().BeNull();
     }
 
     [Test]
