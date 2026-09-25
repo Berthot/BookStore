@@ -14,17 +14,36 @@ public sealed class ValidationCommandBehavior<TCommand, TResult>(
 {
     public async Task<TResult> Handle(TCommand command, CommandHandlerDelegate<TResult> next, CancellationToken cancellationToken)
     {
-        var errors = new List<string>();
+        var fieldErrors = new Dictionary<string, List<string>>();
 
         foreach (var validator in validators)
         {
             var result = await validator.ValidateAsync(command, cancellationToken);
             if (!result.IsValid)
-                errors.AddRange(result.Errors.Select(e => e.ErrorMessage));
+            {
+                foreach (var failure in result.Errors)
+                {
+                    var key = string.IsNullOrEmpty(failure.PropertyName) ? "general" : failure.PropertyName;
+                    if (!fieldErrors.TryGetValue(key, out var list))
+                        fieldErrors[key] = list = [];
+                    list.Add(failure.ErrorMessage);
+                }
+            }
         }
 
-        if (errors.Count > 0)
-            return new TResult { IsSuccess = false, ErrorCode = ErrorCode.Validation, Errors = errors.AsReadOnly() };
+        if (fieldErrors.Count > 0)
+        {
+            var readOnly = fieldErrors.ToDictionary(
+                kv => kv.Key,
+                kv => (IReadOnlyList<string>)kv.Value.AsReadOnly());
+            return new TResult
+            {
+                IsSuccess = false,
+                ErrorCode = ErrorCode.Validation,
+                Errors = readOnly.Values.SelectMany(v => v).ToList().AsReadOnly(),
+                ValidationErrors = readOnly
+            };
+        }
 
         return await next();
     }
@@ -39,17 +58,36 @@ public sealed class ValidationQueryBehavior<TQuery, TResult>(
 {
     public async Task<TResult> Handle(TQuery query, QueryHandlerDelegate<TResult> next, CancellationToken cancellationToken)
     {
-        var errors = new List<string>();
+        var fieldErrors = new Dictionary<string, List<string>>();
 
         foreach (var validator in validators)
         {
             var result = await validator.ValidateAsync(query, cancellationToken);
             if (!result.IsValid)
-                errors.AddRange(result.Errors.Select(e => e.ErrorMessage));
+            {
+                foreach (var failure in result.Errors)
+                {
+                    var key = string.IsNullOrEmpty(failure.PropertyName) ? "general" : failure.PropertyName;
+                    if (!fieldErrors.TryGetValue(key, out var list))
+                        fieldErrors[key] = list = [];
+                    list.Add(failure.ErrorMessage);
+                }
+            }
         }
 
-        if (errors.Count > 0)
-            return new TResult { IsSuccess = false, ErrorCode = ErrorCode.Validation, Errors = errors.AsReadOnly() };
+        if (fieldErrors.Count > 0)
+        {
+            var readOnly = fieldErrors.ToDictionary(
+                kv => kv.Key,
+                kv => (IReadOnlyList<string>)kv.Value.AsReadOnly());
+            return new TResult
+            {
+                IsSuccess = false,
+                ErrorCode = ErrorCode.Validation,
+                Errors = readOnly.Values.SelectMany(v => v).ToList().AsReadOnly(),
+                ValidationErrors = readOnly
+            };
+        }
 
         return await next();
     }

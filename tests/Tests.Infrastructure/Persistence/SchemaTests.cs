@@ -22,7 +22,8 @@ public sealed class SchemaTests
     [TearDown]
     public async Task TearDownAsync()
     {
-        await _connection.DisposeAsync();
+        if (_connection is not null)
+            await _connection.DisposeAsync();
     }
 
     [Test]

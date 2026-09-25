@@ -85,7 +85,7 @@ public sealed class SubmitTransactionHandlerTests : UnitTestsBase
     }
 
     [Test]
-    public async Task Handle_commit_occurs_before_publish()
+    public async Task Handle_publish_occurs_before_commit_for_outbox_atomicity()
     {
         var callOrder = new List<string>();
         _publisher.When(x => x.PublishAsync(Arg.Any<TransactionSubmitted>(), Arg.Any<CancellationToken>()))
@@ -95,6 +95,8 @@ public sealed class SubmitTransactionHandlerTests : UnitTestsBase
 
         await _handler.Handle(ValidRequest(), CancellationToken.None);
 
-        callOrder.Should().ContainInOrder("commit", "publish");
+        // PublishAsync stages the message in the EF outbox; CommitAsync flushes both together.
+        callOrder.Should().ContainInOrder("publish", "commit");
+        callOrder.Should().HaveCount(2);
     }
 }

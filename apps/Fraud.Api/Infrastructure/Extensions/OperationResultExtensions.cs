@@ -24,8 +24,10 @@ public static class OperationResultExtensions
         result.ErrorCode switch
         {
             ErrorCode.Validation => Results.ValidationProblem(
-                result.Errors.Select((e, i) => ($"[{i}]", new[] { e }))
-                    .ToDictionary(x => x.Item1, x => x.Item2)),
+                result.ValidationErrors.Count > 0
+                    ? result.ValidationErrors.ToDictionary(kv => kv.Key, kv => kv.Value.ToArray())
+                    : result.Errors.Select((e, i) => ($"[{i}]", new[] { e }))
+                        .ToDictionary(x => x.Item1, x => x.Item2)),
             ErrorCode.NotFound => Results.Problem(statusCode: 404, title: "Not Found",
                 detail: result.Errors.FirstOrDefault()),
             ErrorCode.Conflict => Results.Problem(statusCode: 409, title: "Conflict",

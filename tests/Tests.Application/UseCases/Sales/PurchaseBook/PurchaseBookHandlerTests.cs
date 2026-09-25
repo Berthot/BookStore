@@ -111,6 +111,25 @@ public sealed class PurchaseBookHandlerTests : UnitTestsBase
         await _uow.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    [Test]
+    public async Task Handle_publish_occurs_before_commit_for_outbox_atomicity()
+    {
+        var book = BookMother.Simple();
+        _bookRepo.GetByIdAsync(book.Id, Arg.Any<CancellationToken>()).Returns(book);
+
+        var order = new List<string>();
+        _publisher.When(x => x.PublishAsync(Arg.Any<PurchasePlaced>(), Arg.Any<CancellationToken>()))
+            .Do(_ => order.Add("publish"));
+        _uow.When(x => x.CommitAsync(Arg.Any<CancellationToken>()))
+            .Do(_ => order.Add("commit"));
+
+        await _handler.Handle(ValidRequest(book.Id), CancellationToken.None);
+
+        // PublishAsync stages the message in the EF outbox; CommitAsync flushes both together.
+        order.Should().ContainInOrder("publish", "commit");
+        order.Should().HaveCount(2);
+    }
+
     private static PurchaseBookRequest ValidRequest(Guid? bookId = null) =>
         new(bookId ?? Guid.NewGuid(), 1, "CARD", "fp-default", "0000", "cust-default", "corr-default");
 }

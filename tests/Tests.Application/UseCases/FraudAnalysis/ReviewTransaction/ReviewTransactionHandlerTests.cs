@@ -96,4 +96,23 @@ public sealed class ReviewTransactionHandlerTests : UnitTestsBase
         await _uow.Received(1).CommitAsync(Arg.Any<CancellationToken>());
         await _publisher.Received(1).PublishAsync(Arg.Any<TransactionDecided>(), Arg.Any<CancellationToken>());
     }
+
+    [Test]
+    public async Task Handle_publish_occurs_before_commit_for_outbox_atomicity()
+    {
+        var transaction = TransactionMother.DecidedReview();
+        _repo.GetByIdAsync(transaction.Id, Arg.Any<CancellationToken>()).Returns(transaction);
+
+        var order = new List<string>();
+        _publisher.When(x => x.PublishAsync(Arg.Any<TransactionDecided>(), Arg.Any<CancellationToken>()))
+            .Do(_ => order.Add("publish"));
+        _uow.When(x => x.CommitAsync(Arg.Any<CancellationToken>()))
+            .Do(_ => order.Add("commit"));
+
+        await _handler.Handle(ApproveRequest(transaction.Id), CancellationToken.None);
+
+        // PublishAsync stages the message in the EF outbox; CommitAsync flushes both together.
+        order.Should().ContainInOrder("publish", "commit");
+        order.Should().HaveCount(2);
+    }
 }
