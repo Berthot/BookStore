@@ -32,7 +32,11 @@ public sealed class FailSafeTransactionHandler(
         // Ensure Processing status before calling FailSafe (transaction may still be Received if the
         // assess consumer crashed before its first commit)
         if (transaction.Status == TransactionStatus.Received)
-            transaction.StartProcessing();
+        {
+            var startError = transaction.StartProcessing();
+            if (startError is not null)
+                return OperationResult<FailSafeTransactionResponse>.Fail(ErrorCode.Unprocessable, startError.Message);
+        }
 
         var now = DateTime.UtcNow;
         var error = transaction.FailSafe(command.Reason);
