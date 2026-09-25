@@ -144,7 +144,8 @@ public sealed class OutboxIntegrationTests
         {
             if (bus is not null)
                 await bus.StopAsync(CancellationToken.None);
-            provider?.Dispose();
+            if (provider is not null)
+                await provider.DisposeAsync();
         }
     }
 
