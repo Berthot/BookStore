@@ -3,7 +3,7 @@ using Infrastructure.Persistence.Fraud;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 
-namespace Tests.Infrastructure;
+namespace Tests.Infrastructure.Fixtures;
 
 /// <summary>Shared PostgreSQL container that starts once per test session, applies both EF migrations, and exposes the connection string.</summary>
 [SetUpFixture]

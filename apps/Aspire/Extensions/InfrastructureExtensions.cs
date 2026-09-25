@@ -1,4 +1,4 @@
-namespace BookStore.Aspire.Extensions;
+namespace Aspire.Extensions;
 
 public static class InfrastructureExtensions
 {

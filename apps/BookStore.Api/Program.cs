@@ -1,18 +1,17 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Application;
-using BookStore.Api.Infrastructure.ErrorHandling;
 using BookStore.Api.Endpoints.Catalog;
 using BookStore.Api.Endpoints.Sales;
-using BookStore.Api.Jobs;
+using BookStore.Api.Infrastructure.ErrorHandling;
 using BookStore.Api.Infrastructure.Middleware;
+using BookStore.Api.Jobs;
 using Infrastructure;
 using Infrastructure.Options;
 using Infrastructure.Persistence.BookStore;
 using Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.ServiceDiscovery;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,4 +85,7 @@ static async Task ApplyDatabaseMigrationsAsync(WebApplication app)
     }
 }
 
-public partial class Program { }
+namespace BookStore.Api
+{
+    public partial class Program { }
+}

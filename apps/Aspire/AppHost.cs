@@ -1,4 +1,4 @@
-using BookStore.Aspire.Extensions;
+using Aspire.Extensions;
 
 var builder = DistributedApplication.CreateBuilder(args);
 

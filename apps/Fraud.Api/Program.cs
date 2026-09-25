@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Application;
-using Fraud.Api.Infrastructure.ErrorHandling;
 using Fraud.Api.Endpoints.FraudAnalysis;
+using Fraud.Api.Infrastructure.ErrorHandling;
 using Fraud.Api.Infrastructure.Middleware;
 using Fraud.Api.Jobs;
 using Infrastructure;
@@ -70,4 +70,7 @@ static async Task ApplyDatabaseMigrationsAsync(WebApplication app)
     await fraudDb.Database.MigrateAsync();
 }
 
-public partial class Program { }
+namespace Fraud.Api
+{
+    public partial class Program { }
+}
