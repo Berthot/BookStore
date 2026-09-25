@@ -1,5 +1,6 @@
 using Application.Diagnostics;
 using Domain.Repositories;
+using Fraud.Api.Diagnostics;
 using Infrastructure.Persistence.Fraud;
 using MassTransit.EntityFrameworkCoreIntegration;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,8 @@ public sealed class FraudMetricsJob(
     ILogger<FraudMetricsJob> logger) : BackgroundService
 {
     private static readonly TimeSpan Interval = TimeSpan.FromSeconds(30);
+
+    static FraudMetricsJob() => ReviewsPendingGauge.Set(0);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -24,7 +27,7 @@ public sealed class FraudMetricsJob(
 
                 var repo = scope.ServiceProvider.GetRequiredService<ITransactionRepository>();
                 var pendingReviews = await repo.CountPendingReviewAsync(stoppingToken);
-                FraudTelemetry.SetReviewsPending(pendingReviews);
+                ReviewsPendingGauge.Set(pendingReviews);
 
                 var db = scope.ServiceProvider.GetRequiredService<FraudDbContext>();
                 var outboxPending = await db.Set<OutboxMessage>().LongCountAsync(stoppingToken);
