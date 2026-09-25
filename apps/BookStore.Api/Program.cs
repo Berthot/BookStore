@@ -3,8 +3,10 @@ using System.Text.Json.Serialization;
 using Application;
 using BookStore.Api.Endpoints.Catalog;
 using BookStore.Api.Endpoints.Sales;
-using BookStore.Api.Infrastructure.ErrorHandling;
-using BookStore.Api.Infrastructure.Middleware;
+using BookStore.Api.Infrastructure.Filters.Idempotency;
+using Web.ErrorHandling;
+using Web.Filters.Idempotency;
+using Web.Middleware;
 using BookStore.Api.Jobs;
 using Infrastructure;
 using Infrastructure.Options;
@@ -30,6 +32,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddSingleton<IIdempotencyTelemetry, BookStoreIdempotencyTelemetry>();
 
 builder.Services.AddHealthChecks();
 

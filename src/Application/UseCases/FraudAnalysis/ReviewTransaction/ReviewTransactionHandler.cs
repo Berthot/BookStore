@@ -18,8 +18,7 @@ public sealed class ReviewTransactionHandler(
     IEventPublisher publisher)
     : ICommandHandler<ReviewTransactionRequest, OperationResult<GetTransactionResponse>>
 {
-    /// <summary>Generic reviewer ID for all review assessments. In production this would come from the auth token; for this tech test a single reviewer is assumed (D-49).</summary>
-    public const string DefaultReviewerId = "reviewer-default";
+    private const string DefaultReviewerId = "reviewer-default";
 
     public async Task<OperationResult<GetTransactionResponse>> Handle(
         ReviewTransactionRequest command,
@@ -88,8 +87,8 @@ public sealed class ReviewTransactionHandler(
         await unitOfWork.CommitAsync(cancellationToken);
 
         FraudTelemetry.Decisions.Add(1,
-            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", outcome.ToString().ToUpperInvariant()),
-            new System.Collections.Generic.KeyValuePair<string, object?>("decider", "REVIEWER"));
+            new("outcome", outcome.ToString().ToUpperInvariant()),
+            new("decider", "REVIEWER"));
 
         return OperationResult<GetTransactionResponse>.SuccessResult(
             GetTransactionHandler.MapToResponse(transaction));

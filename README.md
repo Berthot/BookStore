@@ -21,6 +21,7 @@ Aspire · Docker
 - [🔭 Observabilidade](#-observabilidade)
 - [🧾 Auditoria](#-auditoria)
 - [📜 Contrato de API](#-contrato-de-api)
+- [⚙️ Configuração](#️-configuração)
 - [🧭 Decisões arquiteturais (ADRs)](#-decisões-arquiteturais-adrs)
 - [🗂️ Estrutura do repositório](#️-estrutura-do-repositório)
 - [🧪 Testes](#-testes)
@@ -116,6 +117,29 @@ O Aspire Dashboard abre automaticamente. As portas dos serviços são atribuída
 | S9 | parar o Fraud.Worker, comprar, religar | 🛟 compra conclui sozinha ao religar | `docker compose -f deploy/docker-compose.yml stop fraud-worker` → faça uma compra → `docker compose -f deploy/docker-compose.yml start fraud-worker` → aguarde → compra finaliza |
 | S10 | valor muito acima da média do cliente | 🔍 `REVIEW` | Execute **S10.1–S10.3** (histórico) → aguarde → **S10.4** → **S10.5** |
 | S11 | três compras logo abaixo de um limite | 🔍 `REVIEW` | Execute **S11.1–S11.3** (R$ 475, R$ 480, R$ 490) → aguarde → **S11.4** |
+
+---
+
+## ⚙️ Configuração
+
+Copie `deploy/.env.example` para `deploy/.env` e ajuste os valores. Todos têm fallback seguro no
+`docker-compose.yml`; para um override pontual sem editar o arquivo use a sintaxe
+`VAR=valor docker compose up`.
+
+| Variável | Padrão | Descrição |
+| :--- | :---: | :--- |
+| `POSTGRES_USER` | `bookstore` | Usuário PostgreSQL |
+| `POSTGRES_PASSWORD` | `bookstore` | Senha PostgreSQL |
+| `POSTGRES_DB` | `bookstore` | Nome do banco |
+| `RABBITMQ_USER` | `guest` | Usuário RabbitMQ |
+| `RABBITMQ_PASS` | `guest` | Senha RabbitMQ |
+| `ASPNETCORE_ENVIRONMENT` | `Development` | `Development` exibe stack traces; `Production` os omite |
+| `DEMO_FRAUD_DELAY_SECONDS` | `5` | Pausa artificial do Worker na fase de processamento (0 = desativado) |
+| `RECONCILIATION_INTERVAL_SECONDS` | `30` | Com que frequência o job de reconciliação é executado |
+| `RECONCILIATION_STALENESS_SECONDS` | `60` | Idade mínima (em segundos) de uma compra parada para ser reconciliada |
+
+> **Grafana** (dashboards antifraude) está disponível apenas no stack Aspire — não é incluído no
+> `docker-compose.yml`.
 
 ---
 
@@ -372,8 +396,9 @@ src/
   Domain/           entidades e regras, por contexto (Catalog, Sales, FraudAnalysis)
   Application/      casos de uso: UseCases/<Contexto>/<CasoDeUso>/
   Infrastructure/   Persistence/<DbContext>/ · Extensions/ · Options/ · Adapters/
+  Web/              middleware, filtros e extensões ASP.NET Core compartilhados entre as APIs
 tests/              Tests.Shared · Tests.Domain · Tests.Application · Tests.WebApi ·
-                    Tests.Worker · Tests.Infrastructure
+                    Tests.Infrastructure
 deploy/             docker-compose.yml · .env.example
 docs/               adr/ · diagramas/ · api/ · postman/
 ```

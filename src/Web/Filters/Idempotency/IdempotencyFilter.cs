@@ -1,11 +1,10 @@
 using System.Text;
 using System.Text.Json;
 using Application.Abstractions.Idempotency;
-using Application.Diagnostics;
 
-namespace Fraud.Api.Infrastructure.Filters.Idempotency;
+namespace Web.Filters.Idempotency;
 
-public sealed class IdempotencyFilter<TStore>(TStore store) : IEndpointFilter
+public sealed class IdempotencyFilter<TStore>(TStore store, IIdempotencyTelemetry? telemetry = null) : IEndpointFilter
     where TStore : IIdempotencyStore
 {
     public const string HttpContextEntryKey = "IdempotencyEntry";
@@ -55,14 +54,14 @@ public sealed class IdempotencyFilter<TStore>(TStore store) : IEndpointFilter
                 return Results.Problem(statusCode: 422, title: "Unprocessable Entity",
                     detail: "A request with the same Idempotency-Key was submitted with a different body.");
 
-            FraudTelemetry.IdempotencyRequests.Add(1, new System.Collections.Generic.KeyValuePair<string, object?>("result", "replay"));
+            telemetry?.RecordRequest("replay");
             return ReplayResult(context.HttpContext, existing);
         }
 
         var entry = IdempotencyEntry.Create(key, hash, DateTime.UtcNow);
         store.Add(entry);
         context.HttpContext.Items[HttpContextEntryKey] = entry;
-        FraudTelemetry.IdempotencyRequests.Add(1, new System.Collections.Generic.KeyValuePair<string, object?>("result", "new"));
+        telemetry?.RecordRequest("new");
 
         try
         {
@@ -73,7 +72,7 @@ public sealed class IdempotencyFilter<TStore>(TStore store) : IEndpointFilter
             var committed = await store.FindAsync(key, context.HttpContext.RequestAborted);
             if (committed is { Status: IdempotencyStatus.Completed })
             {
-                FraudTelemetry.IdempotencyRequests.Add(1, new System.Collections.Generic.KeyValuePair<string, object?>("result", "replay"));
+                telemetry?.RecordRequest("replay");
                 return ReplayResult(context.HttpContext, committed);
             }
             return Results.Problem(statusCode: 409, title: "Conflict",

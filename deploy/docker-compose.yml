@@ -46,7 +46,7 @@ services:
     ports:
       - "8081:8081"
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:8081
       ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-bookstore};Username=${POSTGRES_USER:-bookstore};Password=${POSTGRES_PASSWORD:-bookstore}"
       ConnectionStrings__RabbitMQ: "amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672/"
@@ -72,7 +72,7 @@ services:
     environment:
       ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-bookstore};Username=${POSTGRES_USER:-bookstore};Password=${POSTGRES_PASSWORD:-bookstore}"
       ConnectionStrings__RabbitMQ: "amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672/"
-      Demo__FraudProcessingDelaySeconds: "5"
+      Demo__FraudProcessingDelaySeconds: "${DEMO_FRAUD_DELAY_SECONDS:-5}"
       OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
       OTEL_SERVICE_NAME: fraud-worker
       OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
@@ -91,15 +91,15 @@ services:
     ports:
       - "8080:8080"
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-bookstore};Username=${POSTGRES_USER:-bookstore};Password=${POSTGRES_PASSWORD:-bookstore}"
       ConnectionStrings__RabbitMQ: "amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672/"
       Database__ApplyMigrationsOnStartup: "true"
       Seeding__Enabled: "true"
       Services__fraud-api__http__0: "http://fraud-api:8081"
-      Reconciliation__IntervalSeconds: "30"
-      Reconciliation__StalenessThresholdSeconds: "60"
+      Reconciliation__IntervalSeconds: "${RECONCILIATION_INTERVAL_SECONDS:-30}"
+      Reconciliation__StalenessThresholdSeconds: "${RECONCILIATION_STALENESS_SECONDS:-60}"
       OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
       OTEL_SERVICE_NAME: bookstore-api
       OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0

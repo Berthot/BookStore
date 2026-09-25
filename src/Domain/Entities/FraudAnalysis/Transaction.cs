@@ -59,11 +59,12 @@ public sealed class Transaction : Entity
         }, null);
     }
 
-    /// <summary>Advances status to Processing (I-02). Valid from Received or Decided; rejected if already Processing.</summary>
     public DomainError? StartProcessing()
     {
         if (Status == TransactionStatus.Processing)
             return new DomainError("TRANSACTION_ALREADY_PROCESSING", "Transaction is already being processed.");
+        if (Status == TransactionStatus.Decided)
+            return new DomainError("TRANSACTION_ALREADY_DECIDED", "A decided transaction cannot be reprocessed.");
 
         Status = TransactionStatus.Processing;
         UpdatedAt = DateTime.UtcNow;

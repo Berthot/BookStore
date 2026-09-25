@@ -56,8 +56,8 @@ public sealed class FailSafeTransactionHandler(
         await unitOfWork.CommitAsync(cancellationToken);
 
         FraudTelemetry.Decisions.Add(1,
-            new System.Collections.Generic.KeyValuePair<string, object?>("outcome", transaction.CurrentAssessment()!.Outcome.ToString().ToUpperInvariant()),
-            new System.Collections.Generic.KeyValuePair<string, object?>("decider", "SYSTEM"));
+            new("outcome", transaction.CurrentAssessment()!.Outcome.ToString().ToUpperInvariant()),
+            new("decider", "SYSTEM"));
 
         return OperationResult<FailSafeTransactionResponse>.SuccessResult(
             new FailSafeTransactionResponse(
