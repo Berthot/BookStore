@@ -48,18 +48,26 @@ public sealed class GetPurchaseHandlerTests : UnitTestsBase
     }
 
     [Test]
-    public async Task Handle_fraud_details_is_null_for_pending_and_under_review()
+    public async Task Handle_fraud_details_is_null_for_pending_status()
     {
         var pending = PurchaseMother.PendingFraudCheck();
-        var underReview = PurchaseMother.UnderReview();
         _repo.GetByIdAsync(pending.Id, Arg.Any<CancellationToken>()).Returns(pending);
-        _repo.GetByIdAsync(underReview.Id, Arg.Any<CancellationToken>()).Returns(underReview);
 
         var pendingResult = await _handler.Handle(new GetPurchaseRequest(pending.Id), CancellationToken.None);
-        var reviewResult = await _handler.Handle(new GetPurchaseRequest(underReview.Id), CancellationToken.None);
 
         pendingResult.Data!.FraudDetails.Should().BeNull();
-        reviewResult.Data!.FraudDetails.Should().BeNull();
+    }
+
+    [Test]
+    public async Task Handle_fraud_details_exposes_review_outcome_for_under_review()
+    {
+        var underReview = PurchaseMother.UnderReview();
+        _repo.GetByIdAsync(underReview.Id, Arg.Any<CancellationToken>()).Returns(underReview);
+
+        var reviewResult = await _handler.Handle(new GetPurchaseRequest(underReview.Id), CancellationToken.None);
+
+        reviewResult.Data!.FraudDetails.Should().NotBeNull();
+        reviewResult.Data.FraudDetails!.Outcome.Should().Be(Outcome.Review);
     }
 
     [Test]
