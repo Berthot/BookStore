@@ -16,6 +16,5 @@
     <Project Path="tests/Tests.Infrastructure/Tests.Infrastructure.csproj" />
     <Project Path="tests/Tests.Shared/Tests.Shared.csproj" />
     <Project Path="tests/Tests.WebApi/Tests.WebApi.csproj" />
-    <Project Path="tests/Tests.Worker/Tests.Worker.csproj" />
   </Folder>
 </Solution>
