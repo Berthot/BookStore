@@ -21,7 +21,7 @@ public static class TelemetryExtensions
             .WithTracing(tracing =>
             {
                 tracing
-                    .AddAspNetCoreInstrumentation()
+                    .AddAspNetCoreInstrumentation(o => o.Filter = ctx => !ctx.Request.Path.StartsWithSegments("/health"))
                     .AddHttpClientInstrumentation()
                     .AddSource(FraudTelemetry.ActivitySourceName)
                     .AddSource("MassTransit")
