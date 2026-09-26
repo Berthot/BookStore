@@ -1,6 +1,8 @@
+using System.Net.Sockets;
 using Infrastructure.Persistence.BookStore;
 using Infrastructure.Persistence.Fraud;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Testcontainers.PostgreSql;
 
 namespace Tests.Infrastructure;
@@ -19,6 +21,11 @@ public sealed class PostgresContainerFixture
     {
         try
         {
+            // Ryuk from a previous test run may still be alive when the next process starts,
+            // causing ResourceReaperException on StartAsync. [OneTimeTearDown] disposes the
+            // container explicitly so Ryuk is not needed for this fixture.
+            DotNet.Testcontainers.Configurations.TestcontainersSettings.ResourceReaperEnabled = false;
+
             _container = new PostgreSqlBuilder("postgres:17-alpine")
                 .WithDatabase("bookstore_test")
                 .WithUsername("test")
@@ -27,7 +34,19 @@ public sealed class PostgresContainerFixture
 
             await _container.StartAsync();
 
-            ConnectionString = _container.GetConnectionString();
+            // SSL Mode=Disable: local container has no TLS; without it Npgsql attempts a TLS
+            // SetupEncryption handshake that times out on Rancher Desktop/WSL because the port
+            // accepts connections before Postgres is ready to negotiate.
+            var cs = new NpgsqlConnectionStringBuilder(_container.GetConnectionString())
+            {
+                SslMode = SslMode.Disable
+            }.ToString();
+
+            // Rancher Desktop/WSL: the mapped port is reachable before Postgres finishes startup.
+            // TCP probe waits for host-side port-forwarding to be active before running migrations.
+            await WaitForPostgresReadyAsync(cs);
+
+            ConnectionString = cs;
 
             await using var bookStoreCtx = BuildBookStoreContext(ConnectionString);
             await bookStoreCtx.Database.MigrateAsync();
@@ -40,6 +59,41 @@ public sealed class PostgresContainerFixture
         {
             StartupException = ex;
         }
+    }
+
+    // Raw TCP probe: bypasses Npgsql protocol negotiation (which on Rancher Desktop/WSL can hang
+    // even after pg_isready passes) and only checks that the host-side port-forwarding is active.
+    // The migrations themselves use EnableRetryOnFailure — they tolerate the first connection
+    // being slightly late without a custom probe.
+    private static async Task WaitForPostgresReadyAsync(string connectionString)
+    {
+        var csb = new NpgsqlConnectionStringBuilder(connectionString);
+        var host = csb.Host ?? "localhost";
+        var port = csb.Port > 0 ? csb.Port : 5432;
+
+        const int maxAttempts = 20;
+        const int intervalMs = 500;
+
+        Exception? lastException = null;
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            try
+            {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                using var tcp = new TcpClient();
+                await tcp.ConnectAsync(host, port, cts.Token);
+                return; // Port is reachable from the host
+            }
+            catch (Exception ex)
+            {
+                lastException = ex;
+                await Task.Delay(intervalMs);
+            }
+        }
+
+        throw new InvalidOperationException(
+            $"PostgreSQL port {host}:{port} not reachable after {maxAttempts} attempts ({maxAttempts * (2000 + intervalMs) / 1000.0:F1} s max).",
+            lastException);
     }
 
     [OneTimeTearDown]
