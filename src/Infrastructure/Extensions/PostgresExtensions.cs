@@ -60,37 +60,6 @@ public static class PostgresExtensions
         return services;
     }
 
-    /// <summary>Registers both contexts — kept for tests/scenarios that host both bounded contexts in one process.</summary>
-    internal static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddOptions<DatabaseOptions>()
-            .Bind(configuration.GetSection(DatabaseOptions.Section))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        services.AddOptions<SeedingOptions>()
-            .Bind(configuration.GetSection(SeedingOptions.Section))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        services.AddPostgresDbContext<BookStoreDbContext>(configuration, "bookstore",
-            opts => opts.UseAsyncSeeding(async (ctx, _, ct) =>
-                await new CatalogDataSeeder((BookStoreDbContext)ctx).SeedAsync(ct)));
-
-        services.AddPostgresDbContext<FraudDbContext>(configuration, "fraud");
-
-        services.AddScoped<ICatalogSeeder, CatalogDataSeeder>();
-        services.AddScoped<IBookRepository, BookRepository>();
-        services.AddScoped<IPurchaseRepository, PurchaseRepository>();
-        services.AddScoped<ITransactionRepository, TransactionRepository>();
-        services.AddScoped<IBookStoreUnitOfWork, BookStoreUnitOfWork>();
-        services.AddScoped<IFraudUnitOfWork, FraudUnitOfWork>();
-        services.AddScoped<IBookStoreIdempotencyStore, BookStoreIdempotencyStore>();
-        services.AddScoped<IFraudIdempotencyStore, FraudIdempotencyStore>();
-
-        return services;
-    }
-
     /// <summary>Registers a typed DbContext with Npgsql, retry-on-failure and a schema-scoped migrations history table.</summary>
     private static IServiceCollection AddPostgresDbContext<TContext>(
         this IServiceCollection services,
