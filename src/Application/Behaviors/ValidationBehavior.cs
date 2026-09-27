@@ -63,32 +63,27 @@ public sealed class ValidationQueryBehavior<TQuery, TResult>(
         foreach (var validator in validators)
         {
             var result = await validator.ValidateAsync(query, cancellationToken);
-            if (!result.IsValid)
+            if (result.IsValid) continue;
+            foreach (var failure in result.Errors)
             {
-                foreach (var failure in result.Errors)
-                {
-                    var key = string.IsNullOrEmpty(failure.PropertyName) ? "general" : failure.PropertyName;
-                    if (!fieldErrors.TryGetValue(key, out var list))
-                        fieldErrors[key] = list = [];
-                    list.Add(failure.ErrorMessage);
-                }
+                var key = string.IsNullOrEmpty(failure.PropertyName) ? "general" : failure.PropertyName;
+                if (!fieldErrors.TryGetValue(key, out var list))
+                    fieldErrors[key] = list = [];
+                list.Add(failure.ErrorMessage);
             }
         }
 
-        if (fieldErrors.Count > 0)
+        if (fieldErrors.Count <= 0) return await next();
+        var readOnly = fieldErrors.ToDictionary(
+            kv => kv.Key,
+            kv => (IReadOnlyList<string>)kv.Value.AsReadOnly());
+        return new TResult
         {
-            var readOnly = fieldErrors.ToDictionary(
-                kv => kv.Key,
-                kv => (IReadOnlyList<string>)kv.Value.AsReadOnly());
-            return new TResult
-            {
-                IsSuccess = false,
-                ErrorCode = ErrorCode.Validation,
-                Errors = readOnly.Values.SelectMany(v => v).ToList().AsReadOnly(),
-                ValidationErrors = readOnly
-            };
-        }
+            IsSuccess = false,
+            ErrorCode = ErrorCode.Validation,
+            Errors = readOnly.Values.SelectMany(v => v).ToList().AsReadOnly(),
+            ValidationErrors = readOnly
+        };
 
-        return await next();
     }
 }

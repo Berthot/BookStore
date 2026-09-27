@@ -17,7 +17,7 @@ public sealed class HighValueDigitalRule : IFraudRule
 
     public RuleEvaluation Evaluate(FraudContext context)
     {
-        var hit = context.Delivery == DeliveryType.Digital && context.Amount.Value > AmountThreshold;
+        var hit = context is { Delivery: DeliveryType.Digital, Amount.Value: > AmountThreshold };
         return new RuleEvaluation(Code, Version, hit, hit ? Weight : 0m,
             hit ? FormattableString.Invariant($"HIGH_VALUE_DIGITAL: digital delivery with amount {context.Amount.Value}.")
                 : "HIGH_VALUE_DIGITAL: not triggered.");
