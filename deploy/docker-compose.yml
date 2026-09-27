@@ -23,13 +23,32 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+      - "${RABBITMQ_PROM_PORT:-15692}:15692"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq/mnesia
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
       timeout: 5s
       retries: 10
+
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--enable-feature=otlp-write-receiver"
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:9090/-/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
 
   aspire-dashboard:
     image: mcr.microsoft.com/dotnet/aspire-dashboard:9.3.0
@@ -54,10 +73,13 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
       OTEL_SERVICE_NAME: fraud-api
       OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
+      PROMETHEUS_OTLP_ENDPOINT: http://prometheus:9090
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      prometheus:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8081/health || exit 1"]
@@ -76,12 +98,15 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
       OTEL_SERVICE_NAME: fraud-worker
       OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
+      PROMETHEUS_OTLP_ENDPOINT: http://prometheus:9090
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
       fraud-api:
+        condition: service_healthy
+      prometheus:
         condition: service_healthy
 
   bookstore-api:
@@ -103,6 +128,7 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
       OTEL_SERVICE_NAME: bookstore-api
       OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
+      PROMETHEUS_OTLP_ENDPOINT: http://prometheus:9090
     depends_on:
       postgres:
         condition: service_healthy
@@ -110,7 +136,10 @@ services:
         condition: service_healthy
       fraud-api:
         condition: service_healthy
+      prometheus:
+        condition: service_healthy
 
 volumes:
   pg_data:
   rabbitmq_data:
+  prometheus_data:
