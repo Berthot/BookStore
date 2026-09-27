@@ -18,8 +18,9 @@
     Se omitido, executa todos os cenários em sequência.
 
 .PARAMETER Delay
-    Delay em ms entre requests consecutivos (padrão: 300).
-    Aumente para 600+ se o Worker estiver lento ao responder.
+    Delay em ms entre requests consecutivos (padrão: 2000).
+    2000ms cobre o backlog do Worker no Docker Compose (S1+S2+S3 = ~15 s com DEMO_FRAUD_DELAY_SECONDS=5).
+    Reduza para 500 se estiver rodando via Aspire sem delay de demo.
 
 .PARAMETER NoOpen
     Não abre o relatório HTML no browser ao final.
@@ -37,15 +38,15 @@
     # Roda só o cenário S1
     .\run-demo.ps1 -Folder 'S1'
 
-    # Roda S3 e S4 com delay maior para o Worker
-    .\run-demo.ps1 -Folder 'S3' -Delay 600
-    .\run-demo.ps1 -Folder 'S4' -Delay 600
+    # Roda S3 e S4 com delay para o Worker (Docker Compose)
+    .\run-demo.ps1 -Folder 'S3' -Delay 2000
+    .\run-demo.ps1 -Folder 'S4' -Delay 2000
 #>
 param(
     [ValidateSet('aspire', 'docker', 'https')]
     [string]$Environment = 'aspire',
     [string]$Folder = '',
-    [int]$Delay = 300,
+    [int]$Delay = 2000,
     [switch]$NoOpen
 )
 
