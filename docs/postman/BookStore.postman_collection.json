@@ -324,6 +324,7 @@
               "listen": "prerequest",
               "script": {
                 "exec": [
+                  "pm.environment.set('s3CustId', 'cus_s3_bulk_' + pm.variables.replaceIn('{{$guid}}').substring(0, 8));",
                   "pm.environment.set('s3CardFp', 'fp_s3_bulk_' + pm.variables.replaceIn('{{$guid}}').substring(0, 8));"
                 ],
                 "type": "text/javascript"
@@ -355,7 +356,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 10,\n  \"customerId\": \"cus_s3_bulk\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s3CardFp}}\",\n    \"last4\": \"5678\"\n  },\n  \"channel\": \"WEB\"\n}"
+              "raw": "{\n  \"bookId\": \"{{BOOK_CLEAN_CODE}}\",\n  \"quantity\": 10,\n  \"customerId\": \"{{s3CustId}}\",\n  \"payment\": {\n    \"type\": \"CREDIT_CARD\",\n    \"fingerprint\": \"{{s3CardFp}}\",\n    \"last4\": \"5678\"\n  },\n  \"channel\": \"WEB\"\n}"
             },
             "url": {
               "raw": "{{bookstoreUrl}}/api/v1/purchases",
