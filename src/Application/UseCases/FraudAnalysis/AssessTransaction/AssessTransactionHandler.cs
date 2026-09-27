@@ -55,14 +55,14 @@ public sealed class AssessTransactionHandler(
         var since = transaction.OccurredAt.AddDays(-SignalWindowDays);
 
         var recentWithSameCard = await repository.CountRecentByFingerprintAsync(
-            transaction.PaymentFingerprint, since, transaction.Id, cancellationToken);
+            transaction.PaymentFingerprint, since, transaction.OccurredAt, transaction.Id, cancellationToken);
 
         var (customerCount, customerAvg) = await repository.GetCustomerStatsAsync(
-            transaction.CustomerId, transaction.Id, cancellationToken);
+            transaction.CustomerId, transaction.OccurredAt, transaction.Id, cancellationToken);
 
         var justBelowCount = await repository.CountJustBelowThresholdAsync(
             transaction.CustomerId, StructuringLowerBound, StructuringUpperBound,
-            since, transaction.Id, cancellationToken);
+            since, transaction.OccurredAt, transaction.Id, cancellationToken);
 
         var context = new FraudContext(
             transaction.Amount,

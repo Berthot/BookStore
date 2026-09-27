@@ -164,21 +164,21 @@ Content-Type: application/json
 # Docker Compose (portas fixas 8080/8081) — recomendado para provas de entrega
 .\docs\postman\run-demo.ps1 -Environment docker
 
-# Ou via Newman diretamente (--delay-request 2000 cobre o backlog S1+S2+S3 = ~15 s)
+# Ou via Newman diretamente (--delay-request 1500 cobre o backlog S1+S2+S3 = ~15 s)
 newman run docs/postman/BookStore.postman_collection.json \
   -e docs/postman/local.postman_environment.json \
-  --delay-request 2000
+  --delay-request 1500
 
 # Aspire (portas dinâmicas — ajuste o arquivo de ambiente primeiro)
 .\docs\postman\run-demo.ps1 -Environment aspire -Delay 500
 # Ou:
 newman run docs/postman/BookStore.postman_collection.json \
   -e docs/postman/local-aspire.postman_environment.json \
-  --delay-request 500
+  --delay-request 1500
 ```
 
 > **Docker Compose:** O Fraud.Worker processa S1, S2 e S3 em sequência com `DEMO_FRAUD_DELAY_SECONDS=5`,
-> resultando em até 15 s de backlog antes de S3 ser resolvido. `--delay-request 2000` com 30 retries
+> resultando em até 15 s de backlog antes de S3 ser resolvido. `--delay-request 1500` com 30 retries
 > garante uma janela de polling de 60 s — suficiente para qualquer cenário.
 
 ---

@@ -741,7 +741,9 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));"
+                  "pm.test('202 Accepted', () => pm.response.to.have.status(202));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('s5Purchase5Id', body.purchaseId);"
                 ],
                 "type": "text/javascript"
               }
@@ -772,6 +774,51 @@
                 "api",
                 "v1",
                 "purchases"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05S.5b — GET /purchases/:id (verificar CONFIRMED — não rejeitada)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('5ª compra CONFIRMED ou aguardando processamento', () => {",
+                  "  pm.expect(['CONFIRMED', 'PENDING_FRAUD_CHECK']).to.include(body.status);",
+                  "});",
+                  "if (body.status === 'PENDING_FRAUD_CHECK') {",
+                  "  const retries = parseInt(pm.environment.get('_s5bRetries') || '0');",
+                  "  if (retries < 30) {",
+                  "    pm.environment.set('_s5bRetries', retries + 1);",
+                  "    pm.execution.setNextRequest('05S.5b — GET /purchases/:id (verificar CONFIRMED — não rejeitada)');",
+                  "  } else { pm.environment.unset('_s5bRetries'); }",
+                  "} else {",
+                  "  pm.environment.unset('_s5bRetries');",
+                  "  pm.test('5ª compra NÃO foi rejeitada (D-44)', () => pm.expect(body.status).to.eql('CONFIRMED'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{bookstoreUrl}}/api/v1/purchases/{{s5Purchase5Id}}",
+              "host": [
+                "{{bookstoreUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "purchases",
+                "{{s5Purchase5Id}}"
               ]
             }
           },

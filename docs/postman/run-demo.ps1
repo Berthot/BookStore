@@ -18,9 +18,10 @@
     Se omitido, executa todos os cenários em sequência.
 
 .PARAMETER Delay
-    Delay em ms entre requests consecutivos (padrão: 2000).
-    2000ms cobre o backlog do Worker no Docker Compose (S1+S2+S3 = ~15 s com DEMO_FRAUD_DELAY_SECONDS=5).
-    Reduza para 500 se estiver rodando via Aspire sem delay de demo.
+    Delay em ms entre requests consecutivos (padrão: 1500).
+    1500ms cobre o backlog do Worker no Docker Compose (S1+S2+S3 = ~15 s com DEMO_FRAUD_DELAY_SECONDS=5).
+    Use 500 se estiver rodando via Aspire sem delay de demo.
+    No Postman Runner manual configure Collection Runner → Delay: 1500 ms.
 
 .PARAMETER NoOpen
     Não abre o relatório HTML no browser ao final.
@@ -39,14 +40,14 @@
     .\run-demo.ps1 -Folder 'S1'
 
     # Roda S3 e S4 com delay para o Worker (Docker Compose)
-    .\run-demo.ps1 -Folder 'S3' -Delay 2000
-    .\run-demo.ps1 -Folder 'S4' -Delay 2000
+    .\run-demo.ps1 -Folder 'S3' -Delay 1500
+    .\run-demo.ps1 -Folder 'S4' -Delay 1500
 #>
 param(
     [ValidateSet('aspire', 'docker', 'https')]
     [string]$Environment = 'aspire',
     [string]$Folder = '',
-    [int]$Delay = 2000,
+    [int]$Delay = 1500,
     [switch]$NoOpen
 )
 

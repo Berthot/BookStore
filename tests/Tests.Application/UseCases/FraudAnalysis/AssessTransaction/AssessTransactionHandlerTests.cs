@@ -98,11 +98,11 @@ public sealed class AssessTransactionHandlerTests : UnitTestsBase
         await _handler.Handle(new AssessTransactionRequest(transaction.Id), CancellationToken.None);
 
         await _repo.Received(1).CountRecentByFingerprintAsync(
-            transaction.PaymentFingerprint, Arg.Any<DateTime>(), transaction.Id, Arg.Any<CancellationToken>());
+            transaction.PaymentFingerprint, Arg.Any<DateTime>(), transaction.OccurredAt, transaction.Id, Arg.Any<CancellationToken>());
         await _repo.Received(1).GetCustomerStatsAsync(
-            transaction.CustomerId, transaction.Id, Arg.Any<CancellationToken>());
+            transaction.CustomerId, transaction.OccurredAt, transaction.Id, Arg.Any<CancellationToken>());
         await _repo.Received(1).CountJustBelowThresholdAsync(
             transaction.CustomerId, Arg.Any<decimal>(), Arg.Any<decimal>(),
-            Arg.Any<DateTime>(), transaction.Id, Arg.Any<CancellationToken>());
+            Arg.Any<DateTime>(), transaction.OccurredAt, transaction.Id, Arg.Any<CancellationToken>());
     }
 }
