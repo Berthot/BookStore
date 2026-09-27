@@ -6,6 +6,7 @@ COPY apps/BookStore.Api/BookStore.Api.csproj apps/BookStore.Api/
 COPY src/Application/Application.csproj src/Application/
 COPY src/Domain/Domain.csproj src/Domain/
 COPY src/Infrastructure/Infrastructure.csproj src/Infrastructure/
+COPY src/Web/Web.csproj src/Web/
 
 RUN dotnet restore apps/BookStore.Api/BookStore.Api.csproj
 
