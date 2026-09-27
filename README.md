@@ -61,7 +61,7 @@ marketplace consumidor do antifraude, revisão humana, reconciliação, testes e
 ### 📋 Pré-requisitos
 
 - **Docker Desktop 24+** com `docker compose` v2 (incluso)
-- Portas livres: `5432` (PostgreSQL), `5672` / `15672` (RabbitMQ), `8080` (BookStore.Api), `8081` (Fraud.Api), `18888` / `18889` (Aspire Dashboard)
+- Portas livres: `5432` (PostgreSQL), `5672` / `15672` / `15692` (RabbitMQ), `8080` (BookStore.Api), `8081` (Fraud.Api), `18888` / `18889` (Aspire Dashboard), `9090` (Prometheus), `3000` (Grafana)
 
 ### ▶️ Subindo o ambiente
 
@@ -69,9 +69,14 @@ marketplace consumidor do antifraude, revisão humana, reconciliação, testes e
 # copie o arquivo de variáveis de ambiente
 cp deploy/.env.example deploy/.env
 
-# sobe todos os serviços e aguarda ficarem saudáveis
-docker compose -f deploy/docker-compose.yml up -d --wait
+# sobe todos os serviços e aguarda ficarem saudáveis (caminho principal)
+docker compose up -d --build --wait
+
+# alternativa equivalente a partir do subdiretório
+# docker compose -f deploy/docker-compose.yml up -d --build --wait
 ```
+
+> ⚠️ Não suba o Aspire e o Docker Compose ao mesmo tempo — eles compartilham portas: `5432`, `5672`, `15672`, `8080`, `8081`.
 
 Na primeira execução `BookStore.Api` aplica as migrations do schema `bookstore` e popula o catálogo (`Database__ApplyMigrationsOnStartup=true`, `Seeding__Enabled=true`); `Fraud.Api` aplica as migrations do schema `fraud`.
 
@@ -83,6 +88,8 @@ Na primeira execução `BookStore.Api` aplica as migrations do schema `bookstore
 | 📘 Swagger UI — Antifraude | http://localhost:8081/swagger |
 | 🔭 Aspire Dashboard | http://localhost:18888 |
 | 🐇 RabbitMQ Management | http://localhost:15672 (guest / guest) |
+| 📈 Prometheus | http://localhost:9090 |
+| 📊 Grafana | http://localhost:3000 (admin / admin) |
 
 ### ▶️ Subindo com Aspire (desenvolvimento)
 
@@ -114,7 +121,7 @@ O Aspire Dashboard abre automaticamente. As portas dos serviços são atribuída
 | S6 | reenvio com a mesma `Idempotency-Key` | 🔁 mesma resposta, nenhuma compra nova | Execute **S6** (usa a chave salva de S1) |
 | S7 | mesma chave, corpo diferente | ⚠️ `422` | Execute **S7** (mesma chave de S1, body diferente) |
 | S8 | sem `Idempotency-Key` | ⚠️ `400` | Execute **S8** |
-| S9 | parar o Fraud.Worker, comprar, religar | 🛟 compra conclui sozinha ao religar | `docker compose -f deploy/docker-compose.yml stop fraud-worker` → faça uma compra → `docker compose -f deploy/docker-compose.yml start fraud-worker` → aguarde → compra finaliza |
+| S9 | parar o Fraud.Worker, comprar, religar | 🛟 compra conclui sozinha ao religar | `docker compose stop fraud-worker` → faça uma compra → `docker compose start fraud-worker` → aguarde → compra finaliza |
 | S10 | valor muito acima da média do cliente | 🔍 `REVIEW` | Execute **S10.1–S10.3** (histórico) → aguarde → **S10.4** → **S10.5** |
 | S11 | três compras logo abaixo de um limite | 🔍 `REVIEW` | Execute **S11.1–S11.3** (R$ 475, R$ 480, R$ 490) → aguarde → **S11.4** |
 
@@ -137,9 +144,11 @@ Copie `deploy/.env.example` para `deploy/.env` e ajuste os valores. Todos têm f
 | `DEMO_FRAUD_DELAY_SECONDS` | `5` | Pausa artificial do Worker na fase de processamento (0 = desativado) |
 | `RECONCILIATION_INTERVAL_SECONDS` | `30` | Com que frequência o job de reconciliação é executado |
 | `RECONCILIATION_STALENESS_SECONDS` | `60` | Idade mínima (em segundos) de uma compra parada para ser reconciliada |
-
-> **Grafana** (dashboards antifraude) está disponível apenas no stack Aspire — não é incluído no
-> `docker-compose.yml`.
+| `GRAFANA_ADMIN_USER` | `admin` | Usuário administrador do Grafana |
+| `GRAFANA_ADMIN_PASSWORD` | `admin` | Senha do administrador do Grafana |
+| `PROMETHEUS_PORT` | `9090` | Porta host do Prometheus (override opcional) |
+| `GRAFANA_PORT` | `3000` | Porta host do Grafana (override opcional) |
+| `RABBITMQ_PROM_PORT` | `15692` | Porta host do endpoint Prometheus do RabbitMQ (override opcional) |
 
 ---
 

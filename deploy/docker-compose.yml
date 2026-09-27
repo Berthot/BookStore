@@ -14,6 +14,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
 
   rabbitmq:
     image: rabbitmq:4-management-alpine
@@ -23,13 +24,57 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+      - "${RABBITMQ_PROM_PORT:-15692}:15692"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq/mnesia
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--enable-feature=otlp-write-receiver"
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:9090/-/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      - ../apps/Aspire/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ../apps/Aspire/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
 
   aspire-dashboard:
     image: mcr.microsoft.com/dotnet/aspire-dashboard:9.3.0
@@ -38,6 +83,8 @@ services:
       - "18889:18889"
     environment:
       ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
+    # Sem healthcheck: imagem minimal sem shell/curl; nenhum servico depende
+    # dela para startup — docker compose --wait aguarda apenas "running".
 
   fraud-api:
     build:
@@ -54,16 +101,20 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
       OTEL_SERVICE_NAME: fraud-api
       OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
+      PROMETHEUS_OTLP_ENDPOINT: http://prometheus:9090
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      prometheus:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8081/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
 
   fraud-worker:
     build:
@@ -76,6 +127,7 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
       OTEL_SERVICE_NAME: fraud-worker
       OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
+      PROMETHEUS_OTLP_ENDPOINT: http://prometheus:9090
     depends_on:
       postgres:
         condition: service_healthy
@@ -83,6 +135,15 @@ services:
         condition: service_healthy
       fraud-api:
         condition: service_healthy
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "kill -0 1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
 
   bookstore-api:
     build:
@@ -103,6 +164,7 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
       OTEL_SERVICE_NAME: bookstore-api
       OTEL_RESOURCE_ATTRIBUTES: service.version=1.0.0
+      PROMETHEUS_OTLP_ENDPOINT: http://prometheus:9090
     depends_on:
       postgres:
         condition: service_healthy
@@ -110,7 +172,17 @@ services:
         condition: service_healthy
       fraud-api:
         condition: service_healthy
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
 
 volumes:
   pg_data:
   rabbitmq_data:
+  prometheus_data:
+  grafana_data:
