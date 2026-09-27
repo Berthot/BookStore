@@ -1,0 +1,4 @@
+# Ponto de entrada na raiz: `docker compose up -d --build --wait`
+# A definição real fica em deploy/docker-compose.yml (include do Compose v2.20+).
+include:
+  - deploy/docker-compose.yml
