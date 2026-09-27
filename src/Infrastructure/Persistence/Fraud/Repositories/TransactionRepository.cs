@@ -23,27 +23,28 @@ internal sealed class TransactionRepository(FraudDbContext context) : ITransacti
             .AsSplitQuery()
             .FirstOrDefaultAsync(t => t.CorrelationId == correlationId, cancellationToken);
 
-    public async Task<int> CountRecentByFingerprintAsync(string fingerprint, DateTime since, Guid excludeId, CancellationToken cancellationToken = default) =>
+    public async Task<int> CountRecentByFingerprintAsync(string fingerprint, DateTime since, DateTime until, Guid excludeId, CancellationToken cancellationToken = default) =>
         await context.Transactions
-            .Where(t => t.PaymentFingerprint == fingerprint && t.OccurredAt >= since && t.Id != excludeId)
+            .Where(t => t.PaymentFingerprint == fingerprint && t.OccurredAt >= since && t.OccurredAt < until && t.Id != excludeId)
             .CountAsync(cancellationToken);
 
-    public async Task<(int Count, decimal AverageAmount)> GetCustomerStatsAsync(string customerId, Guid excludeId, CancellationToken cancellationToken = default)
+    public async Task<(int Count, decimal AverageAmount)> GetCustomerStatsAsync(string customerId, DateTime until, Guid excludeId, CancellationToken cancellationToken = default)
     {
         var amounts = await context.Transactions
-            .Where(t => t.CustomerId == customerId && t.Id != excludeId)
+            .Where(t => t.CustomerId == customerId && t.OccurredAt < until && t.Id != excludeId)
             .Select(t => t.Amount.Value)
             .ToListAsync(cancellationToken);
 
         return (amounts.Count, amounts.Count > 0 ? amounts.Average() : 0m);
     }
 
-    public async Task<int> CountJustBelowThresholdAsync(string customerId, decimal lower, decimal upper, DateTime since, Guid excludeId, CancellationToken cancellationToken = default) =>
+    public async Task<int> CountJustBelowThresholdAsync(string customerId, decimal lower, decimal upper, DateTime since, DateTime until, Guid excludeId, CancellationToken cancellationToken = default) =>
         await context.Transactions
             .Where(t => t.CustomerId == customerId
                      && t.Amount.Value >= lower
                      && t.Amount.Value < upper
                      && t.OccurredAt >= since
+                     && t.OccurredAt < until
                      && t.Id != excludeId)
             .CountAsync(cancellationToken);
 
