@@ -51,17 +51,4 @@ public static class DependencyInjection
         return services;
     }
 
-    /// <summary>Registers all infrastructure services for both bounded contexts — used by the legacy monolith and shared integration tests.</summary>
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
-    {
-        services
-            .AddPersistence(configuration)
-            .AddMessaging(configuration)
-            .AddTelemetry(configuration);
-
-        services.AddScoped<IEventPublisher, EventPublisher>();
-        services.AddScoped<IFraudCheckGateway, FraudCheckGateway>();
-
-        return services;
-    }
 }
