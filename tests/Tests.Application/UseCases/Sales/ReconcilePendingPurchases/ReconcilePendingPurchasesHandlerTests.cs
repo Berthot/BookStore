@@ -16,6 +16,7 @@ public sealed class ReconcilePendingPurchasesHandlerTests : UnitTestsBase
 {
     private IPurchaseRepository _repo = null!;
     private IEventPublisher _publisher = null!;
+    private IBookStoreUnitOfWork _unitOfWork = null!;
     private ReconcilePendingPurchasesHandler _handler = null!;
 
     [SetUp]
@@ -23,7 +24,8 @@ public sealed class ReconcilePendingPurchasesHandlerTests : UnitTestsBase
     {
         _repo = Substitute.For<IPurchaseRepository>();
         _publisher = Substitute.For<IEventPublisher>();
-        _handler = new ReconcilePendingPurchasesHandler(_repo, _publisher);
+        _unitOfWork = Substitute.For<IBookStoreUnitOfWork>();
+        _handler = new ReconcilePendingPurchasesHandler(_repo, _unitOfWork, _publisher);
     }
 
     [Test]
@@ -41,6 +43,23 @@ public sealed class ReconcilePendingPurchasesHandlerTests : UnitTestsBase
         await _publisher.Received(1).PublishAsync(
             Arg.Is<PurchasePlaced>(m => m.PurchaseId == purchase.Id && m.CorrelationId == purchase.CorrelationId),
             Arg.Any<CancellationToken>());
+        await _unitOfWork.Received(1).CommitAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task Handle_commits_after_publishing_so_outbox_messages_are_persisted()
+    {
+        var threshold = TestConstants.Dates.FixedUtcNow;
+        _repo.ListPendingFraudCheckAsync(threshold, Arg.Any<CancellationToken>())
+            .Returns(new List<Purchase> { PurchaseMother.PendingFraudCheck() });
+
+        await _handler.Handle(new ReconcilePendingPurchasesRequest(threshold), CancellationToken.None);
+
+        Received.InOrder(() =>
+        {
+            _publisher.PublishAsync(Arg.Any<PurchasePlaced>(), Arg.Any<CancellationToken>());
+            _unitOfWork.CommitAsync(Arg.Any<CancellationToken>());
+        });
     }
 
     [Test]
@@ -55,6 +74,7 @@ public sealed class ReconcilePendingPurchasesHandlerTests : UnitTestsBase
         result.IsSuccess.Should().BeTrue();
         result.Data!.Republished.Should().Be(0);
         await _publisher.DidNotReceive().PublishAsync(Arg.Any<PurchasePlaced>(), Arg.Any<CancellationToken>());
+        await _unitOfWork.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
     [Test]

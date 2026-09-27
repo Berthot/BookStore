@@ -9,6 +9,7 @@ namespace Application.UseCases.Sales.ReconcilePendingPurchases;
 
 public sealed class ReconcilePendingPurchasesHandler(
     IPurchaseRepository purchaseRepository,
+    IBookStoreUnitOfWork unitOfWork,
     IEventPublisher publisher)
     : ICommandHandler<ReconcilePendingPurchasesRequest, OperationResult<ReconcilePendingPurchasesResponse>>
 {
@@ -34,6 +35,11 @@ public sealed class ReconcilePendingPurchasesHandler(
                 purchase.CorrelationId,
                 purchase.CreatedAt), cancellationToken);
         }
+
+        // With the bus outbox, PublishAsync only stages the messages in the DbContext; they are persisted
+        // (and later delivered) only when the unit of work commits.
+        if (stalePurchases.Count > 0)
+            await unitOfWork.CommitAsync(cancellationToken);
 
         BookStoreTelemetry.ReconciliationRepublished.Add(stalePurchases.Count);
 
