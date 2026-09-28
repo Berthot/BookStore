@@ -2,7 +2,7 @@
 
 Três processos independentes compartilham o mesmo código de domínio e aplicação (`src/`), com dois
 bounded contexts — **BookStore** (catálogo + compras) e **Fraud** (análise antifraude). Comunicação
-assíncrona via RabbitMQ (MassTransit outbox/inbox) e comunicação síncrona via HTTP entre
+assíncrona via RabbitMQ (MassTransit, outbox transacional nas APIs) e comunicação síncrona via HTTP entre
 `BookStore.Api` → `Fraud.Api`. Veja ADR-0010 para a motivação da divisão.
 
 ```mermaid
@@ -26,8 +26,8 @@ flowchart TB
 
   subgraph pg["PostgreSQL"]
     direction TB
-    sbs[("schema bookstore<br/>Book · Purchase · idempotency_keys<br/>outbox · inbox")]
-    sfr[("schema fraud<br/>Transaction · Assessment · idempotency_keys<br/>outbox · inbox")]
+    sbs[("schema bookstore<br/>Book · Purchase · idempotency_keys<br/>outbox")]
+    sfr[("schema fraud<br/>Transaction · Assessment · idempotency_keys<br/>outbox")]
   end
 
   mq{{"RabbitMQ<br/>purchase-placed<br/>transaction-submitted<br/>transaction-decided"}}
@@ -38,11 +38,11 @@ flowchart TB
   client -->|"HTTP · Idempotency-Key · X-Correlation-Id"| fa
   bs -->|"HTTP + Idempotency-Key: purchaseId"| fa
   bs -->|"estado + outbox · mesma transação"| sbs
-  bs <-->|"purchase-placed (outbox) · transaction-decided (inbox)"| mq
+  bs <-->|"purchase-placed (outbox) · transaction-decided (consome)"| mq
   fa -->|"estado + outbox · mesma transação"| sfr
   fa <-->|"transaction-submitted (outbox)"| mq
-  fw -->|"Assessment + outbox · inbox"| sfr
-  fw <-->|"transaction-submitted (inbox) · transaction-decided (outbox)"| mq
+  fw -->|"Assessment · checagem de estado"| sfr
+  fw <-->|"transaction-submitted (consome) · transaction-decided (publica)"| mq
   mq -.->|"esgotou retries"| err
   bs -.->|OTLP| dash
   fa -.->|OTLP| dash
@@ -64,8 +64,8 @@ flowchart TB
 
 ### Dois APIs + um Worker, um repositório
 
-A divisão em três processos resolve o bug de race condition do MassTransit 8.5.x ao registrar dois
-outboxes no mesmo bus (ver ADR-0010). Cada processo tem exatamente um `DbContext` e um
+A divisão em três processos respeita uma limitação do MassTransit 8: um bus outbox de EF por bus
+(ver ADR-0010). Cada processo tem exatamente um `DbContext` e um
 `AddEntityFrameworkOutbox`, tornando `UseBusOutbox()` seguro.
 
 É um único código-fonte com fronteiras de contexto explícitas. O `BookStore.Api` não conhece o
@@ -78,11 +78,12 @@ O `PurchasePlacedConsumer` chama `POST /api/v1/transactions` na Fraud.Api com
 `Idempotency-Key: {purchaseId}`. A resilience handler (`AddStandardResilienceHandler`) adiciona retry,
 circuit breaker e timeout. O trace atravessa HTTP via `traceparent`, mantendo visibilidade ponta a ponta.
 
-### Outbox transacional e inbox no consumidor
+### Outbox transacional nas APIs e consumidor idempotente
 
-Cada outbox garante entrega **pelo menos uma vez** dentro do seu processo. A inbox do MassTransit
-descarta reentregas por `MessageId`. As duas camadas juntas garantem exatamente uma execução efectiva
-para cada mensagem.
+O outbox das APIs grava o evento na mesma transação do dado e entrega **pelo menos uma vez**. No
+consumidor, a idempotência vem da checagem de estado: uma transação já decidida (ou uma compra que já
+saiu de `PendingFraudCheck`) não é reprocessada. As tabelas de inbox do MassTransit existem nas
+migrations, mas o inbox não está ativado nos consumers — é a evolução natural (ver ADR-0004).
 
 ### Observabilidade por padrão aberto
 

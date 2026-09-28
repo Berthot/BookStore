@@ -37,14 +37,15 @@ sequenceDiagram
   OB->>DB: lê OutboxMessage pendente
   OB->>MQ: publica transaction-submitted
   MQ->>FW: entrega a mensagem
-  FW->>DB: InboxState — MessageId já processado?
-  alt reentrega
-    FW-->>MQ: ack (descarta, sem efeito)
+  FW->>DB: carrega Transaction — já DECIDED?
+  alt reentrega (já decidida)
+    FW-->>MQ: ack (sem efeito — checagem de estado)
   else primeira vez
     FW->>DB: Transaction → Processing · COMMIT
     FW->>DB: sinais: transações recentes do cartão, cliente novo
     FW->>FW: FraudRuleSet.Evaluate(FraudContext) → DecisionPolicy
-    FW->>DB: Assessment + Transaction → Decided + OutboxMessage (transaction-decided) · COMMIT
+    FW->>MQ: publica transaction-decided
+    FW->>DB: Assessment + Transaction → Decided · COMMIT
     FW-->>MQ: ack
   end
 

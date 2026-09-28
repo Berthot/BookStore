@@ -162,8 +162,7 @@ contexts — **BookStore** (catálogo + compras) e **Fraud** (análise antifraud
 - **Fraud.Worker** — avaliação assíncrona: regras, decisão, atualiza compras via mensagem.
 
 Cada processo é dono exclusivo do seu `DbContext` e do seu schema no PostgreSQL (`bookstore` ou
-`fraud`). A divisão resolve o bug de race condition do MassTransit 8.5.x com dois outboxes no mesmo
-bus (ver [ADR-0010](docs/adr/0010-arquitetura-dois-servicos.md)).
+`fraud`). A divisão respeita uma limitação do MassTransit 8 — um bus outbox de EF por bus (ver [ADR-0010](docs/adr/0010-arquitetura-dois-servicos.md)).
 
 <!-- sincronizado de docs/diagramas/01-componentes.md -->
 ```mermaid
@@ -187,8 +186,8 @@ flowchart TB
 
   subgraph pg["PostgreSQL"]
     direction TB
-    sbs[("schema bookstore<br/>Book · Purchase · idempotency_keys<br/>outbox · inbox")]
-    sfr[("schema fraud<br/>Transaction · Assessment · idempotency_keys<br/>outbox · inbox")]
+    sbs[("schema bookstore<br/>Book · Purchase · idempotency_keys<br/>outbox")]
+    sfr[("schema fraud<br/>Transaction · Assessment · idempotency_keys<br/>outbox")]
   end
 
   mq{{"RabbitMQ<br/>purchase-placed<br/>transaction-submitted<br/>transaction-decided"}}
@@ -199,11 +198,11 @@ flowchart TB
   client -->|"HTTP · Idempotency-Key · X-Correlation-Id"| fa
   bs -->|"HTTP + Idempotency-Key: purchaseId"| fa
   bs -->|"estado + outbox · mesma transação"| sbs
-  bs <-->|"purchase-placed (outbox) · transaction-decided (inbox)"| mq
+  bs <-->|"purchase-placed (outbox) · transaction-decided (consome)"| mq
   fa -->|"estado + outbox · mesma transação"| sfr
   fa <-->|"transaction-submitted (outbox)"| mq
-  fw -->|"Assessment + outbox · inbox"| sfr
-  fw <-->|"transaction-submitted (inbox) · transaction-decided (outbox)"| mq
+  fw -->|"Assessment · checagem de estado"| sfr
+  fw <-->|"transaction-submitted (consome) · transaction-decided (publica)"| mq
   mq -.->|"esgotou retries"| err
   bs -.->|OTLP| dash
   fa -.->|OTLP| dash
@@ -259,14 +258,15 @@ sequenceDiagram
   OB->>DB: lê OutboxMessage pendente
   OB->>MQ: publica transaction-submitted
   MQ->>FW: entrega a mensagem
-  FW->>DB: InboxState — MessageId já processado?
-  alt reentrega
-    FW-->>MQ: ack (descarta, sem efeito)
+  FW->>DB: carrega Transaction — já DECIDED?
+  alt reentrega (já decidida)
+    FW-->>MQ: ack (sem efeito — checagem de estado)
   else primeira vez
     FW->>DB: Transaction → Processing · COMMIT
     FW->>DB: sinais: transações recentes do cartão, cliente novo
     FW->>FW: FraudRuleSet.Evaluate(FraudContext) → DecisionPolicy
-    FW->>DB: Assessment + Transaction → Decided + OutboxMessage (transaction-decided) · COMMIT
+    FW->>MQ: publica transaction-decided
+    FW->>DB: Assessment + Transaction → Decided · COMMIT
     FW-->>MQ: ack
   end
 
@@ -325,7 +325,7 @@ Repetir qualquer operação, em qualquer ponto, produz o mesmo resultado que exe
 | Onde | Mecanismo |
 | :--- | :--- |
 | `POST` de transações e compras | `Idempotency-Key` + hash do corpo, gravados na mesma transação do dado (índice único) |
-| Consumidores | inbox (descarta o mesmo `MessageId`) |
+| Consumidores | checagem de estado (transação já decidida não é reprocessada) |
 | Casos de uso | checagem de estado antes de agir |
 | Marketplace → antifraude | `Idempotency-Key = PurchaseId` |
 | Reconciliação | republica com a mesma chave |

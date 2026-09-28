@@ -9,9 +9,9 @@ O projeto nasceu como monólito modular com dois bounded contexts no mesmo proce
 compras, reconciliação) e `Fraud` (submissão, avaliação, revisão de transações). Essa decisão foi adequada
 para construção rápida, mas criou dois problemas:
 
-1. **Bug de concorrência no MassTransit 8.5.x:** registrar dois `AddEntityFrameworkOutbox` com
-   `UseBusOutbox()` no mesmo bus causa race condition — a segunda outbox pode publicar mensagens antes de a
-   primeira confirmar. A solução recomendada é ter **um outbox por bus**.
+1. **Limitação do MassTransit 8:** o bus outbox de EF é um por bus; registrar dois
+   `AddEntityFrameworkOutbox` com `UseBusOutbox()` no mesmo bus não é suportado. A saída é ter **um outbox
+   por bus**.
 
 2. **Escalabilidade e isolamento de falhas:** o Worker de avaliação de fraude e o de reconciliação de compras
    compartilhavam processo, ciclo de vida e configuração. Parar um parava o outro.
@@ -20,10 +20,10 @@ para construção rápida, mas criou dois problemas:
 
 | Opção | A favor | Contra |
 | :--- | :--- | :--- |
-| **Dois serviços HTTP + worker (escolhida)** | um DbContext por processo elimina o bug da outbox; isolamento real de deploy e escala | duplicação de infraestrutura HTTP (middlewares, filtros) em dois projetos |
-| **Monólito com outbox por rota** | sem duplicação | não elimina o bug sem patch interno do MassTransit; mantém acoplamento de deploy |
+| **Dois serviços HTTP + worker (escolhida)** | um DbContext por processo respeita o limite de um outbox por bus; isolamento real de deploy e escala | duplicação de infraestrutura HTTP (middlewares, filtros) em dois projetos |
+| **Monólito com outbox por rota** | sem duplicação | não respeita o limite de um outbox por bus sem contornos no MassTransit; mantém acoplamento de deploy |
 | **Micro-serviços completos com bancos separados** | máximo isolamento | exigiria migração de dados, sincronização de schemas e infra distribuída muito além do escopo do desafio |
-| **Mover a outbox para o Worker** | resolve o bug mantendo uma API | concentra toda lógica de publicação de eventos no Worker, que passa a ser SPOF do fluxo de compras |
+| **Mover a outbox para o Worker** | resolve o limite mantendo uma API | concentra toda lógica de publicação de eventos no Worker, que passa a ser SPOF do fluxo de compras |
 
 ## Decisão
 
@@ -43,16 +43,17 @@ para construção rápida, mas criou dois problemas:
 
 - `Fraud.Api` → `Fraud.Worker`: mensagem `TransactionSubmitted` via RabbitMQ outbox.
 
-- `Fraud.Worker` → `BookStore.Api`: mensagem `TransactionDecided` via RabbitMQ outbox.
+- `Fraud.Worker` → `BookStore.Api`: mensagem `TransactionDecided` via RabbitMQ, publicada pelo consumer
+  (idempotência por checagem de estado).
 
 **Cada processo tem exatamente um `DbContext` e um `AddEntityFrameworkOutbox`, o que torna `UseBusOutbox()`
-seguro e elimina o bug de concorrência.**
+seguro.**
 
 ## Consequências
 
 **Positivas**
 
-- `UseBusOutbox()` habilitado nos três processos sem risco de race condition.
+- `UseBusOutbox()` habilitado nos três processos, um outbox por bus.
 - `BookStore.Api` e `Fraud.Api` podem ser escalados, deployados e reiniciados de forma independente.
 - A chamada HTTP síncrona para a Fraud.Api carrega o `X-Correlation-Id`, mantendo rastreabilidade
   ponta a ponta no painel do Aspire/Grafana.

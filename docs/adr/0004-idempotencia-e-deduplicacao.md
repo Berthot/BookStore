@@ -23,7 +23,8 @@ Numa transação financeira, processar duas vezes significa cobrar duas vezes. O
 | **Middleware HTTP que grava a chave ao final da requisição** | descartada — a gravação da chave é separada da gravação do dado; uma queda entre as duas deixa o dado sem chave, e o reenvio duplica |
 | **Chave no mesmo banco e na mesma transação do dado** | **escolhida** — o índice único do banco garante que só uma requisição vence, e a chave nunca existe sem o dado (nem o contrário) |
 | **Consumidor sem deduplicação** | descartada — a entrega *pelo menos uma vez* da outbox geraria avaliações e atualizações duplicadas |
-| **Inbox + checagem de estado no consumidor** | **escolhida** — a inbox descarta reentregas; a checagem de estado garante que uma ação já aplicada não se repete |
+| **Checagem de estado no consumidor** | **escolhida e implementada** — uma ação já aplicada não se repete (transação decidida, compra fora de `PendingFraudCheck`) |
+| **Inbox do MassTransit** | **prevista, não ativada** — as tabelas existem nas migrations; ativar exige configurar o outbox de consumer por endpoint e revalidar a interação com a unidade de trabalho. Fica como evolução |
 
 ## Decisão
 
@@ -32,7 +33,7 @@ Idempotência em **cinco pontos**, cada um cobrindo uma forma de repetição:
 | # | Onde | Mecanismo | Cobre |
 | :--- | :--- | :--- | :--- |
 | 1 | `POST /api/v1/transactions` e `POST /api/v1/purchases` | header `Idempotency-Key` + hash do corpo, gravados na mesma transação do dado | reenvio do cliente, requisições simultâneas |
-| 2 | consumidores do Worker | inbox do MassTransit (trava por `MessageId`) | reentrega da outbox |
+| 2 | consumidores | checagem de estado (ver linha 3); inbox do MassTransit previsto | reentrega da outbox |
 | 3 | casos de uso | checagem de estado antes de agir (ex.: só avalia transação em `Received`/`Processing`; só atualiza compra em `PendingFraudCheck`) | qualquer reprocessamento que passe pelas camadas anteriores |
 | 4 | marketplace → antifraude | `Idempotency-Key = PurchaseId` | a mesma compra submetida mais de uma vez |
 | 5 | reconciliação | republica usando a mesma chave | recuperação segura de compras paradas |

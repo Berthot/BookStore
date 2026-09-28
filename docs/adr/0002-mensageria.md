@@ -38,7 +38,8 @@ O mecanismo precisa oferecer **retry com backoff**, **DLQ**, integração com a 
 **RabbitMQ como broker e MassTransit v8 como biblioteca**, com:
 
 - **Bus Outbox** no EF Core — a mensagem é gravada na mesma transação da mudança de estado;
-- **Consumer Inbox** — reentregas do mesmo `MessageId` são descartadas;
+- **consumidor idempotente por checagem de estado** — reentregas não reprocessam o que já foi decidido
+  (o Consumer Inbox do MassTransit fica como evolução: tabelas criadas, não ativado);
 - **retry com backoff** em intervalos crescentes;
 - **filas `_error`** como DLQ para mensagens que esgotam as tentativas.
 
@@ -48,7 +49,7 @@ A versão é fixada em `8.*`.
 
 **Positivas**
 
-- Outbox, inbox, retry, DLQ e tracing vêm de um único componente testado, em vez de código próprio.
+- Outbox, retry, DLQ e tracing vêm de um único componente testado, em vez de código próprio.
 - O contexto de trace atravessa a fila: uma compra aparece como um único trace no painel.
 - Toda a configuração fica em uma extension dedicada (`MassTransitExtensions`), documentada.
 
@@ -58,12 +59,10 @@ A versão é fixada em `8.*`.
   fim de 2026. É adequada ao escopo deste desafio. Em produção, a escolha seria reavaliada entre a
   licença da v9, Wolverine, Rebus ou uma outbox própria — o código de domínio não muda, porque só a
   extension de mensageria conhece o MassTransit.
-- **Bug de race condition (resolvido).** MassTransit 8.5.x tem um bug ao registrar dois
-  `AddEntityFrameworkOutbox` com `UseBusOutbox()` no mesmo bus. A solução foi dividir o monólito em
-  três processos (ADR-0010): cada processo tem exatamente um `DbContext` e uma outbox, tornando
-  `UseBusOutbox()` seguro. O monólito original (`AddInfrastructure`) mantém os dois outboxes sem
-  `UseBusOutbox()` para compatibilidade com testes de integração.
+- **Um bus outbox por bus (limitação da v8).** O MassTransit 8 suporta um bus outbox de EF por bus;
+  com dois `DbContext` no mesmo processo isso não fecha. A solução foi dividir o monólito em três
+  processos (ADR-0010): cada processo tem exatamente um `DbContext` e uma outbox.
 - **Entrega pelo menos uma vez.** A outbox pode entregar a mesma mensagem mais de uma vez.
-  Mitigação: inbox no consumidor e checagem de estado antes de agir (ADR-0004).
+  Mitigação: checagem de estado antes de agir (ADR-0004).
 - **Sem replay de histórico.** O RabbitMQ não guarda mensagens já consumidas. Mitigação: o histórico
   de decisões fica no banco (`Assessment` é append-only), não no broker.
